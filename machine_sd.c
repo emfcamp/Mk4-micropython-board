@@ -16,6 +16,8 @@
 #include "py/mperrno.h"
 #include "extmod/vfs.h"
 
+#if MICROPY_MACHINE_SD
+
 #include <ti/drivers/SD.h>
 
 typedef struct _machine_sd_obj_t {
@@ -194,3 +196,5 @@ const mp_obj_type_t machine_sd_type = {
     .print = machine_sd_print,
     .locals_dict = (mp_obj_dict_t*)&machine_sd_locals_dict,
 };
+
+#endif

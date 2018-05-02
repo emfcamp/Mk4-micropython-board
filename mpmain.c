@@ -24,7 +24,7 @@ void mp_hal_stdout_tx_str(const char * str)
     UART_write(console, str, strlen(str));
 }
 
-#if MINIMAL_MAIN
+#if MICROPY_PORT_MINIMAL_MAIN
 
 mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
     mp_raise_OSError(MP_ENOENT);
@@ -45,6 +45,7 @@ int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize,
 {
     int stack_dummy;
 
+soft_reset:
     stack_top = (char*)&stack_dummy;
     // make stack limit somewhat smaller than full stack available
     mp_stack_set_limit(stacksize - 512);
@@ -55,7 +56,19 @@ int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize,
 
     console = uart;
 
-    #if 0
+    #if MICROPY_ENABLE_COMPILER
+    for (;;) {
+        if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL) {
+            if (pyexec_raw_repl() != 0) {
+                break;
+            }
+        } else {
+            if (pyexec_friendly_repl() != 0) {
+                break;
+            }
+        }
+    }
+/*
     pyexec_event_repl_init();
     for (;;) {
         int c = mp_hal_stdin_rx_chr();
@@ -63,13 +76,19 @@ int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize,
             break;
         }
     }
+*/
     #else
     pyexec_friendly_repl();
     #endif
 
-    pyexec_frozen_module("frozentest.py");
+    /* Magic String: needed by pyboard.py - do not change/remove */
+    mp_hal_stdout_tx_str("PYB: soft reboot\r\n");
+
+    extern void machine_teardown(void);
+    machine_teardown();
 
     mp_deinit();
+    goto soft_reset;
 
     return 0;
 }

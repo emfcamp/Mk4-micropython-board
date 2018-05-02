@@ -4,7 +4,7 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2015 Josef Gajdusek
- * Copyright (c) 2017 Texas Instruments
+ * Copyright (c) 2018 Texas Instruments
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal

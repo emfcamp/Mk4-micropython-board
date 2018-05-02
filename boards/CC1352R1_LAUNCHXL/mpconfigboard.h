@@ -1,0 +1,12 @@
+#ifndef MPCONFIGBOARD_H_INC
+#define MPCONFIGBOARD_H_INC
+
+#define MICROPY_HW_BOARD_NAME        "LAUNCHXL_CC1352R1"
+#define MICROPY_HW_MCU_NAME          "TI CC1352R1"
+
+#define MICROPY_PORT_MINIMAL_MAIN    (1)
+
+#define MICROPY_MACHINE_NVSBDEV      (0)
+#define MICROPY_MACHINE_SD           (0)
+
+#endif

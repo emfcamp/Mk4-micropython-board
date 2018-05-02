@@ -65,12 +65,14 @@
 #define MICROPY_PY_UTIME_MP_HAL     (1)
 #define MICROPY_PY_URANDOM          (1)
 #define MICROPY_PY_URANDOM_EXTRA_FUNCS (1)
-#define MICROPY_PY_FRAMEBUF         (1)
-#define MICROPY_PY_UJSON            (1)
-#define MICROPY_PY_UBINASCII        (1)
 #define MICROPY_PY_BUILTINS_STR_UNICODE (0)
 
 #define MICROPY_MODULE_WEAK_LINKS   (1)
+
+#if !MICROPY_PORT_MINIMAL_MAIN
+#define MICROPY_PY_FRAMEBUF         (1)
+#define MICROPY_PY_UJSON            (1)
+#define MICROPY_PY_UBINASCII        (1)
 
 #define MICROPY_VFS                    (1)
 #define MICROPY_FATFS_ENABLE_LFN       (1)
@@ -85,9 +87,11 @@
 #define mp_builtin_open mp_vfs_open
 #define mp_builtin_open_obj mp_vfs_open_obj
 
+#endif
+
 #define MICROPY_PY_MACHINE          (1)
-#define MICROPY_PY_SOCKET           (1)
-#define MICROPY_PY_NETWORK          (1)
+
+// others set in each board's mpconfigboard.h
 
 // type definitions for the specific machine
 
@@ -133,19 +137,22 @@ extern const struct _mp_obj_module_t mp_module_network;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_ROM_QSTR(MP_QSTR_umachine), MP_ROM_PTR(&machine_module) }, \
-    { MP_ROM_QSTR(MP_QSTR_machine), MP_ROM_PTR(&machine_module) }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uos), (mp_obj_t)&mp_module_uos }, \
+    { MP_ROM_QSTR(MP_QSTR_machine), MP_ROM_PTR(&machine_module) },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uos), (mp_obj_t)&mp_module_uos },     \
     { MP_OBJ_NEW_QSTR(MP_QSTR_utime), (mp_obj_t)&mp_module_utime }, \
     SOCKET_BUILTIN_MODULE \
     NETWORK_BUILTIN_MODULE \
 
+/*
+    { MP_ROM_QSTR(MP_QSTR_json),        MP_ROM_PTR(&mp_module_ujson) }, \
+    { MP_ROM_QSTR(MP_QSTR_binascii),    MP_ROM_PTR(&mp_module_ubinascii) }, \
+ */
+
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_ROM_QSTR(MP_QSTR_struct),      MP_ROM_PTR(&mp_module_ustruct) },   \
-    { MP_ROM_QSTR(MP_QSTR_json),        MP_ROM_PTR(&mp_module_ujson) },     \
     { MP_ROM_QSTR(MP_QSTR_os),          MP_ROM_PTR(&mp_module_uos) },       \
     { MP_ROM_QSTR(MP_QSTR_time),        MP_ROM_PTR(&mp_module_utime) },     \
-    { MP_ROM_QSTR(MP_QSTR_socket),      MP_ROM_PTR(&mp_module_socket) },   \
-    { MP_ROM_QSTR(MP_QSTR_binascii),    MP_ROM_PTR(&mp_module_ubinascii) }
+    SOCKET_BUILTIN_MODULE_WEAK_LINKS
 
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>

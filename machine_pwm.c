@@ -26,12 +26,13 @@ typedef struct _machine_pwm_obj_t {
 
 extern const mp_obj_type_t machine_pwm_type;
 
+// TODO: how to set this?
 #define NUM_PWM 4
 static machine_pwm_obj_t pwm_obj[NUM_PWM] = {
-    {{&machine_pwm_type}, .id = 0},
-    {{&machine_pwm_type}, .id = 1},
-    {{&machine_pwm_type}, .id = 2},
-    {{&machine_pwm_type}, .id = 3},
+    {{&machine_pwm_type}, .id = 0, .freq = 1000, .duty = 0},
+    {{&machine_pwm_type}, .id = 1, .freq = 1000, .duty = 0},
+    {{&machine_pwm_type}, .id = 2, .freq = 1000, .duty = 0},
+    {{&machine_pwm_type}, .id = 3, .freq = 1000, .duty = 0},
 };
 
 void machine_pwm_teardown(void) {
@@ -51,27 +52,30 @@ static uint32_t scale_duty(uint32_t duty)
 static void pwm_init_helper(machine_pwm_obj_t *self, size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum { ARG_freq, ARG_duty };
     static const mp_arg_t allowed_args[] = {
-        { MP_QSTR_freq, MP_ARG_INT, {.u_int = 1000} },
-        { MP_QSTR_duty, MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_freq, MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_duty, MP_ARG_INT, {.u_int = ~0} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all(n_args, pos_args, kw_args,
         MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 
-    uint32_t freq = args[ARG_freq].u_int;
-    uint32_t duty = args[ARG_duty].u_int;
+    int freq = args[ARG_freq].u_int;
+    if (freq > 0) {
+        self->freq = freq;
+    }
 
-    duty = (duty > 100 ? duty % 100 : duty);
-
-    self->freq = freq;
-    self->duty = duty;
+    int duty = args[ARG_duty].u_int;
+    if (duty != ~0) {
+        duty = (duty > 100) ? 100 : duty;
+        self->duty = duty;
+    }
 
     PWM_Params params;
     PWM_Params_init(&params);
     params.periodUnits = PWM_PERIOD_HZ;
-    params.periodValue = freq;
+    params.periodValue = self->freq;
     params.dutyUnits = PWM_DUTY_FRACTION;
-    params.dutyValue = scale_duty(duty);
+    params.dutyValue = scale_duty(self->duty);
 
     if (self->pwm) {
         PWM_close(self->pwm);
@@ -123,12 +127,12 @@ STATIC mp_obj_t machine_pwm_freq(size_t n_args, const mp_obj_t *args) {
         return MP_OBJ_NEW_SMALL_INT(self->freq);
     }
 
-    int freq = mp_obj_get_int(args[1]);
-    if (PWM_setPeriod(self->pwm, freq) < 0) {
+    int tval = mp_obj_get_int(args[1]);
+    if (PWM_setPeriod(self->pwm, tval) < 0) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-            "Bad frequency %d", freq));
+            "Bad frequency %d", tval));
     }
-    self->freq = freq;
+    self->freq = tval;
 
     return mp_const_none;
 }
@@ -143,10 +147,8 @@ STATIC mp_obj_t machine_pwm_duty(size_t n_args, const mp_obj_t *args) {
     }
 
     int duty = mp_obj_get_int(args[1]);
-    duty = (duty > 100 ? duty % 100 : duty);
-
+    duty = (duty > 100) ? 100 : duty;
     PWM_setDuty(self->pwm, scale_duty(duty));
-
     self->duty = duty;
 
     return mp_const_none;

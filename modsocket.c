@@ -25,6 +25,16 @@
  * THE SOFTWARE.
  */
 
+#include "py/nlr.h"
+#include "py/objtuple.h"
+#include "py/objstr.h"
+#include "py/runtime.h"
+#include "py/stream.h"
+#include "py/builtin.h"
+#include "py/mphal.h"
+
+#if MICROPY_PY_SOCKET
+
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
@@ -37,14 +47,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
-#include "py/nlr.h"
-#include "py/objtuple.h"
-#include "py/objstr.h"
-#include "py/runtime.h"
-#include "py/stream.h"
-#include "py/builtin.h"
-#include "py/mphal.h"
 
 #include <extras.h>
 
@@ -599,3 +601,5 @@ const mp_obj_module_t mp_module_socket = {
     .base = { &mp_type_module },
     .globals = (mp_obj_dict_t*)&mp_module_socket_globals,
 };
+
+#endif

@@ -16,10 +16,6 @@
 
 #include <ti/drivers/SPI.h>
 
-// TODO: remove after implementing the empty functions
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-
 typedef struct _machine_spi_obj_t {
     mp_obj_base_t base;
     SPI_Handle spi;
@@ -27,7 +23,7 @@ typedef struct _machine_spi_obj_t {
     uint32_t baudrate;
     uint8_t polarity;
     uint8_t phase;
-    uint8_t datasize;
+    uint8_t bits;
 } machine_spi_obj_t;
 
 extern const mp_obj_type_t machine_spi_type;
@@ -35,9 +31,9 @@ extern const mp_obj_type_t machine_spi_type;
 // TODO: how to size this table?
 #define NUM_SPI  3
 static machine_spi_obj_t spi_obj[NUM_SPI] = {
-    {{&machine_spi_type}, .id = 0},
-    {{&machine_spi_type}, .id = 1},
-    {{&machine_spi_type}, .id = 2},
+    {{&machine_spi_type}, .id = 0, .baudrate = 1000000, .polarity = 0, .phase = 0, .bits = 8},
+    {{&machine_spi_type}, .id = 1, .baudrate = 1000000, .polarity = 0, .phase = 0, .bits = 8},
+    {{&machine_spi_type}, .id = 2, .baudrate = 1000000, .polarity = 0, .phase = 0, .bits = 8},
 };
 
 void machine_spi_teardown(void) {
@@ -51,27 +47,35 @@ void machine_spi_teardown(void) {
 
 static void spi_init_helper(machine_spi_obj_t * self, size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     static const mp_arg_t allowed_args[] = {
-        { MP_QSTR_baudrate, MP_ARG_INT, {.u_int = 1000000} },
-        { MP_QSTR_polarity, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 1} },
-        { MP_QSTR_phase, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_bits, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 8} },
-        { MP_QSTR_firstbit, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_baudrate, MP_ARG_INT, {.u_int = ~0u} },
+        { MP_QSTR_polarity, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = ~0u} },
+        { MP_QSTR_phase, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = ~0u} },
+        { MP_QSTR_bits, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = ~0u} },
+        { MP_QSTR_firstbit, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = ~0u} },
     };
     enum { ARG_baudrate, ARG_polarity, ARG_phase, ARG_bits, ARG_firstbit};
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all(n_args, pos_args, kw_args,
         MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 
-    mp_int_t baudrate = args[ARG_baudrate].u_int;
-    mp_int_t bits = args[ARG_bits].u_int;
-    mp_int_t polarity = args[ARG_polarity].u_int ? 1 : 0;
-    mp_int_t phase = args[ARG_phase].u_int ? 1 : 0;
+    if (args[ARG_baudrate].u_int != ~0u) {
+        self->baudrate = args[ARG_baudrate].u_int;
+    }
+    if (args[ARG_bits].u_int != ~0u) {
+        self->bits = args[ARG_bits].u_int;
+    }
+    if (args[ARG_polarity].u_int != ~0u) {
+        self->polarity = args[ARG_polarity].u_int ? 1 : 0;
+    }
+    if (args[ARG_phase].u_int != ~0u) {
+        self->phase = args[ARG_phase].u_int ? 1 : 0;
+    }
 
     SPI_Params params;
     SPI_Params_init(&params);
-    params.bitRate = baudrate;
-    params.dataSize = bits;
-    params.frameFormat = (polarity << 1) | phase;
+    params.bitRate = self->baudrate;
+    params.dataSize = self->bits;
+    params.frameFormat = (self->polarity << 1) | self->phase;
 
     if (self->spi) {
         SPI_close(self->spi);
@@ -80,11 +84,6 @@ static void spi_init_helper(machine_spi_obj_t * self, size_t n_args, const mp_ob
     if ((self->spi = SPI_open(self->id, &params)) == NULL) {
         mp_raise_OSError(MP_ENODEV);
     }
-
-    self->baudrate = baudrate;
-    self->datasize = bits;
-    self->polarity = polarity;
-    self->phase = phase;
 }
 
 STATIC mp_obj_t machine_spi_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
@@ -109,7 +108,7 @@ STATIC void machine_spi_print(const mp_print_t *print, mp_obj_t self_in, mp_prin
     mp_printf(print,
               "<machine_spi.%p> id=%d, baudrate=%u, polarity=%u, phase=%u, bits=%u",
               self, self->id, self->baudrate, self->polarity, self->phase,
-              self->datasize);
+              self->bits);
 }
 
 STATIC mp_obj_t machine_spi_init(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
@@ -132,7 +131,7 @@ static void spi_transfer(machine_spi_obj_t *self, size_t len, const uint8_t *src
 
     trans.txBuf = (void *)src;
     trans.rxBuf = dest;
-    if (self->datasize > 8 && self->datasize <= 16) {
+    if (self->bits > 8 && self->bits <= 16) {
         trans.count = len / 2;
     }
     else {

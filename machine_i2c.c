@@ -33,9 +33,9 @@ extern const mp_obj_type_t machine_i2c_type;
 // TODO: how to size this table?
 #define NUM_I2C  3
 static machine_i2c_obj_t i2c_obj[NUM_I2C] = {
-    {{&machine_i2c_type}, .id = 0},
-    {{&machine_i2c_type}, .id = 1},
-    {{&machine_i2c_type}, .id = 2},
+    {{&machine_i2c_type}, .id = 0, .baudrate = 400000},
+    {{&machine_i2c_type}, .id = 1, .baudrate = 400000},
+    {{&machine_i2c_type}, .id = 2, .baudrate = 400000},
 };
 
 void machine_i2c_teardown(void) {
@@ -49,24 +49,29 @@ void machine_i2c_teardown(void) {
 
 static void i2c_init_helper(machine_i2c_obj_t * self, size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     static const mp_arg_t allowed_args[] = {
-        { MP_QSTR_baudrate, MP_ARG_INT, {.u_int = 400000U} },
+        { MP_QSTR_baudrate, MP_ARG_INT, {.u_int = ~0u} },
     };
     enum { ARG_baudrate };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all(n_args, pos_args, kw_args,
         MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 
-    uint32_t baudrate = args[ARG_baudrate].u_int;
+    if (args[ARG_baudrate].u_int != ~0u) {
+        self->baudrate = args[ARG_baudrate].u_int;
+    }
 
     I2C_Params params;
     I2C_Params_init(&params);
-    if (baudrate <= 100000U) {
+    if (self->baudrate <= 100000u) {
+        self->baudrate = 100000u;
         params.bitRate = I2C_100kHz;
     }
-    else if (baudrate > 100000U && baudrate <= 400000U) {
+    else if (self->baudrate > 100000U && self->baudrate <= 400000U) {
+        self->baudrate = 400000u;
         params.bitRate = I2C_400kHz;
     }
-    else if (baudrate > 400000U) {
+    else if (self->baudrate > 400000U) {
+        self->baudrate = 1000000u;
         params.bitRate = I2C_1000kHz;
     }
 
@@ -77,8 +82,6 @@ static void i2c_init_helper(machine_i2c_obj_t * self, size_t n_args, const mp_ob
     if ((self->i2c = I2C_open(self->id, &params)) == NULL) {
         mp_raise_OSError(MP_ENODEV);
     }
-
-    self->baudrate = baudrate;
 }
 
 STATIC mp_obj_t machine_i2c_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
