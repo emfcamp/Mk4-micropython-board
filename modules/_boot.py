@@ -26,9 +26,11 @@ def startup():
 
         lan.active(True)
         start = time()
-        while not lan.ifconfig() and time() < start + 2:
+        while not lan.ifconfig() and time() < start + 5:
+            print('.')
             sleep_ms(200)
 
+        print('getting ip') 
         ip = lan.ifconfig()
         print('IP: ' + ip[0])
     except:

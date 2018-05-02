@@ -43,3 +43,8 @@ do
         echo SIMPLELINK_$SOC"_SDK_INSTALL_DIR" = $(readlink simplelink_$soc"_sdk_2_10"*)
     fi
 done
+
+if test -d simplelink_sdk_wifi*
+then
+    echo SIMPLELINK_MSP432_SDK_WIFI_PLUGIN_INSTALL_DIR = $(readlink ./simplelink_sdk_wifi*)
+fi

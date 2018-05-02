@@ -30,67 +30,52 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- *  ======== main_tirtos.c ========
- */
+#ifndef __BOARD_H
+#define __BOARD_H
 
-/* POSIX Header files */
-#include <pthread.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/* RTOS header files */
-#include <ti/sysbios/BIOS.h>
+#include "MSP_EXP432E401Y.h"
 
-/* Example/Board Header files */
-#include "Board.h"
+#define Board_initGeneral           MSP_EXP432E401Y_initGeneral
 
-extern void ti_ndk_config_Global_startupFxn();
-extern void *mainThread(void *arg0);
+#define Board_GPIO_LED_ON           MSP_EXP432E401Y_GPIO_LED_ON
+#define Board_GPIO_LED_OFF          MSP_EXP432E401Y_GPIO_LED_OFF
+#define Board_GPIO_LED0             MSP_EXP432E401Y_GPIO_D1
+#define Board_GPIO_LED1             MSP_EXP432E401Y_GPIO_D2
+#define Board_GPIO_LED2             MSP_EXP432E401Y_GPIO_D2
+#define Board_GPIO_BUTTON0          MSP_EXP432E401Y_GPIO_USR_SW1
+#define Board_GPIO_BUTTON1          MSP_EXP432E401Y_GPIO_USR_SW2
 
-/* Stack size in bytes */
-#define THREADSTACKSIZE    4096
+#define Board_I2C0                  MSP_EXP432E401Y_I2C0
+#define Board_I2C_TMP               MSP_EXP432E401Y_I2C0
+#define Board_I2C_TPL0401           MSP_EXP432E401Y_I2C7
 
-/*
- *  ======== main ========
- */
-int main(void)
-{
-    pthread_t           thread;
-    pthread_attr_t      pAttrs;
-    struct sched_param  priParam;
-    int                 retc;
-    int                 detachState;
+#define Board_NVS0                  MSP_EXP432E401Y_NVSMSP432E40
 
-    /* Call board init functions */
-    Board_initGeneral();
+#define Board_PWM0                  MSP_EXP432E401Y_PWM0
+#define Board_PWM1                  MSP_EXP432E401Y_PWM0
 
-    ti_ndk_config_Global_startupFxn();
+#define Board_SD0                   MSP_EXP432E401Y_SDSPI0
 
-    /* Set priority and stack size attributes */
-    pthread_attr_init(&pAttrs);
-    priParam.sched_priority = 1;
+#define Board_SDFatFS0              MSP_EXP432E401Y_SDSPI0
 
-    detachState = PTHREAD_CREATE_DETACHED;
-    retc = pthread_attr_setdetachstate(&pAttrs, detachState);
-    if (retc != 0) {
-        /* pthread_attr_setdetachstate() failed */
-        while (1);
-    }
+#define Board_SPI0                  MSP_EXP432E401Y_SPI2
+#define Board_SPI1                  MSP_EXP432E401Y_SPI3
 
-    pthread_attr_setschedparam(&pAttrs, &priParam);
+#define Board_UART0                 MSP_EXP432E401Y_UART0
 
-    retc |= pthread_attr_setstacksize(&pAttrs, THREADSTACKSIZE);
-    if (retc != 0) {
-        /* pthread_attr_setstacksize() failed */
-        while (1);
-    }
+#define Board_WATCHDOG0             MSP_EXP432E401Y_WATCHDOG0
 
-    retc = pthread_create(&thread, &pAttrs, mainThread, NULL);
-    if (retc != 0) {
-        /* pthread_create() failed */
-        while (1);
-    }
+/* Board specific I2C addresses */
+#define Board_TMP_ADDR              (0x40)
+#define Board_SENSORS_BP_TMP_ADDR   Board_TMP_ADDR
+#define Board_TPL0401_ADDR          (0x40)
 
-    BIOS_start();
-
-    return (0);
+#ifdef __cplusplus
 }
+#endif
+
+#endif /* __BOARD_H */
