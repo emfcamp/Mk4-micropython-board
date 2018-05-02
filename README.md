@@ -6,7 +6,7 @@
 
 * Boards
   * MSP_EXP432E401Y
-  * LAUNCHXL_CC3220SF
+  * CC3220SF_LAUNCHXL
   * YOUR_BOARD below refers to one of the above
 
 * Download and install the SimpleLink SDK for the desired device family, 2.10+

@@ -40,6 +40,15 @@ static machine_spi_obj_t spi_obj[NUM_SPI] = {
     {{&machine_spi_type}, .id = 2},
 };
 
+void machine_spi_teardown(void) {
+    for (int i = 0; i < NUM_SPI; i++) {
+        if (spi_obj[i].spi) {
+            SPI_close(spi_obj[i].spi);
+            spi_obj[i].spi = NULL;
+        }
+    }
+}
+
 static void spi_init_helper(machine_spi_obj_t * self, size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_baudrate, MP_ARG_INT, {.u_int = 1000000} },

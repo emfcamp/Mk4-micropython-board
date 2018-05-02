@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectSpec>
+    <applicability>
+        <when>
+            <context
+                deviceFamily="ARM"
+                deviceId="Cortex M.CC3220SF"
+            />
+        </when>
+    </applicability>
+
+    <import spec="${COM_TI_SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/kernel/tirtos/builds/CC3220SF_LAUNCHXL/debug/gcc/tirtos_builds_CC3220SF_LAUNCHXL_debug_gcc.projectspec"/>
+
+    <project
+        title="Micropython Example Application"
+        name="mpex_CC3220SF_LAUNCHXL_tirtos_gcc"
+        toolChain="GNU"
+        connection="TIXDS110_Connection.xml"
+        device="Cortex M.CC3220SF"
+        ignoreDefaultDeviceSettings="true"
+        ignoreDefaultCCSSettings="true"
+	references="tirtos_builds_CC3220SF_LAUNCHXL_debug_gcc"
+
+        compilerBuildOptions=" 
+		-DFFCONF_H=\&quot;lib/oofatfs/ffconf.h\&quot;
+		-I${MICROPYTHON_INSTALL_DIR}
+		-I${MICROPYTHON_INSTALL_DIR}/ports/ti
+		-I${MICROPYTHON_INSTALL_DIR}/ports/ti/build-CC3220SF_LAUNCHXL
+		-I${MICROPYTHON_INSTALL_DIR}/ports/ti/boards/CC3220SF_LAUNCHXL
+		-I../.. 
+
+		-I${SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/source
+		-I${SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/source/ti/posix/gcc
+		-I${SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/source/ti/net/bsd
+
+		-I${SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/source
+		-I${SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/source/ti/drivers/net/wifi
+
+		-I${SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/kernel/tirtos/packages
+		-I${XDC_INSTALL_DIR}/packages
+
+		-mcpu=cortex-m4
+		-march=armv7e-m
+		-mthumb
+		-mfloat-abi=soft
+		-ffunction-sections
+		-fdata-sections
+		-g
+		-gstrict-dwarf
+		-Wall
+		-std=c99
+		-I${SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/kernel/tirtos/packages/gnu/targets/arm/libs/install-native/arm-none-eabi/include/newlib-nano
+		-I${SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/kernel/tirtos/packages/gnu/targets/arm/libs/install-native/arm-none-eabi/include
+		-I${GCC_ARMCOMPILER}/arm-none-eabi/include
+	"
+
+        linkerBuildOptions=" 
+		-L${MICROPYTHON_INSTALL_DIR}
+		-l:ports/ti/build-CC3220SF_LAUNCHXL/libmicropython.a
+		-L${SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/source
+		-l:ti/net/lib/gcc/m4/slnetsock_debug.a
+		-l:ti/drivers/net/wifi/slnetif/gcc/Release/slnetifwifi.a
+		-l:ti/drivers/net/wifi/gcc/rtos/simplelink.a
+		-Wl,-Map,$@.map
+		-l:ti/display/lib/display.am4g
+		-l:ti/drivers/lib/drivers_cc32xx.am4g
+		-L${SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/kernel/tirtos/packages
+		-l:ti/dpl/lib/dpl_cc32xx.am4g
+		-l:ti/devices/cc32xx/driverlib/gcc/Release/driverlib.a
+		-march=armv7e-m
+		-mthumb
+		-mfloat-abi=soft
+		-static
+		-Wl,--gc-sections
+		-L${SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/kernel/tirtos/packages/gnu/targets/arm/libs/install-native/arm-none-eabi/lib/thumb/v7e-m
+		-lgcc
+		-lc
+		-lm
+		-lnosys
+		-nostartfiles
+		--specs=nano.specs
+	"
+
+        enableHexTool="true" hexBuildOptions="-O binary"
+        description="Micropython Example">
+
+	<!--	
+		-L${MICROPYTHON_INSTALL_DIR}
+		-l:ports/ti/build-CC3220SF_LAUNCHXL/libmicropython.a
+		"-Wl,-T${SIMPLELINK_CC32XX_SDK_INSTALL_DIR}/kernel/tirtos/builds/CC3220SF_LAUNCHXL/debug/gcc/linker.cmd" -->
+
+	<property name="products" value="com.ti.SIMPLELINK_CC32XX_SDK:2_10_00_04;"/>
+
+	<!-- FIXME this isn't getting picked up correctly -->
+	<property name="xdcToolsVersion" value="3_50_05_12"/>
+
+	<pathVariable name="SIMPLELINK_CC32XX_SDK_INSTALL_DIR" path="${COM_TI_SIMPLELINK_CC32XX_SDK_INSTALL_DIR}" scope="project"/>
+	<pathVariable name="GCC_ARMCOMPILER" path="${CG_TOOL_ROOT}" scope="project"/>
+	<pathVariable name="XDC_INSTALL_DIR" path="${XDCROOT}" scope="project"/>
+
+	<!-- FIXME hardcode path!! -->
+	<pathVariable name="MICROPYTHON_INSTALL_DIR" path="/home/roger/emf2018/micropython-ti/micropython" scope="project"/>
+
+        <property name="buildProfile" value="release"/>
+        <property name="isHybrid" value="true"/>
+        <group id="mpex.MICROPYTHON.CC3220SF_LAUNCHXL.demos.GCC"/>
+
+        <file path="mpex.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti_CC3220SF_LAUNCHXL"></file>
+        <file path="main_tirtos.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti_CC3220SF_LAUNCHXL"></file>
+        <file path="inetaddr.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti_CC3220SF_LAUNCHXL"></file>
+        <file path="NVSCC32XX.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti_CC3220SF_LAUNCHXL"></file>
+        <file path="CC3220SF_LAUNCHXL.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti_CC3220SF_LAUNCHXL"></file>
+        <file path="netwifi.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti_CC3220SF_LAUNCHXL"></file>
+        <file path="CC3220SF_LAUNCHXL_TIRTOS.lds" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti_CC3220SF_LAUNCHXL"></file>
+
+	<!--	
+        <file path="../../mpmain.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../modmachine.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../modsocket.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../modnetwork_wifi.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../modnetwork_ndk.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../moduos.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../modutime.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../machine_i2c.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../machine_nvsdev.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../machine_pin.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../machine_pwm.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../machine_sd.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../machine_spi.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../machine_uart.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../fatfs_port.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../../../lib/utils/printf.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../../../lib/utils/pyexec.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../../../lib/libc/string0.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../../../lib/oofatfs/ff.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../../../lib/oofatfs/option/unicode.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../../../lib/timeutils/timeutils.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../../../lib/netutils/netutils.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+        <file path="../../../../lib/mp-readline/readline.c" openOnCreation="false" excludeFromBuild="true" action="link"></file>
+	-->
+
+        <file path="../../mpmain.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../modmachine.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../modsocket.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../modnetwork_wifi.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../modnetwork_ndk.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../moduos.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../modutime.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../machine_i2c.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../machine_nvsbdev.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../machine_pin.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../machine_pwm.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../machine_sd.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../machine_spi.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../machine_uart.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../fatfs_port.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../../../lib/utils/printf.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../../../lib/utils/pyexec.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../../../lib/libc/string0.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../../../lib/oofatfs/ff.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../../../lib/oofatfs/option/unicode.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../../../lib/timeutils/timeutils.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../../../lib/netutils/netutils.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+        <file path="../../../../lib/mp-readline/readline.c" openOnCreation="false" excludeFromBuild="false" action="link" targetDirectory="port_ti"></file>
+
+    </project>
+</projectSpec>
+

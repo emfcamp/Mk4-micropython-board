@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2018 Damien P. George
+ * Copyright (c) 2018 Texas Instruments, Inc.
  *
  * SPDX-License-Identifier: MIT
  */
@@ -20,6 +20,9 @@
 typedef struct _machine_uart_obj_t {
     mp_obj_base_t base;
 } machine_uart_obj_t;
+
+void machine_uart_teardown(void) {
+}
 
 STATIC mp_obj_t machine_uart_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 5, MP_OBJ_FUN_ARGS_MAX, true);

@@ -26,11 +26,20 @@ typedef struct _machine_sd_obj_t {
     uint32_t sectorSize;
 } machine_sd_obj_t;
 
+static machine_sd_obj_t sd_obj;
+
+void machine_sd_teardown(void) {
+    if (sd_obj.sd) {
+        SD_close(sd_obj.sd);
+        sd_obj.sd = NULL;
+    }
+}
+
 STATIC mp_obj_t machine_sd_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 1, MP_OBJ_FUN_ARGS_MAX, true);
     mp_int_t id = mp_obj_get_int(args[0]);
     // kwargs not handled
-    machine_sd_obj_t *self = m_new_obj(machine_sd_obj_t);
+    machine_sd_obj_t *self = &sd_obj; // m_new_obj(machine_sd_obj_t);
     self->base.type = type;
 
     if ((self->sd = SD_open(id, NULL))) {

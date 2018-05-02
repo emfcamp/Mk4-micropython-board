@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2018 Damien P. George
+ * Copyright (c) 2018 Texas Instruments, Inc.
  *
  * SPDX-License-Identifier: MIT
  */
@@ -37,6 +37,15 @@ static machine_i2c_obj_t i2c_obj[NUM_I2C] = {
     {{&machine_i2c_type}, .id = 1},
     {{&machine_i2c_type}, .id = 2},
 };
+
+void machine_i2c_teardown(void) {
+    for (int i = 0; i < NUM_I2C; i++) {
+        if (i2c_obj[i].i2c) {
+            I2C_close(i2c_obj[i].i2c);
+            i2c_obj[i].i2c = NULL;
+        }
+    }
+}
 
 static void i2c_init_helper(machine_i2c_obj_t * self, size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     static const mp_arg_t allowed_args[] = {
@@ -191,7 +200,7 @@ STATIC mp_obj_t machine_i2c_writeto(size_t n_args, const mp_obj_t *args) {
     return MP_OBJ_NEW_SMALL_INT(buf_info.len);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(machine_i2c_writeto_obj, 4, 4, machine_i2c_writeto);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(machine_i2c_writeto_obj, 3, 4, machine_i2c_writeto);
 
 static bool i2c_readfrom_mem(machine_i2c_obj_t * self, mp_int_t addr, mp_int_t memaddr, uint8_t * buf, mp_int_t len) {
     I2C_Transaction trans;

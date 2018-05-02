@@ -123,7 +123,12 @@ soft_reset:
         }
     }
 
+    /* Magic String: needed by pyboard.py - do not change/remove */
     mp_hal_stdout_tx_str("PYB: soft reboot\r\n");
+
+    extern void machine_teardown(void);
+    machine_teardown();
+
     mp_deinit();
     goto soft_reset;
 
