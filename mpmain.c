@@ -1,8 +1,13 @@
 #include <stdint.h>
 #include <string.h>
+#include <stdarg.h>
+
+#include <ti/sysbios/knl/Task.h>
 
 #include <ti/drivers/UART.h>
 #include <ti/drivers/GPIO.h>
+
+#include <xdc/runtime/System.h>
 
 #include "py/mpconfig.h"
 #include "py/stackctrl.h"
@@ -155,13 +160,25 @@ soft_reset:
 }
 #endif
 
+#define MICROPY_EVENT_POLL_HOOK \
+    do { \
+        extern void mp_handle_pending(void); \
+        mp_handle_pending(); \
+        Task_yield();        \
+    } while (0);
+
+
 int mp_hal_stdin_rx_chr(void)
 {
     char c;
-
-    UART_read(console, &c, 1);
-
-    return (int)c;
+    uint32_t count;
+    while (1) {
+        if (UART_control(console, UART_CMD_GETRXCOUNT, &count) >= 0 && count > 0) {
+            UART_read(console, &c, 1);
+            return (int)c;
+        }
+        MICROPY_EVENT_POLL_HOOK
+    }
 }
 
 void mp_hal_stdout_tx_strn(const char * str, size_t len)
@@ -189,4 +206,12 @@ void gc_collect(void) {
                     sizeof(mp_uint_t));
     gc_collect_end();
     //gc_dump_info();
+}
+
+void dprintf(const char * fmt, ...) {
+    va_list ap;
+
+    va_start(ap, fmt);
+    System_vprintf(fmt, ap);
+    va_end(ap);
 }

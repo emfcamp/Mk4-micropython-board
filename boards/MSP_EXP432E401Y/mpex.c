@@ -38,6 +38,7 @@
 #include <pthread.h>
 #include <unistd.h>
 
+#include <ti/drivers/ADC.h>
 #include <ti/drivers/UART.h>
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/PWM.h>
@@ -90,6 +91,7 @@ void *mainThread(void *arg0)
     SPI_init();
     UART_init();
     PWM_init();
+    ADC_init();
 
     pthread_t thread;
     pthread_attr_t attrs;

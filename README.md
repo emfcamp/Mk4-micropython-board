@@ -2,23 +2,35 @@
 
 ## Build
 
-* Linux only (and maci with minimal test)
+* Linux only
 
 * Boards
   * MSP_EXP432E401Y
+  * MSP_EXP432E401Y + CC3120 BP (dual network)
   * MSP_EXP432P401R
   * CC3220SF_LAUNCHXL
   * CC1352R1_LAUNCHXL
 
 YOUR_BOARD below refers to one of the above
 
-* SDKs and Tools
+### SDKs and Tools
 
 To build a MicroPython (MP) library and executable, tools and SDKs are needed:
 
 * GCC ARM compiler
-* XDCtools - to configure and build TI-RTOS (SYS/BIOS) kernel
 * SDKs - drivers and stacks and kernels for each device/SoC family
+
+Two options:
+
+Use the `inst_tools` script to download the requirements
+
+``` shell
+.../ports/ti% ./inst_tools YOUR_BOARD
+```
+
+Note: the CC3220 and CC13xx and CC26xx SDKs cannot be downloaded anonymously so you will need to use the links below to manually download and then install.
+
+Manually download and install
 
 * Download and install the SimpleLink SDK for the desired device family, 2.10+
   * MSP432E4: http://www.ti.com/tool/download/SIMPLELINK-MSP432E4-SDK
@@ -28,19 +40,23 @@ To build a MicroPython (MP) library and executable, tools and SDKs are needed:
 
 * Download and install GCC toolchain: https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads
 
-* Download and install XDCtools: http://software-dl.ti.com/dsps/dsps_public_sw/sdo_sb/targetcontent/rtsc/3_50_05_12/exports/xdccore/xdctools_3_50_05_12_core_linux.zip
+See the `inst_tools` file for required versions to download.
 
-* After installing the SDK and GCC tools and cloning MicroPython (below):
-  * make symlinks (or copies) into the ports/ti/boards/sdk directory
-  * see the `makedefs` utility which will be used by the `ports/ti/Makefile`
+``` shell
+.../ports/ti% mkdir tools
+.../ports/ti/tools% # install gcc and SDK(s)
+```
+
+### Make
+
+After installing the SDK and GCC tools:
 
 * MicroPython
   * git clone https://github.com/micropython/micropython.git
-  * cd micropython/ports
-  * tar xf mp_ti.tar.gz
-  * cd ti
+  * cd micropython
+  * git submodule add `git-url:mp_ports_ti` # ask for actual URL
+  * cd ports/ti
   * make BOARD=YOUR_BOARD
-    * or edit Makefile to change default BOARD
 
 The result should be:
 
@@ -58,21 +74,23 @@ The result should be:
   * will execute /main.py if present when booted
   * Python module search path includes /modules directory
 * UART REPL over XDS110 USB connection
+* socket - socket API for both WiFi and NDK stacks
+* network - control API for both WiFi and NDK stacks
 * Hardware Modules - see machine modules
 
 ## machine Modules
 
 * Follows ["machine" interface](https://docs.micropython.org/en/latest/pyboard/library/machine.html)
 * Pin (GPIO) - read/write pins
-  * configuring pins at runtime not supported yet
 * I2C - uses I2C driver configured in board.c
   * fixed to max 3 currently
 * SPI - uses SPI driver configured in board.c
   * fixed to max 3 currently
-* UART - not implemented, stubs-only functions TBD
+* UART
 * PWM - uses PWM driver configured in board.c
 
 * deinit(): does nothing since TI-RTOS drivers have power management
+  * UART closes underlying driver - only one instance of each UART id
 
 ### SD
 

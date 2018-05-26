@@ -14,7 +14,7 @@
 #include "py/runtime.h"
 #include "py/mperrno.h"
 
-#if MICROPY_PY_MACHINE_NVSBDEV
+#if MICROPY_MACHINE_NVSBDEV
 #include <ti/drivers/NVS.h>
 
 typedef struct _machine_nvsbdev_obj_t {
@@ -23,6 +23,9 @@ typedef struct _machine_nvsbdev_obj_t {
     uint8_t id;
     NVS_Attrs attrs;
 } machine_nvsbdev_obj_t;
+
+void machine_nvsbdev_teardown() {
+}
 
 STATIC mp_obj_t machine_nvsbdev_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 1, MP_OBJ_FUN_ARGS_MAX, true);

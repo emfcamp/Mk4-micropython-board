@@ -2,7 +2,7 @@ CC = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 LD = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 AR = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-ar"
 
-NETNDK_INCLUDES = 
+NETNDK_INCLUDES =
 
 NETNDK_LIBS = \
     -l:ti/ndk/slnetif/lib/slnetifndk.am4fg \
@@ -20,11 +20,11 @@ NETNDK_LIBS = \
     -l:ti/ndk/os/lib/os.am4fg
 
 NETSL_INCLUDES = \
-    "-I$(SIMPLELINK_MSP432_SDK_WIFI_PLUGIN_INSTALL_DIR)/source" \
-    "-I$(SIMPLELINK_MSP432_SDK_WIFI_PLUGIN_INSTALL_DIR)/source/ti/drivers/net/wifi"
+    "-I$(SIMPLELINK_SDK_WIFI_PLUGIN_INSTALL_DIR)/source" \
+    "-I$(SIMPLELINK_SDK_WIFI_PLUGIN_INSTALL_DIR)/source/ti/drivers/net/wifi"
 
 NETSL_LIBS = \
-    "-L$(SIMPLELINK_MSP432_SDK_WIFI_PLUGIN_INSTALL_DIR)/source" \
+    "-L$(SIMPLELINK_SDK_WIFI_PLUGIN_INSTALL_DIR)/source" \
     -l:ti/drivers/net/wifi/slnetif/gcc/Release/slnetifwifi.a \
     -l:ti/drivers/net/wifi/gcc/rtos/msp432e4/simplelink.a
 
@@ -80,4 +80,3 @@ LFLAGS = \
     -lm \
     -lnosys \
     --specs=nano.specs
-

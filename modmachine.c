@@ -17,6 +17,9 @@
 #include <ti/sysbios/BIOS.h>
 #include <xdc/runtime/Memory.h>
 
+#include <SoC.h>
+
+#include "machine_adc.h"
 #include "machine_i2c.h"
 #include "machine_pin.h"
 #include "machine_pwm.h"
@@ -40,6 +43,14 @@
 
 #if MICROPY_PY_MACHINE
 
+// Reset functions not in SDKs yet so provide dummy implementations
+__attribute__(( weak )) void SoC_reset(void) {
+}
+
+__attribute__(( weak )) uint32_t SoC_getResetCause(void) {
+    return 0u;
+}
+
 /* helper function used in mp_main() to cleanup on a soft MP reboot */
 void machine_teardown(void) {
     machine_pin_teardown();
@@ -47,6 +58,7 @@ void machine_teardown(void) {
     machine_spi_teardown();
     machine_uart_teardown();
     machine_pwm_teardown();
+    machine_adc_teardown();
 
     MACHINE_SD_TEARDOWN();
     MACHINE_NVSBDEV_TEARDOWN();
@@ -61,8 +73,34 @@ STATIC mp_obj_t machine_sleep() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(machine_sleep_obj, machine_sleep);
 
 STATIC mp_obj_t machine_reset_cause() {
-    mp_raise_OSError(MP_EOPNOTSUPP);
-    mp_obj_t result = MP_OBJ_NEW_SMALL_INT(0);
+    uint32_t cause = SoC_getResetCause();
+
+    if (cause == 0) {
+        mp_raise_OSError(MP_EOPNOTSUPP);
+    }
+    else {
+        switch (cause) {
+        case SOC_RESET_POWER:
+            cause = MACHINE_PWRON_RESET;
+            break;
+        case SOC_RESET_SLEEP:
+            cause = MACHINE_DEEPSLEEP_RESET;
+            break;
+        case SOC_RESET_HARD:
+            cause = MACHINE_HARD_RESET;
+            break;
+        case SOC_RESET_SOFT:
+            cause = MACHINE_SOFT_RESET;
+            break;
+        case SOC_RESET_WDT:
+            cause = MACHINE_WDT_RESET;
+            break;
+        default:
+            cause = ~0u;
+        }
+    }
+
+    mp_obj_t result = MP_OBJ_NEW_SMALL_INT(cause);
 
     return result;
 }
@@ -132,6 +170,9 @@ STATIC mp_obj_t machine_heap_info() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(machine_heap_info_obj, machine_heap_info);
 
 STATIC mp_obj_t machine_reset() {
+    SoC_reset();
+
+    /* if reset() is not implemented, falls thru to here */
     mp_raise_OSError(MP_EOPNOTSUPP);
 
     return mp_const_none;
@@ -193,15 +234,10 @@ STATIC const mp_rom_map_elem_t machine_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_SPI), MP_ROM_PTR(&machine_spi_type) },
     { MP_ROM_QSTR(MP_QSTR_UART), MP_ROM_PTR(&machine_uart_type) },
     { MP_ROM_QSTR(MP_QSTR_PWM), MP_ROM_PTR(&machine_pwm_type) },
+    { MP_ROM_QSTR(MP_QSTR_ADC), MP_ROM_PTR(&machine_adc_type) },
     MACHINE_SD_CLASS
     MACHINE_NVSBDEV_CLASS
 };
-
-#if 0
-#if MICROPY_PY_MACHINE_NVSBDEV
-    { MP_ROM_QSTR(MP_QSTR_NVSBdev), MP_ROM_PTR(&machine_nvsbdev_type) },
-#endif
-#endif
 
 STATIC MP_DEFINE_CONST_DICT(machine_module_globals, machine_module_globals_table);
 

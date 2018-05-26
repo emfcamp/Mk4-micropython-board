@@ -98,83 +98,114 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(network_stalan_active_obj, 1, 2, netw
 
 STATIC mp_obj_t network_stalan_connect(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     static const mp_arg_t allowed_args[] = {
-        { MP_QSTR_service_id, MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_key, MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_ssid, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_bssid, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_password, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_autoconnect, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = false} },
+        { MP_QSTR_service_id,  MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_key,                           MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_bssid,       MP_ARG_KW_ONLY  | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_autoconnect, MP_ARG_KW_ONLY  | MP_ARG_BOOL,{.u_bool = false} },
+        /* TODO - Add enterprise security config - review */
     };
-    enum { ARG_service_id, ARG_key, ARG_ssid, ARG_bssid, ARG_password, ARG_autoconnect };
+    enum { ARG_service_id, ARG_key, ARG_bssid, ARG_autoconnect };
+
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args,
-        MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+                     MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 
     size_t len;
     const char *p;
-    char ssid[32] = {0};
-    char password[32] = {0};
+    char ssid[33] = {0};
+    char password[33] = {0};
     char bssid[18] = {0};
+    uint8_t mac[6];
     bool autoconnect = false;
 
     // set parameters based on given args
-    if (args[ARG_ssid].u_obj != MP_OBJ_NULL) {
-        p = mp_obj_str_get_data(args[ARG_ssid].u_obj, &len);
-        len = MIN(len, sizeof(ssid));
+    if (args[ARG_service_id].u_obj != MP_OBJ_NULL) {
+        p = mp_obj_str_get_data(args[ARG_service_id].u_obj, &len);
+        // TODO : review throw error if SSID > 32 instead of truncate?
+        len = MIN(len, (sizeof(ssid) - 1));
         memcpy(ssid, p, len);
     }
-    if (args[ARG_password].u_obj != MP_OBJ_NULL) {
-        p = mp_obj_str_get_data(args[ARG_password].u_obj, &len);
-        len = MIN(len, sizeof(password));
+    if (args[ARG_key].u_obj != MP_OBJ_NULL) {
+        p = mp_obj_str_get_data(args[ARG_key].u_obj, &len);
+        // TODO : review throw error if PSWD > 32 instead of truncate?
+        len = MIN(len, (sizeof(password) - 1));
         memcpy(password, p, len);
     }
     if (args[ARG_bssid].u_obj != MP_OBJ_NULL) {
+        unsigned int i;
+        unsigned int uimac[6];
         p = mp_obj_str_get_data(args[ARG_bssid].u_obj, &len);
-        if (len != sizeof(bssid)) {
-            mp_raise_ValueError(NULL);
+        if (len != (sizeof(bssid) - 1)) {
+            mp_raise_ValueError("bssid bad len, format = xx:xx:xx:xx:xx:xx");
         }
+        // TODO : remove intermediate string buffer
         memcpy(bssid, p, sizeof(bssid));
+        sscanf(bssid, "%x:%x:%x:%x:%x:%x",
+            &uimac[0], &uimac[1], &uimac[2], &uimac[3], &uimac[4], &uimac[5]);
+        for(i = 0; i < sizeof(mac); i++) {
+            mac[i] = (unsigned char) uimac[i];
+        }
     }
-    autoconnect = mp_obj_get_int(args[ARG_autoconnect].u_obj);
+    autoconnect = args[ARG_autoconnect].u_bool;
 
-    if (n_args > 1) {
-        mp_uint_t len = 0;
-        SlWlanSecParams_t secParams = {0};
+    SlWlanSecParams_t secParams = {0};
+    int16_t ret;
 
-        sl_WlanDisconnect();
+    ret = sl_WlanDisconnect();
+    if ((ret < 0) && (ret != SL_ERROR_WLAN_WIFI_ALREADY_DISCONNECTED)) {
+        mp_raise_msg(&mp_type_OSError, "disconnect failed");
+    }
 
-        /* TODO: adjust when config() method is implemented */
-        sl_WlanPolicySet(SL_WLAN_POLICY_CONNECTION,
-                         SL_WLAN_CONNECTION_POLICY(0, 1, 0, 0), NULL, 0);
-        sl_NetCfgSet(SL_NETCFG_IPV4_STA_ADDR_MODE, SL_NETCFG_ADDR_DHCP, 0, 0);
+    /* TODO: adjust when config() method is implemented */
+    /* TODO: do we want to enable fast connect? - review */
+    if (sl_WlanPolicySet(SL_WLAN_POLICY_CONNECTION,
+                     SL_WLAN_CONNECTION_POLICY(0, 1, 0, 0), NULL, 0) < 0) {
+        mp_raise_msg(&mp_type_OSError, "Failed to enable fast connect mode");
+    }
+    if (sl_NetCfgSet(SL_NETCFG_IPV4_STA_ADDR_MODE, SL_NETCFG_ADDR_DHCP, 0, 0) < 0) {
+        mp_raise_msg(&mp_type_OSError, "Failed to set DHCP mode");
+    }
 
-        len = strlen(password);
-        if (len) {
-            secParams.Key = (signed char *)password;
-            secParams.KeyLen = len;
-            secParams.Type = SL_WLAN_SEC_TYPE_WPA_WPA2;
+    len = strlen(password);
+    if (len) {
+        secParams.Key = (signed char *)password;
+        secParams.KeyLen = len;
+        secParams.Type = SL_WLAN_SEC_TYPE_WPA_WPA2;
+    }
+    else {
+        secParams.Key = NULL;
+        secParams.KeyLen = 0;
+        secParams.Type = SL_WLAN_SEC_TYPE_OPEN;
+    }
+
+    if (autoconnect) {
+        /* TODO: manage profiles - support only single stored profile for now */
+        if (sl_WlanProfileDel(0xff) < 0) {
+            mp_raise_msg(&mp_type_OSError, "Failed to clear wifi profiles");
         }
-        else {
-            secParams.Key = NULL;
-            secParams.KeyLen = 0;
-            secParams.Type = SL_WLAN_SEC_TYPE_OPEN;
+
+        if (sl_WlanProfileAdd((const int8_t *)ssid, strlen((const char *)ssid),
+                              (const uint8_t *)((strlen(bssid) > 0) ? mac : NULL),
+                              &secParams, NULL, 15u, 0u) < 0 ) {
+            mp_raise_msg(&mp_type_OSError, "Failed to add wifi profile");
         }
 
-        if (sl_WlanConnect((signed char *)ssid, strlen((const char *)ssid),
-                           NULL, &secParams, NULL) < 0) {
-            mp_raise_msg(&mp_type_OSError, "Connect failed");
+        if (sl_WlanPolicySet(SL_WLAN_POLICY_CONNECTION,
+                             SL_WLAN_CONNECTION_POLICY(1, 0, 0, 0), NULL, 0) < 0) {
+            mp_raise_msg(&mp_type_OSError, "Failed to enable autoconnect mode");
         }
+    }
+    else {
+        if (sl_WlanPolicySet(SL_WLAN_POLICY_CONNECTION,
+                             SL_WLAN_CONNECTION_POLICY(0, 0, 0, 0), NULL, 0) < 0) {
+            mp_raise_msg(&mp_type_OSError, "Failed to disable autoconnect mode");
+        }
+    }
 
-        if (autoconnect) {
-            sl_WlanProfileAdd((const int8_t *)ssid, strlen(ssid), NULL,
-                              &secParams, NULL, 15u, 0u);
-            sl_WlanPolicySet(SL_WLAN_POLICY_CONNECTION,
-                             SL_WLAN_CONNECTION_POLICY(1, 0, 0, 0), NULL, 0);
-        }
-        else {
-            sl_WlanPolicySet(SL_WLAN_POLICY_CONNECTION,
-                             SL_WLAN_CONNECTION_POLICY(0, 0, 0, 0), NULL, 0);
-        }
+    if (sl_WlanConnect((const int8_t *)ssid, strlen((const char *)ssid),
+                       (const uint8_t *)((strlen(bssid) > 0) ? mac : NULL),
+                       &secParams, NULL) < 0) {
+        mp_raise_msg(&mp_type_OSError, "Connect failed");
     }
 
     return mp_const_none;
@@ -196,8 +227,12 @@ STATIC mp_obj_t network_stalan_isconnected(mp_obj_t self_in) {
     uint8_t configOpt = SL_DEVICE_EVENT_CLASS_WLAN;
     uint32_t wlanStatus = 0;
     uint16_t configLen = sizeof(wlanStatus);
-    (void)sl_DeviceGet(SL_DEVICE_STATUS, &configOpt, &configLen,
-                       (uint8_t *)&wlanStatus);
+    if (sl_DeviceGet(SL_DEVICE_STATUS, &configOpt, &configLen,
+                       (uint8_t *)&wlanStatus) < 0) {
+            mp_raise_msg(&mp_type_OSError, "Failed to get wifi connected status");
+    }
+    /* TODO : debug this... why is this returning false on second invocation */
+
     return (wlanStatus & SL_DEVICE_STATUS_WLAN_STA_CONNECTED) ? mp_const_true :
         mp_const_false;
 }
@@ -332,7 +367,7 @@ STATIC const mp_rom_map_elem_t network_stalan_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_scan), MP_ROM_PTR(&network_stalan_scan_obj) },
     { MP_ROM_QSTR(MP_QSTR_status), MP_ROM_PTR(&network_stalan_status_obj) },
     { MP_ROM_QSTR(MP_QSTR_ifconfig), MP_ROM_PTR(&network_stalan_ifconfig_obj) },
-    { MP_ROM_QSTR(MP_QSTR_DCHP), MP_ROM_INT(STA_DHCP_ADDR) },
+    { MP_ROM_QSTR(MP_QSTR_DHCP), MP_ROM_INT(STA_DHCP_ADDR) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(network_stalan_locals_dict, network_stalan_locals_dict_table);

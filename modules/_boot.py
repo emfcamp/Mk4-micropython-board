@@ -6,8 +6,8 @@ def startup():
 
         bdev = SD(0)
         vfs = VfsFat(bdev)
-        mount(vfs, '/')
-        sys.path.append('/modules')
+        mount(vfs, '/sd')
+        sys.path.append('/sd/modules')
     except:
         print('error: could not mount FAT filesystem')
 
@@ -26,11 +26,9 @@ def startup():
 
         lan.active(True)
         start = time()
-        while not lan.ifconfig() and time() < start + 5:
-            print('.')
+        while not lan.ifconfig() and time() < start + 2:
             sleep_ms(200)
 
-        print('getting ip') 
         ip = lan.ifconfig()
         print('IP: ' + ip[0])
     except:

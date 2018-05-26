@@ -1,4 +1,4 @@
-include ../sdk/defs.mk
+include ../../$(BUILD)/defs.mk
 include mpconfigboard.mk
 
 BOARD := $(notdir $(CURDIR))

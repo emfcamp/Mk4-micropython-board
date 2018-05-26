@@ -55,6 +55,17 @@ extern "C" {
 #define MSP_EXP432E401Y_GPIO_LED_ON  (1)
 
 /*!
+ *  @def    MSP_EXP432E401Y_ADCName
+ *  @brief  Enum of ADC channels on the MSP_EXP432E401Y dev board
+ */
+typedef enum MSP_EXP432E401Y_ADCName {
+    MSP_EXP432E401Y_ADC0 = 0,
+    MSP_EXP432E401Y_ADC1,
+
+    MSP_EXP432E401Y_ADCCOUNT
+} MSP_EXP432E401Y_ADCName;
+
+/*!
  *  @def    MSP_EXP432E401Y_GPIOName
  *  @brief  Enum of LED names on the MSP_EXP432E401Y dev board
  */
@@ -137,6 +148,8 @@ typedef enum MSP_EXP432E401Y_SPIName {
  */
 typedef enum MSP_EXP432E401Y_UARTName {
     MSP_EXP432E401Y_UART0 = 0,
+    MSP_EXP432E401Y_UART6 = 1,
+    MSP_EXP432E401Y_UART7 = 2,
 
     MSP_EXP432E401Y_UARTCOUNT
 } MSP_EXP432E401Y_UARTName;

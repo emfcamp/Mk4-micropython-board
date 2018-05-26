@@ -313,7 +313,7 @@ void NetWiFi_init()
          *  GPIO interrupts, but for simplicity polling is used to check the
          *  button.
          */
-        currButton = GPIO_read(Board_GPIO_BUTTON0);
+        currButton = GPIO_read(Board_BUTTON0);
         if ((currButton == 0) && (prevButton != 0)) {
             smartConfigFxn();
         }

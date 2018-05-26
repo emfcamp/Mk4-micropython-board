@@ -1,4 +1,4 @@
-include ../../sdk/defs.mk
+include ../../../$(BUILD)/defs.mk
 
 XDCPATH = $(SIMPLELINK_MSP432E4_SDK_INSTALL_DIR)/source;$(SIMPLELINK_MSP432E4_SDK_INSTALL_DIR)/kernel/tirtos/packages
 

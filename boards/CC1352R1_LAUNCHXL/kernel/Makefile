@@ -1,4 +1,4 @@
-include ../../sdk/defs.mk
+include ../../../$(BUILD)/defs.mk
 
 XDCPATH = $(SIMPLELINK_CC13X2_SDK_INSTALL_DIR)/source;$(SIMPLELINK_CC13X2_SDK_INSTALL_DIR)/kernel/tirtos/packages
 

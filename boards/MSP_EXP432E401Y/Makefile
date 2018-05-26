@@ -1,13 +1,15 @@
-include ../sdk/defs.mk
+include ../../$(BUILD)/defs.mk
 include mpconfigboard.mk
 
 BOARD := $(notdir $(CURDIR))
 
 KERNEL_BUILD := ./kernel/build
 
+CFLAGS += -I../..
+
 all: mpex.out
 
-mpex.out: main_tirtos.o mpex.o ndk.o MSP_EXP432E401Y.o ../../build-$(BOARD)/libmicropython.a
+mpex.out: main_tirtos.o mpex.o ndk.o SoCMSP432E4.o MSP_EXP432E401Y.o ../../build-$(BOARD)/libmicropython.a
 	@ echo building kernel ...
 	@ make -C kernel
 	@ echo linking ...
