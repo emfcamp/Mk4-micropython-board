@@ -7,13 +7,17 @@ KERNEL_BUILD := ./kernel/build
 
 CFLAGS += -I../..
 
-all: mpex.out
+all: mpex.out mpex.bin
 
 mpex.out: main_tirtos.o mpex.o ndk.o SoCMSP432E4.o MSP_EXP432E401Y.o ../../build-$(BOARD)/libmicropython.a
 	@ echo building kernel ...
 	@ make -C kernel
 	@ echo linking ...
 	@ $(LD) -o $@ $^ $(LFLAGS)
+
+mpex.bin: mpex.out
+	@ echo creating downloadable binary	
+	@ $(GCC_ARMCOMPILER)/arm-none-eabi/bin/objcopy -O binary $^ $@
 
 ../../build-$(BOARD)/libmicropython.a:
 	@ echo building micropython library

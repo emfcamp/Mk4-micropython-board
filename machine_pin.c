@@ -13,14 +13,11 @@
 
 #include "py/runtime.h"
 
+#include <ti/sysbios/knl/Semaphore.h>
 #include <ti/drivers/GPIO.h>
 
 #define PULL_UP     0x4u
 #define PULL_DOWN   0x8u
-
-// TODO: remove after implementing the empty functions
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
 typedef struct _machine_pin_obj_t {
     mp_obj_base_t base;
@@ -238,6 +235,43 @@ STATIC mp_obj_t machine_pin_drive(size_t n_args, const mp_obj_t *args) {
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(machine_pin_drive_obj, 1, machine_pin_drive);
 
+static void gpioCallback(uint8_t index) {
+    mp_obj_t *cb = &MP_STATE_PORT(pinirq_callback)[index];
+    if (*cb != mp_const_none) {
+        mp_sched_schedule(*cb, mp_const_none);
+    }
+    extern Semaphore_Handle machine_sleep_sem;
+    Semaphore_post(machine_sleep_sem);
+}
+
+STATIC mp_obj_t machine_pin_irq(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    machine_pin_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_handler, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_trigger, MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_priority, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 1} },
+        { MP_QSTR_wake, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+    };
+    enum { ARG_handler, ARG_trigger, ARG_priority, ARG_wake };
+    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args,
+        MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+
+    mp_obj_t *cb = &MP_STATE_PORT(pinirq_callback)[self->id];
+
+    GPIO_disableInt(self->id);
+    *cb = args[ARG_handler].u_obj;
+    GPIO_setCallback(self->id, gpioCallback);
+    GPIO_enableInt(self->id);
+
+    // TODO: fix result
+    mp_obj_t result = mp_const_none;
+
+    return result;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(machine_pin_irq_obj, 1, machine_pin_irq);
+
 STATIC const mp_rom_map_elem_t machine_pin_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&machine_pin_init_obj) },
     { MP_ROM_QSTR(MP_QSTR_value), MP_ROM_PTR(&machine_pin_value_obj) },
@@ -246,6 +280,7 @@ STATIC const mp_rom_map_elem_t machine_pin_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_mode), MP_ROM_PTR(&machine_pin_mode_obj) },
     { MP_ROM_QSTR(MP_QSTR_pull), MP_ROM_PTR(&machine_pin_pull_obj) },
     { MP_ROM_QSTR(MP_QSTR_drive), MP_ROM_PTR(&machine_pin_drive_obj) },
+    { MP_ROM_QSTR(MP_QSTR_irq), MP_ROM_PTR(&machine_pin_irq_obj) },
     { MP_ROM_QSTR(MP_QSTR_IN), MP_ROM_INT(GPIO_CFG_INPUT) },
     { MP_ROM_QSTR(MP_QSTR_OUT), MP_ROM_INT(GPIO_CFG_OUTPUT) },
     { MP_ROM_QSTR(MP_QSTR_PULL_UP), MP_ROM_INT(PULL_UP) },

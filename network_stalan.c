@@ -224,17 +224,17 @@ STATIC mp_obj_t network_stalan_disconnect(mp_obj_t self_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(network_stalan_disconnect_obj, network_stalan_disconnect);
 
 STATIC mp_obj_t network_stalan_isconnected(mp_obj_t self_in) {
-    uint8_t configOpt = SL_DEVICE_EVENT_CLASS_WLAN;
-    uint32_t wlanStatus = 0;
-    uint16_t configLen = sizeof(wlanStatus);
-    if (sl_DeviceGet(SL_DEVICE_STATUS, &configOpt, &configLen,
-                       (uint8_t *)&wlanStatus) < 0) {
-            mp_raise_msg(&mp_type_OSError, "Failed to get wifi connected status");
-    }
-    /* TODO : debug this... why is this returning false on second invocation */
+    SlWlanConnStatusParam_t connectionParams;
+    uint16_t opt = 0;
+    int32_t status;
+    uint16_t size = sizeof(connectionParams);
 
-    return (wlanStatus & SL_DEVICE_STATUS_WLAN_STA_CONNECTED) ? mp_const_true :
-        mp_const_false;
+    memset(&connectionParams, 0, sizeof(connectionParams));
+    status = sl_WlanGet(SL_WLAN_CONNECTION_INFO, &opt, &size, (uint8_t *)&connectionParams);
+    if (status < 0) {
+        mp_raise_OSError(MP_EIO);
+    }
+    return connectionParams.ConnStatus ? mp_const_true : mp_const_false;
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(network_stalan_isconnected_obj, network_stalan_isconnected);

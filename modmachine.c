@@ -15,6 +15,7 @@
 #include "py/mperrno.h"
 
 #include <ti/sysbios/BIOS.h>
+#include <ti/sysbios/knl/Semaphore.h>
 #include <xdc/runtime/Memory.h>
 
 #include <SoC.h>
@@ -23,6 +24,7 @@
 #include "machine_i2c.h"
 #include "machine_pin.h"
 #include "machine_pwm.h"
+#include "machine_rtc.h"
 #include "machine_spi.h"
 #include "machine_uart.h"
 
@@ -51,6 +53,8 @@ __attribute__(( weak )) uint32_t SoC_getResetCause(void) {
     return 0u;
 }
 
+Semaphore_Handle machine_sleep_sem;
+
 /* helper function used in mp_main() to cleanup on a soft MP reboot */
 void machine_teardown(void) {
     machine_pin_teardown();
@@ -59,14 +63,27 @@ void machine_teardown(void) {
     machine_uart_teardown();
     machine_pwm_teardown();
     machine_adc_teardown();
+    machine_rtc_teardown();
 
     MACHINE_SD_TEARDOWN();
     MACHINE_NVSBDEV_TEARDOWN();
+
+    if (machine_sleep_sem) {
+        Semaphore_delete(&machine_sleep_sem);
+    }
+}
+
+void machine_setup(void) {
+    if (!machine_sleep_sem) {
+        Semaphore_Params params;
+        Semaphore_Params_init(&params);
+        params.mode = Semaphore_Mode_BINARY;
+        machine_sleep_sem = Semaphore_create(0, &params, NULL);
+    }
 }
 
 STATIC mp_obj_t machine_sleep() {
-    mp_raise_OSError(MP_EOPNOTSUPP);
-
+    Semaphore_pend(machine_sleep_sem, BIOS_WAIT_FOREVER);
     return mp_const_none;
 }
 
@@ -235,6 +252,7 @@ STATIC const mp_rom_map_elem_t machine_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_UART), MP_ROM_PTR(&machine_uart_type) },
     { MP_ROM_QSTR(MP_QSTR_PWM), MP_ROM_PTR(&machine_pwm_type) },
     { MP_ROM_QSTR(MP_QSTR_ADC), MP_ROM_PTR(&machine_adc_type) },
+    { MP_ROM_QSTR(MP_QSTR_RTC), MP_ROM_PTR(&machine_rtc_type) },
     MACHINE_SD_CLASS
     MACHINE_NVSBDEV_CLASS
 };

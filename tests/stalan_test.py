@@ -35,13 +35,13 @@ else:
 
 
 wlan.connect(SSID, PASSWORD, autoconnect=True)
-if wait_for(lambda: wlan.ifconfig() is not None, TIMEOUT):
+if wait_for(wlan.isconnected, TIMEOUT):
     print(wlan.ifconfig())
 
 wlan.disconnect()
 
 wlan.connect(SSID, PASSWORD, autoconnect=False)
-if wait_for(lambda: wlan.ifconfig() is not None, TIMEOUT):
+if wait_for(wlan.isconnected, TIMEOUT):
     print(wlan.ifconfig())
 
 wlan.disconnect()

@@ -68,6 +68,8 @@
 #define MICROPY_PY_URANDOM          (1)
 #define MICROPY_PY_URANDOM_EXTRA_FUNCS (1)
 #define MICROPY_PY_BUILTINS_STR_UNICODE (0)
+#define MICROPY_ENABLE_SCHEDULER    (1)
+#define MICROPY_SCHEDULER_DEPTH     (8)
 
 #define MICROPY_MODULE_WEAK_LINKS   (1)
 
@@ -154,6 +156,7 @@ extern const struct _mp_obj_module_t mp_module_network;
     { MP_ROM_QSTR(MP_QSTR_struct),      MP_ROM_PTR(&mp_module_ustruct) },   \
     { MP_ROM_QSTR(MP_QSTR_os),          MP_ROM_PTR(&mp_module_uos) },       \
     { MP_ROM_QSTR(MP_QSTR_time),        MP_ROM_PTR(&mp_module_utime) },     \
+    { MP_ROM_QSTR(MP_QSTR_random),      MP_ROM_PTR(&mp_module_urandom) },   \
     SOCKET_BUILTIN_MODULE_WEAK_LINKS
 
 // We need to provide a declaration/definition of alloca()
@@ -167,4 +170,5 @@ extern const struct _mp_obj_module_t mp_module_network;
 #define MP_STATE_PORT MP_STATE_VM
 
 #define MICROPY_PORT_ROOT_POINTERS \
-    const char *readline_hist[8];
+    const char *readline_hist[8]; \
+    mp_obj_t pinirq_callback[10];

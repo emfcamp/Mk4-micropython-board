@@ -121,6 +121,9 @@ soft_reset:
 
     console = uart;
 
+    extern void machine_setup(void);
+    machine_setup();
+
     pyexec_frozen_module("_boot.py");
 
     const char *boot_py = "/boot.py";

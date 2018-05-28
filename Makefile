@@ -33,6 +33,7 @@ SRC_C = mpmain.c \
 	machine_uart.c \
 	machine_nvsbdev.c \
 	machine_pwm.c \
+	machine_rtc.c \
 	fatfs_port.c \
 	lib/utils/printf.c \
 	lib/utils/stdout_helpers.c \
