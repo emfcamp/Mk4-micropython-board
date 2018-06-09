@@ -19,6 +19,9 @@ NETNDK_LIBS = \
     -l:ti/ndk/stack/lib/stk.am4fg \
     -l:ti/ndk/os/lib/os.am4fg
 
+
+
+
 NETSL_INCLUDES = \
     "-I$(SIMPLELINK_SDK_WIFI_PLUGIN_INSTALL_DIR)/source" \
     "-I$(SIMPLELINK_SDK_WIFI_PLUGIN_INSTALL_DIR)/source/ti/drivers/net/wifi"
