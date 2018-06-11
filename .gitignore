@@ -1,0 +1,8 @@
+build-*
+installs/
+tools/
+*.o
+*.out
+*.map
+*.bin
+
