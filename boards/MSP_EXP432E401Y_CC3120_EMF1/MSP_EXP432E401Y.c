@@ -320,8 +320,16 @@ GPIO_PinConfig gpioPinConfigs[] = {
     GPIOMSP432E4_PE1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
     
     //MSP_EXP432E401Y_CS_pin,
-    GPIOMSP432E4_PD2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH
-	
+    GPIOMSP432E4_PD2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
+    
+    //MSP_EXP432E401Y_LCD_CS,
+    GPIOMSP432E4_PD2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
+
+    //MSP_EXP432E401Y_GPIO_LCD_DCX,
+    GPIOMSP432E4_PK2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
+
+    //MSP_EXP432E401Y_GPIO_LCD_RST,
+    GPIOMSP432E4_PA3 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH
 };
 
 /*
@@ -591,6 +599,20 @@ const SPIMSP432E4DMA_HWAttrs spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPICOUNT] = {
         .fssPinMask = SPIMSP432E4_PQ1_SSI3FSS,
         .xdat0PinMask = SPIMSP432E4_PQ2_SSI3XDAT0,
         .xdat1PinMask = SPIMSP432E4_PQ3_SSI3XDAT1
+    },
+    {
+        .baseAddr = SSI0_BASE,
+        .intNum = INT_SSI0,
+        .intPriority = (~0),
+        .scratchBufPtr = &spiMSP432E4DMAscratchBuf[MSP_EXP432E401Y_SPI0],
+        .defaultTxBufValue = 0xFF,
+        .minDmaTransferSize = 10,
+        .rxDmaChannel = UDMA_CH10_SSI0RX,
+        .txDmaChannel = UDMA_CH11_SSI0TX,
+        .clkPinMask = SPIMSP432E4_PA2_SSI0CLK,
+        .fssPinMask = SPIMSP432E4_PA3_SSI0FSS,
+        .xdat0PinMask = SPIMSP432E4_PA4_SSI0XDAT0,
+        .xdat1PinMask = SPIMSP432E4_PA5_SSI0XDAT1
     }
 };
 
@@ -604,6 +626,11 @@ const SPI_Config SPI_config[MSP_EXP432E401Y_SPICOUNT] = {
         .fxnTablePtr = &SPIMSP432E4DMA_fxnTable,
         .object = &spiMSP432E4DMAObjects[MSP_EXP432E401Y_SPI3],
         .hwAttrs = &spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPI3]
+    },
+    {
+        .fxnTablePtr = &SPIMSP432E4DMA_fxnTable,
+        .object = &spiMSP432E4DMAObjects[MSP_EXP432E401Y_SPI0],
+        .hwAttrs = &spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPI0]
     },
 };
 
@@ -735,4 +762,3 @@ const WiFi_Config WiFi_config[1] =
         .hwAttrs = &wifiMSP432HWAttrs,
     }
 };
-
