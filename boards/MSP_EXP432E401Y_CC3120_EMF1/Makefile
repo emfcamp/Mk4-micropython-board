@@ -23,5 +23,5 @@ mpex.bin: mpex.out
 
 clean:
 	@ echo cleaning $(BOARD) ...
-	@ rm -f *.o *.out *.map
+	@ rm -f *.o *.out *.map *.bin
 	@ make -C kernel clean

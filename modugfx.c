@@ -39,7 +39,7 @@
 #include "modugfx.h"
 #include "gfx.h"
 
-#include "board_ILI9341.h"
+#include "ugfx/board_ILI9341.h"
 
 //#include "genhdr/pins.h"
 //#include "bufhelper.h"
@@ -65,7 +65,7 @@
 
 systemticks_t gfxSystemTicks(void)
 {
-	return SysTickValueGet();
+	return mp_hal_ticks_ms();
 }
 
 systemticks_t gfxMillisecondsToTicks(delaytime_t ms)
@@ -300,6 +300,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(ugfx_backlight_obj, 0, 1, ugfx_backli
 ///
 /// Gets the colour of the given pixel at (x,y)
 ///
+///
+// LWK TODO:- remove the pragma once routine is fixed
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 STATIC mp_obj_t ugfx_get_pixel(mp_obj_t x_in, mp_obj_t y_in) {
     // extract arguments
     //ugfx_obj_t *self = args[0];
@@ -310,7 +314,7 @@ STATIC mp_obj_t ugfx_get_pixel(mp_obj_t x_in, mp_obj_t y_in) {
     //return mp_obj_new_int(gdispGetPixelColor(x,y));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ugfx_get_pixel_obj, ugfx_get_pixel);
-
+#pragma GCC diagnostic pop
 
 
 /// \method set_default_font()

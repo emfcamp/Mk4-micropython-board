@@ -71,9 +71,6 @@ static GFXINLINE void init_board(GDisplay *g) {
 */
 
 
-
-	#if MICROPY_HW_UGFX_INTERFACE == UGFX_DRIVER_SPI
-
     SPI_Params params;
     SPI_Params_init(&params);
     params.bitRate = 1000000;
@@ -136,7 +133,6 @@ static GFXINLINE void init_board(GDisplay *g) {
 	GPIO_InitStructure.Pin = MICROPY_HW_UGFX_PIN_A0;
     HAL_GPIO_Init(MICROPY_HW_UGFX_PORT_A0, &GPIO_InitStructure);
 */
-	#endif
 
 
     //GPIODirModeSet(MICROPY_HW_UGFX_PORT_CS, MICROPY_HW_UGFX_PIN_CS, GPIO_DIR_MODE_OUT);
@@ -146,9 +142,9 @@ static GFXINLINE void init_board(GDisplay *g) {
     //GPIOPinWrite(MICROPY_HW_UGFX_PORT_CS, MICROPY_HW_UGFX_PIN_CS, MICROPY_HW_UGFX_PIN_CS);
     //GPIOPinWrite(MICROPY_HW_UGFX_PORT_RST, MICROPY_HW_UGFX_PIN_RST, MICROPY_HW_UGFX_PIN_RST);
     //GPIOPinWrite(MICROPY_HW_UGFX_PORT_A0, MICROPY_HW_UGFX_PIN_RST, MICROPY_HW_UGFX_PIN_A0);
-    GPIO_write(MSP_EXP432E401Y_LCD_CS_pin, 1);
-    GPIO_write(MSP_EXP432E401Y_LCD_RST_pin, 1);
-    GPIO_write(MSP_EXP432E401Y_LCD_A0_pin, 1);
+    GPIO_write(MICROPY_HW_UGFX_PIN_CS, 1);
+    GPIO_write(MICROPY_HW_UGFX_PIN_RST, 1);
+    GPIO_write(MICROPY_HW_UGFX_PIN_A0, 1);
 
 /*
 	//configure the RST and backlight pins
@@ -187,11 +183,11 @@ static GFXINLINE void setpin_reset(GDisplay *g, bool_t state) {
 		// reset lcd
 		//GPIO_clear_pin(MICROPY_HW_UGFX_PORT_RST, MICROPY_HW_UGFX_PIN_RST);
         //GPIOPinWrite(MICROPY_HW_UGFX_PORT_RST, MICROPY_HW_UGFX_PIN_RST, 0);
-        GPIO_write(MSP_EXP432E401Y_LCD_RST_pin, 0);
+        GPIO_write(MICROPY_HW_UGFX_PIN_RST, 0);
 	} else {
 		//GPIO_set_pin(MICROPY_HW_UGFX_PORT_RST, MICROPY_HW_UGFX_PIN_RST);
         //GPIOPinWrite(MICROPY_HW_UGFX_PORT_RST, MICROPY_HW_UGFX_PIN_RST, MICROPY_HW_UGFX_PIN_RST);
-        GPIO_write(MSP_EXP432E401Y_LCD_RST_pin, 1);
+        GPIO_write(MICROPY_HW_UGFX_PIN_RST, 1);
 	}
 }
 
@@ -215,20 +211,18 @@ static GFXINLINE void acquire_bus(GDisplay *g) {
 }
 
 
-
-#if MICROPY_HW_UGFX_INTERFACE == UGFX_DRIVER_SPI
 static GFXINLINE void release_bus(GDisplay *g) {
 	(void) g;
 	//GPIOPinWrite(MICROPY_HW_UGFX_PORT_CS, MICROPY_HW_UGFX_PIN_CS, MICROPY_HW_UGFX_PIN_CS);  //CS high
-    GPIO_write(MSP_EXP432E401Y_LCD_CS_pin, 1);
+    GPIO_write(MICROPY_HW_UGFX_PIN_CS, 1);
 }
 static GFXINLINE void write_index(GDisplay *g, uint16_t index) {
 	(void) g;
 
 	//GPIOPinWrite(MICROPY_HW_UGFX_PORT_CS, MICROPY_HW_UGFX_PIN_CS, 0);  //CS low
 	//GPIOPinWrite(MICROPY_HW_UGFX_PORT_A0, MICROPY_HW_UGFX_PIN_A0, 0);  //CMD low
-    GPIO_write(MSP_EXP432E401Y_LCD_CS_pin, 0);
-    GPIO_write(MSP_EXP432E401Y_LCD_A0_pin, 0);
+    GPIO_write(MICROPY_HW_UGFX_PIN_CS, 0);
+    GPIO_write(MICROPY_HW_UGFX_PIN_A0, 0);
 
 	//HAL_SPI_Transmit(&ili_spi, &index, 1, 1000);
 
@@ -238,7 +232,7 @@ static GFXINLINE void write_index(GDisplay *g, uint16_t index) {
     trans.count = 1;
     (void)SPI_transfer(spi_h, &trans);
 	//GPIOPinWrite(MICROPY_HW_UGFX_PORT_A0, MICROPY_HW_UGFX_PIN_A0, MICROPY_HW_UGFX_PIN_A0);  //CMD high
-    GPIO_write(MSP_EXP432E401Y_LCD_A0_pin, 1);
+    GPIO_write(MICROPY_HW_UGFX_PIN_A0, 1);
 }
 static GFXINLINE void write_data(GDisplay *g, uint16_t data) {
 	(void) g;
@@ -260,26 +254,6 @@ static GFXINLINE uint16_t read_data(GDisplay *g) {
     (void)SPI_transfer(spi_h, &trans);
 	return d;
 }
-#elif MICROPY_HW_UGFX_INTERFACE == UGFX_DRIVER_PARALLEL
-static GFXINLINE void release_bus(GDisplay *g) {
-	(void) g;
-}
-static GFXINLINE void write_index(GDisplay *g, uint16_t index) {
-	(void) g;
-	LCD_REG = index;
-}
-static GFXINLINE void write_data(GDisplay *g, uint8_t data) {
-	(void) g;
-	LCD_RAM = data;
-}
-static GFXINLINE uint8_t read_data(GDisplay *g) {
-	(void) g;
-	uint8_t d = LCD_RAM;
-	return d;
-}
-#else
-#error "Select SPI or PARALLEL for UGFX driver type"
-#endif
 
 
 static GFXINLINE void setreadmode(GDisplay *g) {

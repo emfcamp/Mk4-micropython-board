@@ -12,23 +12,13 @@
 #define MICROPY_MACHINE_SD           (0)
 #define MICROPY_HW_HAS_UGFX          (MICROPY_PY_UGFX)  // set in mpconfigbpard.mk
 
+#include "MSP_EXP432E401Y.h"
 
-
-// None of these are correct...
-#define MICROPY_HW_UGFX_INTERFACE  UGFX_DRIVER_SPI
-
-#define MICROPY_HW_UGFX_SPI         2
-
-#define MICROPY_HW_UGFX_PORT_CS     GPIOA
-#define MICROPY_HW_UGFX_PORT_RST    GPIOA
-#define MICROPY_HW_UGFX_PORT_A0     GPIOA
-#define MICROPY_HW_UGFX_PIN_CS      (1<<1)
-#define MICROPY_HW_UGFX_PIN_RST     (1<<2)
-#define MICROPY_HW_UGFX_PIN_A0      (1<<3)
-
-#define MSP_EXP432E401Y_LCD_CS_pin  15
-#define MSP_EXP432E401Y_LCD_RST_pin 16
-#define MSP_EXP432E401Y_LCD_A0_pin 17
-
+#if MICROPY_HW_HAS_UGFX
+#define MICROPY_HW_UGFX_SPI         MSP_EXP432E401Y_SPI0
+#define MICROPY_HW_UGFX_PIN_CS      MSP_EXP432E401Y_LCD_CS
+#define MICROPY_HW_UGFX_PIN_RST     MSP_EXP432E401Y_GPIO_LCD_RST
+#define MICROPY_HW_UGFX_PIN_A0      MSP_EXP432E401Y_GPIO_LCD_DCX
+#endif
 
 #endif
