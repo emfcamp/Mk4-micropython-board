@@ -48,12 +48,14 @@ SRC_C = mpmain.c \
 SRC_EXTRA =
 
 # for uGFX driver module
-#ifeq ($(MICROPY_PY_UGFX),1)
-#GFXLIB=../../../../extmod/ugfx
-GFXLIB=$(UGFX_INSTALL_DIR)
+ifeq ($(MICROPY_PY_UGFX),1)
+CFLAGS += -DMICROPY_PY_UGFX=1
+# TODO:- work out how to get this using the $(UGFX_INSTALL_DIR) from defs.mk
+GFXLIB=./tools/ugfx
 include $(GFXLIB)/gfx.mk
 include $(GFXLIB)/drivers/gdisp/ILI9341/driver.mk
 INC += $(foreach d, $(GFXINC), -I$d)
+INC += -I./ugfx
 SRC_C += modugfx.c
 SRC_UGFX += $(GFXSRC)
 #SRC_C += ugfx_widgets.c
@@ -61,7 +63,7 @@ SRC_UGFX += $(GFXSRC)
 #SRC_C += ugfx_styles.c
 ## Add Toggle driver
 #SRC_UGFX += ugfx_ginput_lld_toggle.c
-#endif
+endif
 
 HDR_QSTR = machine_nvsbdev.h machine_sd.h
 
@@ -76,6 +78,7 @@ SRC_QSTR += $(SRC_C) $(SRC_MOD) $(SRC_LIB) $(EXTMOD_SRC_C) $(HDR_QSTR)
 
 OBJ += $(PY_O) $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_EXTRA:.c=.o))
+OBJ += $(addprefix $(BUILD)/, $(SRC_UGFX:.c=.o))
 
 all: $(BUILD)/libmicropython.a
 	$(ECHO) building $(BOARD) ...

@@ -10,7 +10,7 @@
 #define MICROPY_PY_NETWORK_WIFI      (1)   /* TI WiFi */
 #define MICROPY_MACHINE_NVSBDEV      (0)
 #define MICROPY_MACHINE_SD           (0)
-#define MICROPY_HW_HAS_UGFX          (1)
+#define MICROPY_HW_HAS_UGFX          (MICROPY_PY_UGFX)  // set in mpconfigbpard.mk
 
 
 

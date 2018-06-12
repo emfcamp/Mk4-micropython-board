@@ -2,6 +2,9 @@ CC = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 LD = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 AR = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-ar"
 
+# do we want uGFX?
+MICROPY_PY_UGFX ?= 1
+
 NETNDK_INCLUDES =
 
 NETNDK_LIBS = \
@@ -18,9 +21,6 @@ NETNDK_LIBS = \
     -l:ti/ndk/hal/userled_stub/lib/hal_userled_stub.am4fg \
     -l:ti/ndk/stack/lib/stk.am4fg \
     -l:ti/ndk/os/lib/os.am4fg
-
-
-
 
 NETSL_INCLUDES = \
     "-I$(SIMPLELINK_SDK_WIFI_PLUGIN_INSTALL_DIR)/source" \
