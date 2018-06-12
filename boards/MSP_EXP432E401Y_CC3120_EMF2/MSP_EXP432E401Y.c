@@ -603,6 +603,20 @@ const SPIMSP432E4DMA_HWAttrs spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPICOUNT] = {
         .fssPinMask = SPIMSP432E4_PQ1_SSI3FSS,
         .xdat0PinMask = SPIMSP432E4_PQ2_SSI3XDAT0,
         .xdat1PinMask = SPIMSP432E4_PQ3_SSI3XDAT1
+    },
+    {
+        .baseAddr = SSI0_BASE,
+        .intNum = INT_SSI0,
+        .intPriority = (~0),
+        .scratchBufPtr = &spiMSP432E4DMAscratchBuf[MSP_EXP432E401Y_SPI0],
+        .defaultTxBufValue = 0xFF,
+        .minDmaTransferSize = 10,
+        .rxDmaChannel = UDMA_CH10_SSI0RX,
+        .txDmaChannel = UDMA_CH11_SSI0TX,
+        .clkPinMask = SPIMSP432E4_PA2_SSI0CLK,
+        .fssPinMask = SPIMSP432E4_PA3_SSI0FSS,
+        .xdat0PinMask = SPIMSP432E4_PA4_SSI0XDAT0,
+        .xdat1PinMask = SPIMSP432E4_PA5_SSI0XDAT1
     }
 };
 
@@ -617,6 +631,11 @@ const SPI_Config SPI_config[MSP_EXP432E401Y_SPICOUNT] = {
         .object = &spiMSP432E4DMAObjects[MSP_EXP432E401Y_SPI3],
         .hwAttrs = &spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPI3]
     },
+    {
+        .fxnTablePtr = &SPIMSP432E4DMA_fxnTable,
+        .object = &spiMSP432E4DMAObjects[MSP_EXP432E401Y_SPI0],
+        .hwAttrs = &spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPI0]
+    }
 };
 
 const uint_least8_t SPI_count = MSP_EXP432E401Y_SPICOUNT;
