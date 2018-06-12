@@ -35,12 +35,12 @@
 
 #if MICROPY_HW_HAS_UGFX
 
-#include "pin.h"
-//#include "ugfx_containers.h"
+// #include "pin.h"
+// #include "ugfx_containers.h"
 #include "modugfx.h"
 
-#include "genhdr/pins.h"
-#include "bufhelper.h"
+// #include "genhdr/pins.h"
+// #include "bufhelper.h"
 
 /// \moduleref ugfx
 /// UPDATE ME

@@ -35,14 +35,14 @@
 
 #if MICROPY_HW_HAS_UGFX
 
-#include "pin.h"
+// #include "pin.h"
 #include "modugfx.h"
 #include "gfx.h"
 
-#include "genhdr/pins.h"
-#include "bufhelper.h"
+// #include "genhdr/pins.h"
+// #include "bufhelper.h"
 
-#include "../extmod/ugfx/src/gwin/gwin_class.h"
+#include "src/gwin/gwin_class.h"
 
 /// \moduleref ugfx
 /// UPDATE ME
@@ -66,7 +66,7 @@ STATIC mp_obj_t ugfx_widget_text(mp_uint_t n_args, const mp_obj_t *args) {
 
 	if (n_args == 1){
 		const char * s = gwinGetText(gh);
-		return mp_obj_new_str(s, strlen(s), TRUE);
+		return mp_obj_new_str(s, strlen(s));
 	}
 	else
 	{
@@ -539,7 +539,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(ugfx_list_remove_item_obj, ugfx_list_remove_ite
 STATIC mp_obj_t ugfx_list_get_selected_text(mp_obj_t self_in) {
     ugfx_list_obj_t *self = self_in;
 	const char* s = gwinListGetSelectedText(self->ghList);
-    return mp_obj_new_str(s, strlen(s), TRUE);
+    return mp_obj_new_str(s, strlen(s));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ugfx_list_get_selected_obj, ugfx_list_get_selected_text);
 
@@ -771,7 +771,7 @@ STATIC mp_obj_t ugfx_keyboard_selected_key(mp_obj_t self_in) {
 	const char utf8_str[9];
 	uint8_t len = gwinKeyboardGetSelected(self->ghKeyboard, (uint8_t*)utf8_str);
 //	utf8_str[len] = 0;
-    return mp_obj_new_str(utf8_str, len, TRUE);
+    return mp_obj_new_str(utf8_str, len);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ugfx_keyboard_selected_key_obj, ugfx_keyboard_selected_key);
 

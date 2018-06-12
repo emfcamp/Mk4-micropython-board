@@ -58,11 +58,11 @@ INC += $(foreach d, $(GFXINC), -I$d)
 INC += -I./ugfx
 SRC_C += modugfx.c
 SRC_UGFX += $(GFXSRC)
-#SRC_C += ugfx_widgets.c
-#SRC_C += ugfx_containers.c
-#SRC_C += ugfx_styles.c
+SRC_C += ./ugfx/ugfx_widgets.c
+SRC_C += ./ugfx/ugfx_containers.c
+SRC_C += ./ugfx/ugfx_styles.c
 ## Add Toggle driver
-#SRC_UGFX += ugfx_ginput_lld_toggle.c
+SRC_UGFX += ./ugfx/ugfx_ginput_lld_toggle.c
 endif
 
 HDR_QSTR = machine_nvsbdev.h machine_sd.h

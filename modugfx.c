@@ -963,6 +963,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(ugfx_display_image_file_obj, 3, 3, ug
 
 
 STATIC const mp_map_elem_t ugfx_module_dict_table[] = {
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_ugfx) },
     // instance methods
     { MP_OBJ_NEW_QSTR(MP_QSTR_init), (mp_obj_t)&ugfx_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_backlight), (mp_obj_t)&ugfx_backlight_obj },
@@ -1048,27 +1049,16 @@ STATIC const mp_map_elem_t ugfx_module_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_Image), (mp_obj_t)&ugfx_image_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Checkbox), (mp_obj_t)&ugfx_checkbox_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Imagebox), (mp_obj_t)&ugfx_imagebox_type },
-
-
 };
 
-STATIC MP_DEFINE_CONST_DICT(ugfx_module_globals, ugfx_module_dict_table);
-/*
-const mp_obj_type_t ugfx_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_UGFX,
-    .make_new = ugfx_make_new,
-    .locals_dict = (mp_obj_t)&ugfx_locals_dict,
-};
-*/
+STATIC MP_DEFINE_CONST_DICT (
+    ugfx_module_globals,
+    ugfx_module_dict_table
+);
 
-const mp_obj_module_t ugfx_module = {
+const mp_obj_module_t mp_module_ugfx = {
     .base = { &mp_type_module },
-    //.name = MP_QSTR_ugfx,
     .globals = (mp_obj_dict_t*)&ugfx_module_globals,
 };
-
-
-
 
 #endif // MICROPY_HW_HAS_UGFX

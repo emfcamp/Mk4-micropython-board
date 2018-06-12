@@ -12,6 +12,7 @@ mpex.out: main_tirtos.o mpex.o netwifi.o ndkstub.o inetaddr.o MSP_EXP432E401Y.o 
 	@ make -C kernel
 	@ echo linking ...
 	@ $(LD) -o $@ $^ $(LFLAGS)
+	@ $(SIZE) $@
 
 mpex.bin: mpex.out
 	@ echo creating downloadable binary	

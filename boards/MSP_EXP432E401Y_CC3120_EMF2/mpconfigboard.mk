@@ -1,6 +1,7 @@
 CC = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 LD = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 AR = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-ar"
+SIZE = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-size"
 
 # do we want uGFX?
 MICROPY_PY_UGFX ?= 1
