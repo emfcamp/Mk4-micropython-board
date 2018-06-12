@@ -35,9 +35,6 @@ declare -r CC32XX_SDK="http://software-dl.ti.com/simplelink/esd/simplelink_cc32x
 # This is an addon, provided separately as a tarball until it is part of an official sdk - this also should be placed in "CACHEPATH"
 declare -r CC3120_SDK="file://copyManuallyIntoInstallCacheDirectory/simplelink_sdk_wifi_plugin_1_55_00_42_rogerSdk210"
 
-# This is an addon, used to EMF badge displays
-declare -r UGFX_SDK="https://git.ugfx.io/uGFX/uGFX/archive/v2.8.tar.gz"
-
 # Global retval for fetch
 fetch_retval=""
 
@@ -56,7 +53,7 @@ fetch()
         fetch_retval=$CACHEPATH/$package
     else
         echo $package not found in cache, downloading from $1 ...
-        if curl -O -# -L -k $1
+        if curl -O -# -L $1
         then
             fetch_retval=$CACHEPATH/$package
         else
@@ -135,22 +132,6 @@ get_install_sdk_addon()
     tar xf $tarball
 }
 
-get_install_ugfx()
-{
-    addon=ugfx
-    if test -d $addon
-    then
-        echo $addon allready installed
-        return
-    fi
-
-    fetch $1
-    tarball=$fetch_retval
-    echo Unpacking $addon addon
-    tar xf $tarball
-
-}
-
 main()
 {
     board=${1:-MSP432E4}
@@ -185,13 +166,7 @@ main()
     get_install_gcc $is_linux
 
     case $board in
-        *EMF*)
-            get_install_sdk $MSP432E4_SDK $is_linux
-            get_install_sdk_addon $CC3120_SDK $is_linux
-            get_install_ugfx $UGFX_SDK 
-            ;;
         MSP_EXP432E401Y_CC3120)
-            echo MSP
             get_install_sdk $MSP432E4_SDK $is_linux
             get_install_sdk_addon $CC3120_SDK $is_linux
             ;;

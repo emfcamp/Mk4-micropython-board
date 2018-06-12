@@ -50,8 +50,7 @@ SRC_EXTRA =
 # for uGFX driver module
 ifeq ($(MICROPY_PY_UGFX),1)
 CFLAGS += -DMICROPY_PY_UGFX=1
-# TODO:- work out how to get this using the $(UGFX_INSTALL_DIR) from defs.mk
-GFXLIB=./tools/ugfx
+GFXLIB=./extmod/ugfx
 include $(GFXLIB)/gfx.mk
 include $(GFXLIB)/drivers/gdisp/ILI9341/driver.mk
 INC += $(foreach d, $(GFXINC), -I$d)

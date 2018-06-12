@@ -64,12 +64,6 @@ main()
             echo ${SDK%%_?_??_*}"_INSTALL_DIR" = $(canonicalize_path $sdk)
         fi
     done
-
-    if test -d ugfx
-    then
-    echo UGFX_INSTALL_DIR = $(canonicalize_path ./ugfx)
-    fi
-
 }
 
 main $*
