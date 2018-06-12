@@ -55,14 +55,14 @@ GFXLIB=./tools/ugfx
 include $(GFXLIB)/gfx.mk
 include $(GFXLIB)/drivers/gdisp/ILI9341/driver.mk
 INC += $(foreach d, $(GFXINC), -I$d)
-INC += -I./ugfx
+INC += -I./modugfx
 SRC_C += modugfx.c
 SRC_UGFX += $(GFXSRC)
-SRC_C += ./ugfx/ugfx_widgets.c
-SRC_C += ./ugfx/ugfx_containers.c
-SRC_C += ./ugfx/ugfx_styles.c
+SRC_C += ./modugfx/ugfx_widgets.c
+SRC_C += ./modugfx/ugfx_containers.c
+SRC_C += ./modugfx/ugfx_styles.c
 ## Add Toggle driver
-SRC_UGFX += ./ugfx/ugfx_ginput_lld_toggle.c
+SRC_UGFX += ./modugfx/ugfx_ginput_lld_toggle.c
 endif
 
 HDR_QSTR = machine_nvsbdev.h machine_sd.h

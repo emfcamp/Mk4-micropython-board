@@ -25,8 +25,8 @@
  */
 
 #include "gfx.h"
-#include "ugfx/ugfx_widgets.h"
-#include "ugfx/ugfx_containers.h"
-#include "ugfx/ugfx_styles.h"
+#include "modugfx/ugfx_widgets.h"
+#include "modugfx/ugfx_containers.h"
+#include "modugfx/ugfx_styles.h"
 
 extern const mp_obj_type_t ugfx_type;

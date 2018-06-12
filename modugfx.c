@@ -39,7 +39,7 @@
 #include "modugfx.h"
 #include "gfx.h"
 
-#include "ugfx/board_ILI9341.h"
+#include "modugfx/board_ILI9341.h"
 
 //#include "genhdr/pins.h"
 //#include "bufhelper.h"
