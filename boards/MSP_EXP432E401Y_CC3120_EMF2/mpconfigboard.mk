@@ -43,7 +43,8 @@ INCLUDES = \
     "-I$(SIMPLELINK_MSP432E4_SDK_INSTALL_DIR)/kernel/tirtos/packages/gnu/targets/arm/libs/install-native/arm-none-eabi/include" \
     "-I$(GCC_ARMCOMPILER)/arm-none-eabi/include"
 
-CFLAGS += \
+CFLAGS += -DDeviceFamily_MSP432E4 \
+    -D__MSP432E401Y__ \
     $(INCLUDES) \
     $(NETSL_INCLUDES) \
     -mcpu=cortex-m4 \

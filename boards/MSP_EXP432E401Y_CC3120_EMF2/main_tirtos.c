@@ -43,11 +43,32 @@
 /* Example/Board Header files */
 #include "Board.h"
 
+/* External ram setup helper */
+#include "epiram.h"
+
 //extern void ti_ndk_config_Global_startupFxn();
 extern void *mainThread(void *arg0);
 
 /* Stack size in bytes */
 #define THREADSTACKSIZE    4096
+
+/*
+ * Custom reset function called by TI-RTOS before main so we can setup the EPI SRAM
+ */
+void tildaResetFxn()
+{
+    ExternalRAM_init();
+    return;
+}
+
+/*
+ * Custom start function called by TI-RTOS before main so we can setup the EPI SRAM
+ */
+void tildaStartFxn()
+{
+    ExternalRAM_init();
+    return;
+}
 
 /*
  *  ======== main ========

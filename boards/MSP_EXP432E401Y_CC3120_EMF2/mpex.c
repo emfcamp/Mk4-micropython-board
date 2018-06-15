@@ -48,7 +48,7 @@
 #include <ti/drivers/net/wifi/slnetifwifi.h>
 
 #define STACKSIZE 8192U
-#define MPHEAPSIZE (65536 + 14384)
+#define MPHEAPSIZE (8388608 - 30720) // 8 Meg SRAM - GFX_OS_HEAP_SIZE (30K)
 
 #define SLNET_IF_WIFI_PRIO       (5)
 #define TASKSTACKSIZE            2048
@@ -56,7 +56,8 @@
 
 extern int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize, UART_Handle uart);
 
-static uint8_t heap[MPHEAPSIZE];
+__attribute__((section(".ExternalSRAM")))
+static uint8_t mpheap[MPHEAPSIZE];
 
 void * mpThread(void * arg)
 {
@@ -69,7 +70,7 @@ void * mpThread(void * arg)
    params.readDataMode = UART_DATA_BINARY;
    uart = UART_open(0, &params);
 
-   mp_main(heap, sizeof(heap), STACKSIZE, uart);
+   mp_main(mpheap, sizeof(mpheap), STACKSIZE, uart);
 
    UART_close(uart);
 

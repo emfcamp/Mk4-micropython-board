@@ -33,7 +33,7 @@
 /*
  *  ======== MSP_EXP432E401Y.c ========
  *  This file is responsible for setting up the board specific items for the
- *  MSP_EXP432E401Y board.
+ *  MSP_EXP432E401Y_CC3120_EMF2 board.
  */
 #include <stdint.h>
 #include <stdlib.h>
