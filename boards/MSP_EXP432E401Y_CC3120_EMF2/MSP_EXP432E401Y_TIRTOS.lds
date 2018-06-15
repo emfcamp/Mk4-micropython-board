@@ -125,6 +125,15 @@ SECTIONS {
         __extram_end__ = .;
     } > REGION_EXTRAM AT> REGION_EXTRAM
 
+    /* UGFX heap data section */
+    .bss.heap :
+    {
+        __bss_heap_start__ = .;         /* define a global symbol at ugfx start */
+        *(.bss.heap)
+        . = ALIGN(4);
+        __bss_heap_end__ = .;         /* define a global symbol at ugfx end */
+    } > REGION_EXTRAM AT> REGION_EXTRAM
+
     .bss : {
         __bss_start__ = .;
         *(.shbss)
