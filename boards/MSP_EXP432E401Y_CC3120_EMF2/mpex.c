@@ -47,6 +47,8 @@
 
 #include <ti/drivers/net/wifi/slnetifwifi.h>
 
+#include "mpconfigboard.h"
+
 // Micropython RTOS thread stack size
 #define STACKSIZE 8192U
 #define MPHEAPSIZE (8388608 - 30720) // 8 Meg SRAM - GFX_OS_HEAP_SIZE (30K)
@@ -67,10 +69,10 @@ void * mpThread(void * arg)
    UART_Params params;
 
    UART_Params_init(&params);
-   params.baudRate = 115200;
+   params.baudRate = MICROPY_HW_UART_REPL_BAUD;
    params.writeDataMode = UART_DATA_BINARY;
    params.readDataMode = UART_DATA_BINARY;
-   uart = UART_open(0, &params);
+   uart = UART_open(MICROPY_HW_UART_REPL, &params);
 
    mp_main(mpheap, sizeof(mpheap), STACKSIZE, uart);
 
