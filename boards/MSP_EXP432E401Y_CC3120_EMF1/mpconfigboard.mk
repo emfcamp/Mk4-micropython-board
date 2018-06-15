@@ -1,6 +1,7 @@
 CC = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 LD = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 AR = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-ar"
+SIZE = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-size"
 
 # do we want uGFX?
 MICROPY_PY_UGFX ?= 1
@@ -43,6 +44,8 @@ INCLUDES = \
     "-I$(GCC_ARMCOMPILER)/arm-none-eabi/include"
 
 CFLAGS += \
+    -DDeviceFamily_MSP432E4 \
+    -D__MSP432E401Y__ \
     $(INCLUDES) \
     $(NETSL_INCLUDES) \
     -mcpu=cortex-m4 \
