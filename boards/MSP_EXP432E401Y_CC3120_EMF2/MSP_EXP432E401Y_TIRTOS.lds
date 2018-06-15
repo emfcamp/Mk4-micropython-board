@@ -117,21 +117,13 @@ SECTIONS {
         *(.nvs)
     } > REGION_TEXT
 
-    .ExternalSRAM :
+    .ExternalSRAM (NOLOAD):
     {
         __extram_start__ = .;
-
-        . = ALIGN(4);
-        __extram_end__ = .;
-    } > REGION_EXTRAM AT> REGION_EXTRAM
-
-    /* UGFX heap data section */
-    .bss.heap :
-    {
-        __bss_heap_start__ = .;         /* define a global symbol at ugfx start */
+        *(.ExternalSRAM*)
         *(.bss.heap)
         . = ALIGN(4);
-        __bss_heap_end__ = .;         /* define a global symbol at ugfx end */
+        __extram_end__ = .;
     } > REGION_EXTRAM AT> REGION_EXTRAM
 
     .bss : {

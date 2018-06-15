@@ -47,9 +47,11 @@
 
 #include <ti/drivers/net/wifi/slnetifwifi.h>
 
+// Micropython RTOS thread stack size
 #define STACKSIZE 8192U
 #define MPHEAPSIZE (8388608 - 30720) // 8 Meg SRAM - GFX_OS_HEAP_SIZE (30K)
 
+// Simplelink network task
 #define SLNET_IF_WIFI_PRIO       (5)
 #define TASKSTACKSIZE            2048
 #define SPAWN_TASK_PRIORITY      9
