@@ -63,7 +63,7 @@
 typedef uint32_t            USBCDCDEventType;
 
 /* Defines */
-#define USBBUFFERSIZE   256
+#define USBBUFFERSIZE   512
 
 /* Typedefs */
 typedef volatile enum {

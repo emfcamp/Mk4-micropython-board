@@ -176,6 +176,7 @@ typedef enum MSP_EXP432E401Y_UARTName {
  *  @brief  Enum of USB setup function on the MSP_EXP432E401Y dev board
  */
 typedef enum MSP_EXP432E401Y_USBMode {
+    MSP_EXP432E401Y_USBULPI,
     MSP_EXP432E401Y_USBDEVICE,
     MSP_EXP432E401Y_USBHOST
 } MSP_EXP432E401Y_USBMode;
