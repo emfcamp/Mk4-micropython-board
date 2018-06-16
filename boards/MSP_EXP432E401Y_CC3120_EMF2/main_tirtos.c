@@ -92,10 +92,10 @@ int main(void)
     MSP_EXP432E401Y_initGeneral();
     MSP_EXP432E401Y_initGPIO();
 
-#if MICROPY_HW_USB_REPL
+    #if MICROPY_HW_USB_REPL
     MSP_EXP432E401Y_initUSB(MSP_EXP432E401Y_USBDEVICE);
     USBCDCD_init(MSP_EXP432E401Y_USBDEVICE);
-#endif
+    #endif
 
 //    ti_ndk_config_Global_startupFxn();
 

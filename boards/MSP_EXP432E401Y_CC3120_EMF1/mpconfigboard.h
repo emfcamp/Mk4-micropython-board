@@ -12,6 +12,7 @@
 #define MICROPY_PY_NETWORK_WIFI      (1)   /* TI WiFi */
 #define MICROPY_MACHINE_NVSBDEV      (0)
 #define MICROPY_MACHINE_SD           (0)
+#define MICROPY_HW_USB_REPL          (1)   /* Enable the USB REPL */
 #define MICROPY_HW_UART_REPL         MSP_EXP432E401Y_UART3
 #define MICROPY_HW_UART_REPL_BAUD    115200
 #define MICROPY_HW_HAS_UGFX          (MICROPY_PY_UGFX)  // set in mpconfigbpard.mk

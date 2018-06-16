@@ -33,7 +33,7 @@
 /*
  *  ======== MSP_EXP432E401Y.c ========
  *  This file is responsible for setting up the board specific items for the
- *  MSP_EXP432E401Y board.
+ *  MSP_EXP432E401Y_CC3120_EMF2 board.
  */
 #include <stdint.h>
 #include <stdlib.h>
@@ -94,43 +94,6 @@ const ADC_Config ADC_config[MSP_EXP432E401Y_ADCCOUNT] = {
 const uint_least8_t ADC_count = MSP_EXP432E401Y_ADCCOUNT;
 
 /*
- *  ============================= Display =============================
- */
-#include <ti/display/Display.h>
-#include <ti/display/DisplayUart.h>
-#define MAXPRINTLEN 1024
-
-DisplayUart_Object displayUartObject;
-
-static char displayBuf[MAXPRINTLEN];
-
-const DisplayUart_HWAttrs displayUartHWAttrs = {
-    .uartIdx = MSP_EXP432E401Y_UART3,
-    .baudRate = 115200,
-    .mutexTimeout = (unsigned int)(-1),
-    .strBuf = displayBuf,
-    .strBufLen = MAXPRINTLEN
-};
-
-#ifndef BOARD_DISPLAY_USE_UART_ANSI
-#define BOARD_DISPLAY_USE_UART_ANSI 0
-#endif
-
-const Display_Config Display_config[] = {
-    {
-#  if (BOARD_DISPLAY_USE_UART_ANSI)
-        .fxnTablePtr = &DisplayUartAnsi_fxnTable,
-#  else /* Default to minimal UART with no cursor placement */
-        .fxnTablePtr = &DisplayUartMin_fxnTable,
-#  endif
-        .object = &displayUartObject,
-        .hwAttrs = &displayUartHWAttrs
-    }
-};
-
-const uint_least8_t Display_count = sizeof(Display_config) / sizeof(Display_Config);
-
-/*
  *  =============================== DMA ===============================
  */
 #include <ti/drivers/dma/UDMAMSP432E4.h>
@@ -172,6 +135,35 @@ const UDMAMSP432E4_Config UDMAMSP432E4_config = {
     .object = &udmaMSP432E4Object,
     .hwAttrs = &udmaMSP432E4HWAttrs
 };
+
+/*
+ *  ======== MSP_EXP432E401Y_usbBusFaultHwi ========
+ */
+static void MSP_EXP432E401Y_usbBusFaultHwi(uintptr_t arg)
+{
+    /*
+     *  This function should be modified to appropriately manage handle
+     *  a USB bus fault.
+     */
+    
+
+    // LWK TODO: fix these to just go out over the repl uart? mp_hal_stdout_tx_str()??
+    // static Display_Handle display;  
+    
+    // Display_init();
+
+    // /* Open the display for output */
+    // display = Display_open(Display_Type_UART, NULL);
+
+    // if (display == NULL) {
+    //     /* Failed to open display driver */
+    //     while (1);
+    // }
+
+
+    // Display_printf(display, 0, 0, "USB bus fault detected.\n");   
+    HwiP_clearInterrupt(INT_GPIOQ4);
+}
 
 /*
  *  =============================== General ===============================
@@ -254,82 +246,129 @@ const EMACMSP432E4_HWAttrs EMACMSP432E4_hwAttrs = {
  *       reduce memory usage.
  */
 GPIO_PinConfig gpioPinConfigs[] = {
-	
+    
 // Inputs
     //MSP_EXP432E401Y_GPIO_JOYC = 0,
-    GPIOMSP432E4_PP0 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
+    GPIOMSP432E4_PP0 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
 
     //MSP_EXP432E401Y_GPIO_JOYU,
-    GPIOMSP432E4_PM7 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
+    GPIOMSP432E4_PM7 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
 
     //MSP_EXP432E401Y_GPIO_JOYD,
-    GPIOMSP432E4_PN0 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
+    GPIOMSP432E4_PM4 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
 
     //MSP_EXP432E401Y_GPIO_JOYL,
-    GPIOMSP432E4_PM5 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
+    GPIOMSP432E4_PM5 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
     
     //MSP_EXP432E401Y_GPIO_JOYR,
-    GPIOMSP432E4_PM4 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
+    GPIOMSP432E4_PB2 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
     
-    //MSP_EXP432E401Y_GPIO_ETHLED0,
-    GPIOMSP432E4_PK4 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
-    
-    //MSP_EXP432E401Y_GPIO_ETHLED1,
-    GPIOMSP432E4_PK6 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
+    //MSP_EXP432E401Y_GPIO_BNT_MENU,
+    // GPIOMSP432E4_PK7 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
 
     //MSP_EXP432E401Y_GPIO_SIM_STATUS,
-    GPIOMSP432E4_PQ4 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
+    GPIOMSP432E4_PQ4 | GPIO_CFG_IN_NOPULL | GPIO_CFG_IN_INT_RISING,
 
-    //MSP_EXP432E401Y_BQ_IRQ,
-    GPIOMSP432E4_PE5 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,
-            
+    //MSP_EXP432E401Y_GPIO_SIM_NETLIGHT,
+    GPIOMSP432E4_PP4 | GPIO_CFG_IN_NOPULL | GPIO_CFG_IN_INT_RISING,
+
+    //MSP_EXP432E401Y_GPIO_SIM_RI,
+    // GPIOMSP432E4_PN5 | GPIO_CFG_IN_NOPULL | GPIO_CFG_IN_INT_RISING,
+    
+    //MSP_EXP432E401Y_GPIO_BQ_INT,
+    GPIOMSP432E4_PE5 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
+    
+    //MSP_EXP432E401YG_GPIO_TCA_INT,
+    // GPIOMSP432E4_PE0 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
+
+    //MSP_EXP432E401Y_GPIO_LCD_TEAR,
+    GPIOMSP432E4_PK1 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,
+
     /* CC3120 WIFI BP */
-    //MSP_EXP432E401Y_HOST_IRQ,
+    //MSP_EXP432E401Y_CC_HOST_IRQ,
     GPIOMSP432E4_PE0 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,
 
+    //MSP_EXP432E401Y_GPIO_VBUS_DET,
+    // Rising for USB connected, Falling for USB disconenct
+    // GPIOMSP432E4_PQ4 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_BOTH_EDGES,
+
+    // MSP_EXP432E401Y_ADC_A_X,
+    // GPIOMSP432E4_PE2 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,
+
+    // MSP_EXP432E401Y_ADC_A_Y,
+    // GPIOMSP432E4_PE3 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,
+
+    // MSP_EXP432E401Y_ADC_CH3,
+    // GPIOMSP432E4_PD6 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,
+
+    //MSP_EXP432E401Y_ADC_SPK,
+    GPIOMSP432E4_PD7 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,    
+
 // Outputs
-    //MSP_EXP432E401Y_GPIO_LEDA,
+    //MSP_EXP432E401Y_GPIO_ETHLED0,
+    GPIOMSP432E4_PK4 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+    
+    //MSP_EXP432E401Y_GPIO_ETHLED1,
+    GPIOMSP432E4_PK6 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+
+    //MSP_EXP432E401Y_GPIO_LED1,
     GPIOMSP432E4_PB0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
     
-    //MSP_EXP432E401Y_GPIO_LEDB,
+    //MSP_EXP432E401Y_GPIO_LED1,
     GPIOMSP432E4_PB1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-#if 0
-    //MSP_EXP432E401Y_GPIO_NETLIGHT,
-    GPIOMSP432E4_PP4 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-    
-    //MSP_EXP432E401Y_GPIO_PWR_KEY,
+
+    // MSP_EXP432E401Y_TIM_WS2812,
+    GPIOMSP432E4_PE4 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,    
+
+    //MSP_EXP432E401Y_GPIO_SIM_PWR_KEY,
     GPIOMSP432E4_PP5 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
     
-    //MSP_EXP432E401Y_GPIO_LCD_BLIGHT,
+    // MSP_EXP432E401Y_PWM_MIC,
+    GPIOMSP432E4_PF3 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+
+    //MSP_EXP432E401Y_PWM_LCD_BLIGHT,
     GPIOMSP432E4_PF0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+
+    //MSP_EXP432E401Y_GPIO_LCD_DCX,
+    GPIOMSP432E4_PK2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
     
-    //MSP_EXP432E401Y_GPIO_ETHLED2,
-    GPIOMSP432E4_PK6 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+    //MSP_EXP432E401Y_GPIO_LCD_RST,
+    GPIOMSP432E4_PK3 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
     
+    //MSP_EXP432E401Y_LCD_CS,
+    GPIOMSP432E4_PA3 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
+
     //MSP_EXP432E401Y_GPIO_MUX_A,
     GPIOMSP432E4_PN1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
     
     //MSP_EXP432E401Y_GPIO_MUX_B,
     GPIOMSP432E4_PN2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-#endif    
+
+    // MSP_EXP432E401Y_GPIO_T_X,
+    // GPIOMSP432E4_PF1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+    
+    // MSP_EXP432E401Y_GPIO_T_Y,
+    // GPIOMSP432E4_PF2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+    
+    // MSP_EXP432E401Y_GPIO_FET,
+    // GPIOMSP432E4_PN3 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+
+    // MSP_EXP432E401Y_GPIO_CH4,
+    // GPIOMSP432E4_PD5 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+    
+    //MSP_EXP432E401Y_FLASH_CS,
+    GPIOMSP432E4_PQ1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
+
     /* CC3120 WIFI BP */
     //MSP_EXP432E401Y_CC_RST,
-    GPIOMSP432E4_PK0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+    GPIOMSP432E4_PK0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
    
-    //MSP_EXP432E401Y_nHIB_pin,
+    //MSP_EXP432E401Y_CC_nHIB_pin,
     GPIOMSP432E4_PE1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
     
-    //MSP_EXP432E401Y_CS_pin,
-    GPIOMSP432E4_PD2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
+    //MSP_EXP432E401Y_CC_CS_pin,
+    GPIOMSP432E4_PD2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH
     
-    //MSP_EXP432E401Y_LCD_CS,
-    GPIOMSP432E4_PD2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
-
-    //MSP_EXP432E401Y_GPIO_LCD_DCX,
-    GPIOMSP432E4_PK2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
-
-    //MSP_EXP432E401Y_GPIO_LCD_RST,
-    GPIOMSP432E4_PA3 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH
 };
 
 /*
@@ -354,6 +393,15 @@ const GPIOMSP432E4_Config GPIOMSP432E4_config = {
 };
 
 /*
+ *  ======== MSP_EXP432E401Y_initGPIO ========
+ */
+void MSP_EXP432E401Y_initGPIO(void)
+{
+    /* Initialize peripheral and pins */
+    GPIO_init();
+}
+
+/*
  *  =============================== I2C ===============================
  */
 #include <ti/drivers/I2C.h>
@@ -363,32 +411,32 @@ I2CMSP432E4_Object i2cMSP432E4Objects[MSP_EXP432E401Y_I2CCOUNT];
 
 const I2CMSP432E4_HWAttrs i2cMSP432E4HWAttrs[MSP_EXP432E401Y_I2CCOUNT] = {
     {
-        .baseAddr = I2C2_BASE,
-        .intNum = INT_I2C2,
+        .baseAddr = I2C5_BASE,
+        .intNum = INT_I2C5,
         .intPriority = (~0),
-        .sclPin = I2CMSP432E4_PL1_I2C2SCL,
-        .sdaPin = I2CMSP432E4_PL0_I2C2SDA
+        .sclPin = I2CMSP432E4_PB4_I2C5SCL,
+        .sdaPin = I2CMSP432E4_PB5_I2C5SDA
     },
     {
-        .baseAddr = I2C0_BASE,
-        .intNum = INT_I2C0,
+        .baseAddr = I2C9_BASE,
+        .intNum = INT_I2C9,
         .intPriority = (~0),
-        .sclPin = I2CMSP432E4_PB2_I2C0SCL,
-        .sdaPin = I2CMSP432E4_PB3_I2C0SDA
+        .sclPin = I2CMSP432E4_PA0_I2C9SCL,
+        .sdaPin = I2CMSP432E4_PA1_I2C9SDA
     }
 };
 
 const I2C_Config I2C_config[MSP_EXP432E401Y_I2CCOUNT] = {
     {
         .fxnTablePtr = &I2CMSP432E4_fxnTable,
-        .object = &i2cMSP432E4Objects[MSP_EXP432E401Y_I2C2],
-        .hwAttrs = &i2cMSP432E4HWAttrs[MSP_EXP432E401Y_I2C2]
+        .object = &i2cMSP432E4Objects[MSP_EXP432E401Y_I2C5],
+        .hwAttrs = &i2cMSP432E4HWAttrs[MSP_EXP432E401Y_I2C5]
     },
     {
         .fxnTablePtr = &I2CMSP432E4_fxnTable,
-        .object = &i2cMSP432E4Objects[MSP_EXP432E401Y_I2C0],
-        .hwAttrs = &i2cMSP432E4HWAttrs[MSP_EXP432E401Y_I2C0]
-    },
+        .object = &i2cMSP432E4Objects[MSP_EXP432E401Y_I2C9],
+        .hwAttrs = &i2cMSP432E4HWAttrs[MSP_EXP432E401Y_I2C9]
+    }
 };
 
 const uint_least8_t I2C_count = MSP_EXP432E401Y_I2CCOUNT;
@@ -447,7 +495,7 @@ const NVSMSP432E4_HWAttrs nvsMSP432E4HWAttrs[MSP_EXP432E401Y_NVSCOUNT] = {
     {
         .regionBase = (void *) flashBuf,
         .regionSize = REGIONSIZE,
-    },
+    }
 };
 
 const NVS_Config NVS_config[MSP_EXP432E401Y_NVSCOUNT] = {
@@ -455,7 +503,7 @@ const NVS_Config NVS_config[MSP_EXP432E401Y_NVSCOUNT] = {
         .fxnTablePtr = &NVSMSP432E4_fxnTable,
         .object = &nvsMSP432E4Objects[MSP_EXP432E401Y_NVSMSP432E40],
         .hwAttrs = &nvsMSP432E4HWAttrs[MSP_EXP432E401Y_NVSMSP432E40],
-    },
+    }
 };
 
 const uint_least8_t NVS_count = MSP_EXP432E401Y_NVSCOUNT;
@@ -491,63 +539,10 @@ const PWM_Config PWM_config[MSP_EXP432E401Y_PWMCOUNT] = {
         .fxnTablePtr = &PWMMSP432E4_fxnTable,
         .object = &pwmMSP432E4Objects[MSP_EXP432E401Y_PWM0],
         .hwAttrs = &pwmMSP432E4HWAttrs[MSP_EXP432E401Y_PWM0]
-    },
+    }
 };
 
 const uint_least8_t PWM_count = MSP_EXP432E401Y_PWMCOUNT;
-
-/*
- *  =============================== SDFatFS ===============================
- */
-#include <ti/drivers/SD.h>
-#include <ti/drivers/SDFatFS.h>
-
-/*
- * Note: The SDFatFS driver provides interface functions to enable FatFs
- * but relies on the SD driver to communicate with SD cards.  Opening a
- * SDFatFs driver instance will internally try to open a SD driver instance
- * reusing the same index number (opening SDFatFs driver at index 0 will try to
- * open SD driver at index 0).  This requires that all SDFatFs driver instances
- * have an accompanying SD driver instance defined with the same index.  It is
- * acceptable to have more SD driver instances than SDFatFs driver instances
- * but the opposite is not supported & the SDFatFs will fail to open.
- */
-SDFatFS_Object sdfatfsObjects[MSP_EXP432E401Y_SDFatFSCOUNT];
-
-const SDFatFS_Config SDFatFS_config[MSP_EXP432E401Y_SDFatFSCOUNT] = {
-    {
-        .object = &sdfatfsObjects[MSP_EXP432E401Y_SDFatFS0]
-    }
-};
-
-const uint_least8_t SDFatFS_count = MSP_EXP432E401Y_SDFatFSCOUNT;
-
-#if 0
-/*
- *  =============================== SD ===============================
- */
-#include <ti/drivers/SD.h>
-#include <ti/drivers/sd/SDSPI.h>
-
-SDSPI_Object sdspiObjects[MSP_EXP432E401Y_SDCOUNT];
-
-const SDSPI_HWAttrs sdspiHWAttrs[MSP_EXP432E401Y_SDCOUNT] = {
-    {
-        .spiIndex = MSP_EXP432E401Y_SPI2,
-        .spiCsGpioIndex = MSP_EXP432E401Y_SDSPI_CS
-    }
-};
-
-const SD_Config SD_config[MSP_EXP432E401Y_SDCOUNT] = {
-    {
-        .fxnTablePtr = &SDSPI_fxnTable,
-        .object = &sdspiObjects[MSP_EXP432E401Y_SDSPI0],
-        .hwAttrs = &sdspiHWAttrs[MSP_EXP432E401Y_SDSPI0]
-    },
-};
-
-const uint_least8_t SD_count = MSP_EXP432E401Y_SDCOUNT;
-#endif
 
 /*
  *  =============================== SPI ===============================
@@ -631,7 +626,7 @@ const SPI_Config SPI_config[MSP_EXP432E401Y_SPICOUNT] = {
         .fxnTablePtr = &SPIMSP432E4DMA_fxnTable,
         .object = &spiMSP432E4DMAObjects[MSP_EXP432E401Y_SPI0],
         .hwAttrs = &spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPI0]
-    },
+    }
 };
 
 const uint_least8_t SPI_count = MSP_EXP432E401Y_SPICOUNT;
@@ -661,44 +656,18 @@ const UARTMSP432E4_HWAttrs uartMSP432E4HWAttrs[MSP_EXP432E401Y_UARTCOUNT] = {
         .errorFxn = NULL
     },
     {
-        .baseAddr = UART6_BASE,
-        .intNum = INT_UART6,
+        .baseAddr = UART2_BASE,
+        .intNum = INT_UART2,
         .intPriority = (~0),
         .flowControl = UARTMSP432E4_FLOWCTRL_NONE,
-        .ringBufPtr  = uartMSP432E4RingBuffer[MSP_EXP432E401Y_UART6],
-        .ringBufSize = sizeof(uartMSP432E4RingBuffer[MSP_EXP432E401Y_UART6]),
-        .rxPin = UARTMSP432E4_PP0_U6RX,
-        .txPin = UARTMSP432E4_PP1_U6TX,
+        .ringBufPtr  = uartMSP432E4RingBuffer[MSP_EXP432E401Y_UART2],
+        .ringBufSize = sizeof(uartMSP432E4RingBuffer[MSP_EXP432E401Y_UART2]),
+        .rxPin = UARTMSP432E4_PD4_U2RX,
+        .txPin = UARTMSP432E4_PD4_U2TX,
         .ctsPin = UARTMSP432E4_PIN_UNASSIGNED,
         .rtsPin = UARTMSP432E4_PIN_UNASSIGNED,
         .errorFxn = NULL
-    },
-    {
-        .baseAddr = UART7_BASE,
-        .intNum = INT_UART7,
-        .intPriority = (~0),
-        .flowControl = UARTMSP432E4_FLOWCTRL_NONE,
-        .ringBufPtr  = uartMSP432E4RingBuffer[MSP_EXP432E401Y_UART7],
-        .ringBufSize = sizeof(uartMSP432E4RingBuffer[MSP_EXP432E401Y_UART7]),
-        .rxPin = UARTMSP432E4_PC4_U7RX,
-        .txPin = UARTMSP432E4_PC5_U7TX,
-        .ctsPin = UARTMSP432E4_PIN_UNASSIGNED,
-        .rtsPin = UARTMSP432E4_PIN_UNASSIGNED,
-        .errorFxn = NULL
-    },
-    {
-        .baseAddr = UART4_BASE,
-        .intNum = INT_UART4,
-        .intPriority = (~0),
-        .flowControl = UARTMSP432E4_FLOWCTRL_NONE,
-        .ringBufPtr  = uartMSP432E4RingBuffer[MSP_EXP432E401Y_UART4],
-        .ringBufSize = sizeof(uartMSP432E4RingBuffer[MSP_EXP432E401Y_UART4]),
-        .rxPin = UARTMSP432E4_PK0_U4RX,
-        .txPin = UARTMSP432E4_PK1_U4TX,
-        .ctsPin = UARTMSP432E4_PIN_UNASSIGNED,
-        .rtsPin = UARTMSP432E4_PIN_UNASSIGNED,
-        .errorFxn = NULL
-    },
+    }
 };
 
 const UART_Config UART_config[MSP_EXP432E401Y_UARTCOUNT] = {
@@ -709,22 +678,92 @@ const UART_Config UART_config[MSP_EXP432E401Y_UARTCOUNT] = {
     },
     {
         .fxnTablePtr = &UARTMSP432E4_fxnTable,
-        .object = &uartMSP432E4Objects[MSP_EXP432E401Y_UART6],
-        .hwAttrs = &uartMSP432E4HWAttrs[MSP_EXP432E401Y_UART6]
-    },
-    {
-        .fxnTablePtr = &UARTMSP432E4_fxnTable,
-        .object = &uartMSP432E4Objects[MSP_EXP432E401Y_UART7],
-        .hwAttrs = &uartMSP432E4HWAttrs[MSP_EXP432E401Y_UART7]
-    },
-    {
-        .fxnTablePtr = &UARTMSP432E4_fxnTable,
-        .object = &uartMSP432E4Objects[MSP_EXP432E401Y_UART4],
-        .hwAttrs = &uartMSP432E4HWAttrs[MSP_EXP432E401Y_UART4]
-    },
+        .object = &uartMSP432E4Objects[MSP_EXP432E401Y_UART2],
+        .hwAttrs = &uartMSP432E4HWAttrs[MSP_EXP432E401Y_UART2]
+    }
 };
 
 const uint_least8_t UART_count = MSP_EXP432E401Y_UARTCOUNT;
+
+/*
+ *  =============================== USB ===============================
+ */
+/*
+ *  ======== MSP_EXP432E401Y_initUSB ========
+ *  This function just turns on the USB
+ */
+#include <ti/devices/msp432e4/driverlib/inc/hw_gpio.h>
+#include <ti/devices/msp432e4/driverlib/driverlib.h>
+#include <ti/drivers/uart/UARTMSP432E4.h>
+void MSP_EXP432E401Y_initUSB(MSP_EXP432E401Y_USBMode usbMode)
+{
+
+    HwiP_Params hwiParams;
+
+    Power_setDependency(PowerMSP432E4_PERIPH_USB0);  //Power to USB is turned off in Power_init() and in .cfg file.  With this
+                                                     //API call, the power is enabled to USB module
+    /* Enable the USB peripheral */
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_USB0);
+
+    /* Setup pins for USB operation */
+    if (usbMode == MSP_EXP432E401Y_USBHOST || usbMode == MSP_EXP432E401Y_USBDEVICE) {
+        GPIOPinTypeUSBAnalog(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+        GPIOPinTypeUSBAnalog(GPIO_PORTL_BASE, GPIO_PIN_6 | GPIO_PIN_7);
+    }
+
+    /* Additional configurations for Host mode */
+    if (usbMode == MSP_EXP432E401Y_USBHOST) {
+        /* Configure the pins needed */
+        HWREG(GPIO_PORTD_BASE + GPIO_O_LOCK) = GPIO_LOCK_KEY;
+        HWREG(GPIO_PORTD_BASE + GPIO_O_CR) = 0xff;
+        GPIOPinConfigure(GPIO_PD6_USB0EPEN);
+        GPIOPinTypeUSBDigital(GPIO_PORTD_BASE, GPIO_PIN_6 | GPIO_PIN_7);
+
+        /*
+         *  USB bus fault is routed to pin PQ4.  We create a Hwi to allow us
+         *  to detect power faults and recover gracefully or terminate the
+         *  program.  PQ4 is active low; set the pin as input with a weak
+         *  pull-up.
+         */
+        GPIOPadConfigSet(GPIO_PORTQ_BASE, GPIO_PIN_4,
+                         GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+        GPIOIntTypeSet(GPIO_PORTQ_BASE, GPIO_PIN_4, GPIO_FALLING_EDGE);
+        GPIOIntClear(GPIO_PORTQ_BASE, GPIO_PIN_4);
+
+        /* Create a Hwi for PQ4 pin. */
+        HwiP_Params_init(&hwiParams);
+        HwiP_create(INT_GPIOQ4,
+                      MSP_EXP432E401Y_usbBusFaultHwi, &hwiParams);
+    }
+
+    if (usbMode == MSP_EXP432E401Y_USBULPI) {
+        GPIOPinConfigure(GPIO_PL0_USB0D0);
+        GPIOPinConfigure(GPIO_PL1_USB0D1);
+        GPIOPinConfigure(GPIO_PL2_USB0D2);
+        GPIOPinConfigure(GPIO_PL3_USB0D3);
+        GPIOPinConfigure(GPIO_PL4_USB0D4);
+        GPIOPinConfigure(GPIO_PL5_USB0D5);
+        GPIOPinConfigure(GPIO_PP5_USB0D6);
+        GPIOPinConfigure(GPIO_PP4_USB0D7);
+        GPIOPinConfigure(GPIO_PB3_USB0CLK);
+        GPIOPinConfigure(GPIO_PB2_USB0STP);
+        GPIOPinConfigure(GPIO_PP3_USB0DIR);
+        GPIOPinConfigure(GPIO_PP2_USB0NXT);
+
+        GPIOPinTypeUSBDigital(GPIO_PORTL_BASE, GPIO_PIN_0);
+        GPIOPinTypeUSBDigital(GPIO_PORTL_BASE, GPIO_PIN_1);
+        GPIOPinTypeUSBDigital(GPIO_PORTL_BASE, GPIO_PIN_2);
+        GPIOPinTypeUSBDigital(GPIO_PORTL_BASE, GPIO_PIN_3);
+        GPIOPinTypeUSBDigital(GPIO_PORTL_BASE, GPIO_PIN_4);
+        GPIOPinTypeUSBDigital(GPIO_PORTL_BASE, GPIO_PIN_5);
+        GPIOPinTypeUSBDigital(GPIO_PORTP_BASE, GPIO_PIN_5);
+        GPIOPinTypeUSBDigital(GPIO_PORTP_BASE, GPIO_PIN_4);
+        GPIOPinTypeUSBDigital(GPIO_PORTB_BASE, GPIO_PIN_3);
+        GPIOPinTypeUSBDigital(GPIO_PORTB_BASE, GPIO_PIN_2);
+        GPIOPinTypeUSBDigital(GPIO_PORTP_BASE, GPIO_PIN_3);
+        GPIOPinTypeUSBDigital(GPIO_PORTP_BASE, GPIO_PIN_2);
+    }
+}
 
 /*
  *  =============================== Watchdog ===============================
@@ -740,7 +779,7 @@ const WatchdogMSP432E4_HWAttrs watchdogMSP432E4HWAttrs[MSP_EXP432E401Y_WATCHDOGC
         .intNum = INT_WATCHDOG,
         .intPriority = (~0),
         .reloadValue = 80000000 /* 1 second period at default CPU clock freq */
-    },
+    }
 };
 
 const Watchdog_Config Watchdog_config[MSP_EXP432E401Y_WATCHDOGCOUNT] = {
@@ -748,7 +787,7 @@ const Watchdog_Config Watchdog_config[MSP_EXP432E401Y_WATCHDOGCOUNT] = {
         .fxnTablePtr = &WatchdogMSP432E4_fxnTable,
         .object = &watchdogMSP432E4Objects[MSP_EXP432E401Y_WATCHDOG0],
         .hwAttrs = &watchdogMSP432E4HWAttrs[MSP_EXP432E401Y_WATCHDOG0]
-    },
+    }
 };
 
 const uint_least8_t Watchdog_count = MSP_EXP432E401Y_WATCHDOGCOUNT;
@@ -765,9 +804,9 @@ const uint_least8_t Watchdog_count = MSP_EXP432E401Y_WATCHDOGCOUNT;
 const WIFIMSP432_HWAttrsV1 wifiMSP432HWAttrs =
 {
     .spiIndex = MSP_EXP432E401Y_SPI2,
-    .hostIRQPin = MSP_EXP432E401Y_HOST_IRQ,
-    .nHIBPin = MSP_EXP432E401Y_nHIB_pin,
-    .csPin = MSP_EXP432E401Y_CS_pin,
+    .hostIRQPin = MSP_EXP432E401Y_CC_HOST_IRQ,
+    .nHIBPin = MSP_EXP432E401Y_CC_nHIB_pin,
+    .csPin = MSP_EXP432E401Y_CC_CS_pin,
     .maxDMASize = 1024,
     .spiBitRate = 3000000
 };

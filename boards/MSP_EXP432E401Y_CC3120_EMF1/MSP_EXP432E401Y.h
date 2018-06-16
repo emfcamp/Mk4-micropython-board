@@ -77,31 +77,42 @@ typedef enum MSP_EXP432E401Y_GPIOName {
     MSP_EXP432E401Y_GPIO_JOYD,
     MSP_EXP432E401Y_GPIO_JOYL,
     MSP_EXP432E401Y_GPIO_JOYR,
-    MSP_EXP432E401Y_GPIO_ETHLED0,
-    MSP_EXP432E401Y_GPIO_ETHLED1,
+    // MSP_EXP432E401Y_GPIO_BNT_MENU,
     MSP_EXP432E401Y_GPIO_SIM_STATUS,
+    MSP_EXP432E401Y_GPIO_SIM_NETLIGHT,
+    // MSP_EXP432E401Y_GPIO_SIM_RI,
     MSP_EXP432E401Y_GPIO_BQ_INT,
-    MSP_EXP432E401Y_HOST_IRQ,
+    // MSP_EXP432E401Y_GPIO_TCA_INT,
+    MSP_EXP432E401Y_GPIO_LCD_TEAR,
+    MSP_EXP432E401Y_CC_HOST_IRQ,
+    // MSP_EXP432E401Y_GPIO_VBUS_DET,
+    // MSP_EXP432E401Y_ADC_A_X,
+    // MSP_EXP432E401Y_ADC_A_Y,
+    // MSP_EXP432E401Y_ADC_CH3,
+    MSP_EXP432E401Y_ADC_SPK,
 
 // Outputs
-    MSP_EXP432E401Y_GPIO_LEDA,
-    MSP_EXP432E401Y_GPIO_LEDB,
-#if 0
-    MSP_EXP432E401Y_GPIO_NETLIGHT,
-    MSP_EXP432E401Y_GPIO_PWR_KEY,
-    MSP_EXP432E401Y_GPIO_LCD_BLIGHT,
-    MSP_EXP432E401Y_GPIO_ETHLED2,
-    MSP_EXP432E401Y_GPIO_MUX_A,
-    MSP_EXP432E401Y_GPIO_MUX_B,
-#endif
-    MSP_EXP432E401Y_GPIO_CC_RST,
-
-    MSP_EXP432E401Y_nHIB_pin,
-    MSP_EXP432E401Y_CS_pin,
-
-    MSP_EXP432E401Y_LCD_CS,
+    MSP_EXP432E401Y_GPIO_ETHLED0,
+    MSP_EXP432E401Y_GPIO_ETHLED1,
+    MSP_EXP432E401Y_GPIO_LED1,
+    MSP_EXP432E401Y_GPIO_LED2,
+    MSP_EXP432E401Y_TIM_WS2812,
+    MSP_EXP432E401Y_GPIO_SIM_PWR_KEY,
+    MSP_EXP432E401Y_PWM_MIC,
+    MSP_EXP432E401Y_PWM_LCD_BLIGHT,
     MSP_EXP432E401Y_GPIO_LCD_DCX,
     MSP_EXP432E401Y_GPIO_LCD_RST,
+    MSP_EXP432E401Y_LCD_CS,
+    MSP_EXP432E401Y_GPIO_MUX_A,
+    MSP_EXP432E401Y_GPIO_MUX_B,
+    // MSP_EXP432E401Y_GPIO_T_X,
+    // MSP_EXP432E401Y_GPIO_T_Y,
+    // MSP_EXP432E401Y_GPIO_FET,
+    // MSP_EXP432E401Y_GPIO_CH4,
+    MSP_EXP432E401Y_FLASH_CS,
+    MSP_EXP432E401Y_CC_RST,
+    MSP_EXP432E401Y_CC_nHIB_pin,
+    MSP_EXP432E401Y_CC_CS_pin,
 
     MSP_EXP432E401Y_GPIOCOUNT
 } MSP_EXP432E401Y_GPIOName;
@@ -111,8 +122,8 @@ typedef enum MSP_EXP432E401Y_GPIOName {
  *  @brief  Enum of I2C names on the MSP_EXP432E401Y dev board
  */
 typedef enum MSP_EXP432E401Y_I2CName {
-    MSP_EXP432E401Y_I2C0 = 0,
-    MSP_EXP432E401Y_I2C2,
+    MSP_EXP432E401Y_I2C5 = 0,
+    MSP_EXP432E401Y_I2C9,
 
     MSP_EXP432E401Y_I2CCOUNT
 } MSP_EXP432E401Y_I2CName;
@@ -138,26 +149,6 @@ typedef enum MSP_EXP432E401Y_PWMName {
 } MSP_EXP432E401Y_PWMName;
 
 /*!
- *  @def    MSP_EXP432E401Y_SDFatFSName
- *  @brief  Enum of SDFatFS names on the MSP_EXP432E401Y dev board
- */
-typedef enum MSP_EXP432E401Y_SDFatFSName {
-    MSP_EXP432E401Y_SDFatFS0 = 0,
-
-    MSP_EXP432E401Y_SDFatFSCOUNT
-} MSP_EXP432E401Y_SDFatFSName;
-
-/*!
- *  @def    MSP_EXP432E401Y_SDName
- *  @brief  Enum of SD names on the MSP_EXP432E401Y dev board
- */
-typedef enum MSP_EXP432E401Y_SDName {
-    MSP_EXP432E401Y_SDSPI0 = 0,
-
-    MSP_EXP432E401Y_SDCOUNT
-} MSP_EXP432E401Y_SDName;
-
-/*!
  *  @def    MSP_EXP432E401Y_SPIName
  *  @brief  Enum of SPI names on the MSP_EXP432E401Y dev board
  */
@@ -175,12 +166,29 @@ typedef enum MSP_EXP432E401Y_SPIName {
  */
 typedef enum MSP_EXP432E401Y_UARTName {
     MSP_EXP432E401Y_UART3 = 0,
-    MSP_EXP432E401Y_UART6 = 1,
-    MSP_EXP432E401Y_UART7 = 2,
-    MSP_EXP432E401Y_UART4,
+    MSP_EXP432E401Y_UART2,
 
     MSP_EXP432E401Y_UARTCOUNT
 } MSP_EXP432E401Y_UARTName;
+
+/*!
+ *  @def    MSP_EXP432E401Y_USBMode
+ *  @brief  Enum of USB setup function on the MSP_EXP432E401Y dev board
+ */
+typedef enum MSP_EXP432E401Y_USBMode {
+    MSP_EXP432E401Y_USBDEVICE,
+    MSP_EXP432E401Y_USBHOST
+} MSP_EXP432E401Y_USBMode;
+
+/*!
+ *  @def    MSP_EXP432E401Y_USBMSCHFatFsName
+ *  @brief  Enum of USBMSCHFatFs names on the MSP_EXP432E401Y dev board
+ */
+typedef enum MSP_EXP432E401Y_USBMSCHFatFsName {
+    MSP_EXP432E401Y_USBMSCHFATFS0 = 0,
+
+    MSP_EXP432E401Y_USBMSCHFATFSCOUNT
+} MSP_EXP432E401Y_USBMSCHFATFSName;
 
 /*
  *  @def    MSP_EXP432E401Y_WatchdogName
@@ -200,6 +208,28 @@ typedef enum MSP_EXP432E401Y_WatchdogName {
  *     - Enable clock sources for peripherals
  */
 extern void MSP_EXP432E401Y_initGeneral(void);
+
+/*!
+ *  @brief  Initialize board specific GPIO settings
+ *
+ *  This function initializes the board specific GPIO settings and
+ *  then calls the GPIO_init API to initialize the GPIO module.
+ *
+ *  The GPIOs controlled by the GPIO module are determined by the GPIO_PinConfig
+ *  variable.
+ */
+extern void MSP_EXP432E401Y_initGPIO(void);
+
+/*!
+ *  @brief  Initialize board specific USB settings
+ *
+ *  This function initializes the board specific USB settings and pins based on
+ *  the USB mode of operation.
+ *
+ *  @param      usbMode    USB mode of operation
+ */
+extern void MSP_EXP432E401Y_initUSB(MSP_EXP432E401Y_USBMode usbMode);
+
 
 #ifdef __cplusplus
 }

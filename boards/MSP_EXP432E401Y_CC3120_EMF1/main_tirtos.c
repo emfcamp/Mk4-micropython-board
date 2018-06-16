@@ -41,13 +41,41 @@
 #include <ti/sysbios/BIOS.h>
 
 /* Example/Board Header files */
-#include "Board.h"
+#include "MSP_EXP432E401Y.h"
+
+/* External ram setup helper */
+#include "epiram.h"
+
+#include "mpconfigboard.h"
+
+/* USBS Composit CDC device rom TI RTOS usb_serial_device example */
+#if MICROPY_HW_USB_REPL
+#include "USBCDCD.h"
+#endif
 
 //extern void ti_ndk_config_Global_startupFxn();
 extern void *mainThread(void *arg0);
 
 /* Stack size in bytes */
 #define THREADSTACKSIZE    4096
+
+/*
+ * Custom reset function called by TI-RTOS before main so we can setup the EPI SRAM
+ */
+void tildaResetFxn()
+{
+    ExternalRAM_init();
+    return;
+}
+
+/*
+ * Custom start function called by TI-RTOS before main so we can setup the EPI SRAM
+ */
+void tildaStartFxn()
+{
+    ExternalRAM_init();
+    return;
+}
 
 /*
  *  ======== main ========
@@ -61,7 +89,13 @@ int main(void)
     int                 detachState;
 
     /* Call board init functions */
-    Board_initGeneral();
+    MSP_EXP432E401Y_initGeneral();
+    MSP_EXP432E401Y_initGPIO();
+
+    #if MICROPY_HW_USB_REPL
+    MSP_EXP432E401Y_initUSB(MSP_EXP432E401Y_USBDEVICE);
+    USBCDCD_init(MSP_EXP432E401Y_USBDEVICE);
+    #endif
 
 //    ti_ndk_config_Global_startupFxn();
 

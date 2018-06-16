@@ -41,6 +41,7 @@ MEMORY
 {
     FLASH (RX) : ORIGIN = 0x00000000, LENGTH = 0x00100000
     SRAM (RWX) : ORIGIN = 0x20000000, LENGTH = 0x00040000
+    ExternalSRAM (RWX) : ORIGIN = 0x60000000, LENGTH = 8M
 }
 
 REGION_ALIAS("REGION_TEXT", FLASH);
@@ -50,6 +51,7 @@ REGION_ALIAS("REGION_STACK", SRAM);
 REGION_ALIAS("REGION_HEAP", SRAM);
 REGION_ALIAS("REGION_ARM_EXIDX", FLASH);
 REGION_ALIAS("REGION_ARM_EXTAB", FLASH);
+REGION_ALIAS("REGION_EXTRAM", ExternalSRAM);
 
 SECTIONS {
 
@@ -114,6 +116,15 @@ SECTIONS {
     .nvs (NOLOAD) : ALIGN(0x4000) {
         *(.nvs)
     } > REGION_TEXT
+
+    .ExternalSRAM (NOLOAD):
+    {
+        __extram_start__ = .;
+        *(.ExternalSRAM*)
+        *(.bss.heap)
+        . = ALIGN(4);
+        __extram_end__ = .;
+    } > REGION_EXTRAM AT> REGION_EXTRAM
 
     .bss : {
         __bss_start__ = .;
