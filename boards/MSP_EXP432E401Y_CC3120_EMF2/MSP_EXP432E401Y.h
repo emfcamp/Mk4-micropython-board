@@ -148,26 +148,6 @@ typedef enum MSP_EXP432E401Y_PWMName {
 } MSP_EXP432E401Y_PWMName;
 
 /*!
- *  @def    MSP_EXP432E401Y_SDFatFSName
- *  @brief  Enum of SDFatFS names on the MSP_EXP432E401Y dev board
- */
-typedef enum MSP_EXP432E401Y_SDFatFSName {
-    MSP_EXP432E401Y_SDFatFS0 = 0,
-
-    MSP_EXP432E401Y_SDFatFSCOUNT
-} MSP_EXP432E401Y_SDFatFSName;
-
-/*!
- *  @def    MSP_EXP432E401Y_SDName
- *  @brief  Enum of SD names on the MSP_EXP432E401Y dev board
- */
-typedef enum MSP_EXP432E401Y_SDName {
-    MSP_EXP432E401Y_SDSPI0 = 0,
-
-    MSP_EXP432E401Y_SDCOUNT
-} MSP_EXP432E401Y_SDName;
-
-/*!
  *  @def    MSP_EXP432E401Y_SPIName
  *  @brief  Enum of SPI names on the MSP_EXP432E401Y dev board
  */
@@ -191,6 +171,26 @@ typedef enum MSP_EXP432E401Y_UARTName {
     MSP_EXP432E401Y_UARTCOUNT
 } MSP_EXP432E401Y_UARTName;
 
+/*!
+ *  @def    MSP_EXP432E401Y_USBMode
+ *  @brief  Enum of USB setup function on the MSP_EXP432E401Y dev board
+ */
+typedef enum MSP_EXP432E401Y_USBMode {
+    MSP_EXP432E401Y_USBULPI,
+    MSP_EXP432E401Y_USBDEVICE,
+    MSP_EXP432E401Y_USBHOST
+} MSP_EXP432E401Y_USBMode;
+
+/*!
+ *  @def    MSP_EXP432E401Y_USBMSCHFatFsName
+ *  @brief  Enum of USBMSCHFatFs names on the MSP_EXP432E401Y dev board
+ */
+typedef enum MSP_EXP432E401Y_USBMSCHFatFsName {
+    MSP_EXP432E401Y_USBMSCHFATFS0 = 0,
+
+    MSP_EXP432E401Y_USBMSCHFATFSCOUNT
+} MSP_EXP432E401Y_USBMSCHFATFSName;
+
 /*
  *  @def    MSP_EXP432E401Y_WatchdogName
  *  @brief  Enum of Watchdogs on the MSP_EXP432E401Y dev board
@@ -209,6 +209,28 @@ typedef enum MSP_EXP432E401Y_WatchdogName {
  *     - Enable clock sources for peripherals
  */
 extern void MSP_EXP432E401Y_initGeneral(void);
+
+/*!
+ *  @brief  Initialize board specific GPIO settings
+ *
+ *  This function initializes the board specific GPIO settings and
+ *  then calls the GPIO_init API to initialize the GPIO module.
+ *
+ *  The GPIOs controlled by the GPIO module are determined by the GPIO_PinConfig
+ *  variable.
+ */
+extern void MSP_EXP432E401Y_initGPIO(void);
+
+/*!
+ *  @brief  Initialize board specific USB settings
+ *
+ *  This function initializes the board specific USB settings and pins based on
+ *  the USB mode of operation.
+ *
+ *  @param      usbMode    USB mode of operation
+ */
+extern void MSP_EXP432E401Y_initUSB(MSP_EXP432E401Y_USBMode usbMode);
+
 
 #ifdef __cplusplus
 }

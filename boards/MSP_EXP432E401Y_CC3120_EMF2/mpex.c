@@ -106,9 +106,7 @@ void *mainThread(void *arg0)
 
     retc = pthread_create(&spawn_thread, &pAttrs_spawn, sl_Task, NULL);
 
-    GPIO_init();
     I2C_init();
-    //SD_init();
     SPI_init();
     UART_init();
     PWM_init();

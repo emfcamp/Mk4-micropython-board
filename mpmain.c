@@ -21,13 +21,13 @@
 #include "lib/utils/pyexec.h"
 #include "lib/mp-readline/readline.h"
 
+#if MICROPY_HW_USB_REPL
+#include "USBCDCD.h"
+#endif
+
 static char * stack_top;
 static UART_Handle console;
-
-void mp_hal_stdout_tx_str(const char * str)
-{
-    UART_write(console, str, strlen(str));
-}
+void mp_hal_stdout_tx_str(const char * str);
 
 #if MICROPY_PORT_MINIMAL_MAIN
 
@@ -176,6 +176,14 @@ int mp_hal_stdin_rx_chr(void)
     char c;
     uint32_t count;
     while (1) {
+#if MICROPY_HW_USB_REPL
+        unsigned char data[1];
+        /* Block while the device is NOT connected to the USB */
+        c = USBCDCD_receiveData(data, 1, 1);
+        if (c != 0) {
+            return (int)data[0];
+        }
+#endif
         if (UART_control(console, UART_CMD_GETRXCOUNT, &count) >= 0 && count > 0) {
             UART_read(console, &c, 1);
             return (int)c;
@@ -186,12 +194,35 @@ int mp_hal_stdin_rx_chr(void)
 
 void mp_hal_stdout_tx_strn(const char * str, size_t len)
 {
+#if MICROPY_HW_USB_REPL
+    USBCDCD_sendData((const unsigned char *)str, len, 1);
+#endif
     UART_write(console, str, len);
+}
+
+void mp_hal_stdout_tx_str(const char * str)
+{
+    mp_hal_stdout_tx_strn(str, strlen(str));
 }
 
 void mp_hal_stdout_tx_strn_cooked(const char * str, size_t len)
 {
-    mp_hal_stdout_tx_strn(str, len);
+    const char *last = str;
+    while (len--) {
+        if (*str == '\n') {
+            if (str > last) {
+                mp_hal_stdout_tx_strn(last, str - last);
+            }
+            mp_hal_stdout_tx_strn("\r\n", 2);
+            ++str;
+            last = str;
+        } else {
+            ++str;
+        }
+    }
+    if (str > last) {
+        mp_hal_stdout_tx_strn(last, str - last);
+    }
 }
 
 void nlr_jump_fail(void * val)

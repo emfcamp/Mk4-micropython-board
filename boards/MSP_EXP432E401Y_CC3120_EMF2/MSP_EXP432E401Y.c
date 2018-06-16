@@ -137,6 +137,35 @@ const UDMAMSP432E4_Config UDMAMSP432E4_config = {
 };
 
 /*
+ *  ======== MSP_EXP432E401Y_usbBusFaultHwi ========
+ */
+static void MSP_EXP432E401Y_usbBusFaultHwi(uintptr_t arg)
+{
+    /*
+     *  This function should be modified to appropriately manage handle
+     *  a USB bus fault.
+     */
+    
+
+    // LWK TODO: fix these to just go out over the repl uart? mp_hal_stdout_tx_str()??
+    // static Display_Handle display;  
+    
+    // Display_init();
+
+    // /* Open the display for output */
+    // display = Display_open(Display_Type_UART, NULL);
+
+    // if (display == NULL) {
+    //     /* Failed to open display driver */
+    //     while (1);
+    // }
+
+
+    // Display_printf(display, 0, 0, "USB bus fault detected.\n");   
+    HwiP_clearInterrupt(INT_GPIOQ4);
+}
+
+/*
  *  =============================== General ===============================
  */
 /*
@@ -340,7 +369,7 @@ GPIO_PinConfig gpioPinConfigs[] = {
 };
 
 /*
- * Array of callback functioxn pointers
+ * Array of callback function pointers
  * NOTE: The order of the pin configurations must coincide with what was
  *       defined in MSP_EXP432E401Y.h
  * NOTE: Pins not used for interrupts can be omitted from callbacks array to
@@ -359,6 +388,15 @@ const GPIOMSP432E4_Config GPIOMSP432E4_config = {
     .numberOfCallbacks = sizeof(gpioCallbackFunctions)/sizeof(GPIO_CallbackFxn),
     .intPriority = (~0)
 };
+
+/*
+ *  ======== MSP_EXP432E401Y_initGPIO ========
+ */
+void MSP_EXP432E401Y_initGPIO(void)
+{
+    /* Initialize peripheral and pins */
+    GPIO_init();
+}
 
 /*
  *  =============================== I2C ===============================
@@ -395,7 +433,7 @@ const I2C_Config I2C_config[MSP_EXP432E401Y_I2CCOUNT] = {
         .fxnTablePtr = &I2CMSP432E4_fxnTable,
         .object = &i2cMSP432E4Objects[MSP_EXP432E401Y_I2C5],
         .hwAttrs = &i2cMSP432E4HWAttrs[MSP_EXP432E401Y_I2C5]
-    },
+    }
 };
 
 const uint_least8_t I2C_count = MSP_EXP432E401Y_I2CCOUNT;
@@ -454,7 +492,7 @@ const NVSMSP432E4_HWAttrs nvsMSP432E4HWAttrs[MSP_EXP432E401Y_NVSCOUNT] = {
     {
         .regionBase = (void *) flashBuf,
         .regionSize = REGIONSIZE,
-    },
+    }
 };
 
 const NVS_Config NVS_config[MSP_EXP432E401Y_NVSCOUNT] = {
@@ -462,7 +500,7 @@ const NVS_Config NVS_config[MSP_EXP432E401Y_NVSCOUNT] = {
         .fxnTablePtr = &NVSMSP432E4_fxnTable,
         .object = &nvsMSP432E4Objects[MSP_EXP432E401Y_NVSMSP432E40],
         .hwAttrs = &nvsMSP432E4HWAttrs[MSP_EXP432E401Y_NVSMSP432E40],
-    },
+    }
 };
 
 const uint_least8_t NVS_count = MSP_EXP432E401Y_NVSCOUNT;
@@ -498,63 +536,10 @@ const PWM_Config PWM_config[MSP_EXP432E401Y_PWMCOUNT] = {
         .fxnTablePtr = &PWMMSP432E4_fxnTable,
         .object = &pwmMSP432E4Objects[MSP_EXP432E401Y_PWM0],
         .hwAttrs = &pwmMSP432E4HWAttrs[MSP_EXP432E401Y_PWM0]
-    },
+    }
 };
 
 const uint_least8_t PWM_count = MSP_EXP432E401Y_PWMCOUNT;
-
-/*
- *  =============================== SDFatFS ===============================
- */
-#include <ti/drivers/SD.h>
-#include <ti/drivers/SDFatFS.h>
-
-/*
- * Note: The SDFatFS driver provides interface functions to enable FatFs
- * but relies on the SD driver to communicate with SD cards.  Opening a
- * SDFatFs driver instance will internally try to open a SD driver instance
- * reusing the same index number (opening SDFatFs driver at index 0 will try to
- * open SD driver at index 0).  This requires that all SDFatFs driver instances
- * have an accompanying SD driver instance defined with the same index.  It is
- * acceptable to have more SD driver instances than SDFatFs driver instances
- * but the opposite is not supported & the SDFatFs will fail to open.
- */
-SDFatFS_Object sdfatfsObjects[MSP_EXP432E401Y_SDFatFSCOUNT];
-
-const SDFatFS_Config SDFatFS_config[MSP_EXP432E401Y_SDFatFSCOUNT] = {
-    {
-        .object = &sdfatfsObjects[MSP_EXP432E401Y_SDFatFS0]
-    }
-};
-
-const uint_least8_t SDFatFS_count = MSP_EXP432E401Y_SDFatFSCOUNT;
-
-#if 0
-/*
- *  =============================== SD ===============================
- */
-#include <ti/drivers/SD.h>
-#include <ti/drivers/sd/SDSPI.h>
-
-SDSPI_Object sdspiObjects[MSP_EXP432E401Y_SDCOUNT];
-
-const SDSPI_HWAttrs sdspiHWAttrs[MSP_EXP432E401Y_SDCOUNT] = {
-    {
-        .spiIndex = MSP_EXP432E401Y_SPI2,
-        .spiCsGpioIndex = MSP_EXP432E401Y_SDSPI_CS
-    }
-};
-
-const SD_Config SD_config[MSP_EXP432E401Y_SDCOUNT] = {
-    {
-        .fxnTablePtr = &SDSPI_fxnTable,
-        .object = &sdspiObjects[MSP_EXP432E401Y_SDSPI0],
-        .hwAttrs = &sdspiHWAttrs[MSP_EXP432E401Y_SDSPI0]
-    },
-};
-
-const uint_least8_t SD_count = MSP_EXP432E401Y_SDCOUNT;
-#endif
 
 /*
  *  =============================== SPI ===============================
@@ -716,6 +701,86 @@ const UART_Config UART_config[MSP_EXP432E401Y_UARTCOUNT] = {
 const uint_least8_t UART_count = MSP_EXP432E401Y_UARTCOUNT;
 
 /*
+ *  =============================== USB ===============================
+ */
+/*
+ *  ======== MSP_EXP432E401Y_initUSB ========
+ *  This function just turns on the USB
+ */
+#include <ti/devices/msp432e4/driverlib/inc/hw_gpio.h>
+#include <ti/devices/msp432e4/driverlib/driverlib.h>
+#include <ti/drivers/uart/UARTMSP432E4.h>
+void MSP_EXP432E401Y_initUSB(MSP_EXP432E401Y_USBMode usbMode)
+{
+
+    HwiP_Params hwiParams;
+
+    Power_setDependency(PowerMSP432E4_PERIPH_USB0);  //Power to USB is turned off in Power_init() and in .cfg file.  With this
+                                                     //API call, the power is enabled to USB module
+    /* Enable the USB peripheral */
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_USB0);
+
+    /* Setup pins for USB operation */
+    if (usbMode == MSP_EXP432E401Y_USBHOST || usbMode == MSP_EXP432E401Y_USBDEVICE) {
+        GPIOPinTypeUSBAnalog(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+        GPIOPinTypeUSBAnalog(GPIO_PORTL_BASE, GPIO_PIN_6 | GPIO_PIN_7);
+    }
+
+    /* Additional configurations for Host mode */
+    if (usbMode == MSP_EXP432E401Y_USBHOST) {
+        /* Configure the pins needed */
+        HWREG(GPIO_PORTD_BASE + GPIO_O_LOCK) = GPIO_LOCK_KEY;
+        HWREG(GPIO_PORTD_BASE + GPIO_O_CR) = 0xff;
+        GPIOPinConfigure(GPIO_PD6_USB0EPEN);
+        GPIOPinTypeUSBDigital(GPIO_PORTD_BASE, GPIO_PIN_6 | GPIO_PIN_7);
+
+        /*
+         *  USB bus fault is routed to pin PQ4.  We create a Hwi to allow us
+         *  to detect power faults and recover gracefully or terminate the
+         *  program.  PQ4 is active low; set the pin as input with a weak
+         *  pull-up.
+         */
+        GPIOPadConfigSet(GPIO_PORTQ_BASE, GPIO_PIN_4,
+                         GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+        GPIOIntTypeSet(GPIO_PORTQ_BASE, GPIO_PIN_4, GPIO_FALLING_EDGE);
+        GPIOIntClear(GPIO_PORTQ_BASE, GPIO_PIN_4);
+
+        /* Create a Hwi for PQ4 pin. */
+        HwiP_Params_init(&hwiParams);
+        HwiP_create(INT_GPIOQ4,
+                      MSP_EXP432E401Y_usbBusFaultHwi, &hwiParams);
+    }
+
+    if (usbMode == MSP_EXP432E401Y_USBULPI) {
+        GPIOPinConfigure(GPIO_PL0_USB0D0);
+        GPIOPinConfigure(GPIO_PL1_USB0D1);
+        GPIOPinConfigure(GPIO_PL2_USB0D2);
+        GPIOPinConfigure(GPIO_PL3_USB0D3);
+        GPIOPinConfigure(GPIO_PL4_USB0D4);
+        GPIOPinConfigure(GPIO_PL5_USB0D5);
+        GPIOPinConfigure(GPIO_PP5_USB0D6);
+        GPIOPinConfigure(GPIO_PP4_USB0D7);
+        GPIOPinConfigure(GPIO_PB3_USB0CLK);
+        GPIOPinConfigure(GPIO_PB2_USB0STP);
+        GPIOPinConfigure(GPIO_PP3_USB0DIR);
+        GPIOPinConfigure(GPIO_PP2_USB0NXT);
+
+        GPIOPinTypeUSBDigital(GPIO_PORTL_BASE, GPIO_PIN_0);
+        GPIOPinTypeUSBDigital(GPIO_PORTL_BASE, GPIO_PIN_1);
+        GPIOPinTypeUSBDigital(GPIO_PORTL_BASE, GPIO_PIN_2);
+        GPIOPinTypeUSBDigital(GPIO_PORTL_BASE, GPIO_PIN_3);
+        GPIOPinTypeUSBDigital(GPIO_PORTL_BASE, GPIO_PIN_4);
+        GPIOPinTypeUSBDigital(GPIO_PORTL_BASE, GPIO_PIN_5);
+        GPIOPinTypeUSBDigital(GPIO_PORTP_BASE, GPIO_PIN_5);
+        GPIOPinTypeUSBDigital(GPIO_PORTP_BASE, GPIO_PIN_4);
+        GPIOPinTypeUSBDigital(GPIO_PORTB_BASE, GPIO_PIN_3);
+        GPIOPinTypeUSBDigital(GPIO_PORTB_BASE, GPIO_PIN_2);
+        GPIOPinTypeUSBDigital(GPIO_PORTP_BASE, GPIO_PIN_3);
+        GPIOPinTypeUSBDigital(GPIO_PORTP_BASE, GPIO_PIN_2);
+    }
+}
+
+/*
  *  =============================== Watchdog ===============================
  */
 #include <ti/drivers/Watchdog.h>
@@ -729,7 +794,7 @@ const WatchdogMSP432E4_HWAttrs watchdogMSP432E4HWAttrs[MSP_EXP432E401Y_WATCHDOGC
         .intNum = INT_WATCHDOG,
         .intPriority = (~0),
         .reloadValue = 80000000 /* 1 second period at default CPU clock freq */
-    },
+    }
 };
 
 const Watchdog_Config Watchdog_config[MSP_EXP432E401Y_WATCHDOGCOUNT] = {
@@ -737,7 +802,7 @@ const Watchdog_Config Watchdog_config[MSP_EXP432E401Y_WATCHDOGCOUNT] = {
         .fxnTablePtr = &WatchdogMSP432E4_fxnTable,
         .object = &watchdogMSP432E4Objects[MSP_EXP432E401Y_WATCHDOG0],
         .hwAttrs = &watchdogMSP432E4HWAttrs[MSP_EXP432E401Y_WATCHDOG0]
-    },
+    }
 };
 
 const uint_least8_t Watchdog_count = MSP_EXP432E401Y_WATCHDOGCOUNT;
@@ -758,7 +823,7 @@ const WIFIMSP432_HWAttrsV1 wifiMSP432HWAttrs =
     .nHIBPin = MSP_EXP432E401Y_CC_nHIB_pin,
     .csPin = MSP_EXP432E401Y_CC_CS_pin,
     .maxDMASize = 1024,
-    .spiBitRate = 1000000
+    .spiBitRate = 3000000
 };
 
 const uint_least8_t WiFi_count = 1;
@@ -769,4 +834,3 @@ const WiFi_Config WiFi_config[1] =
         .hwAttrs = &wifiMSP432HWAttrs,
     }
 };
-

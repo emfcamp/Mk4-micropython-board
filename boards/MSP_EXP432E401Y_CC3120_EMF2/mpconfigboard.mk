@@ -6,6 +6,10 @@ SIZE = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-size"
 # do we want uGFX?
 MICROPY_PY_UGFX ?= 1
 
+USBLIB_LIBS = \
+    "-L$(SIMPLELINK_MSP432E4_SDK_INSTALL_DIR)/source/ti/usblib/msp432e4/lib/gcc/m4f" \
+    -l:ti/usblib/msp432e4/lib/gcc/m4f/msp432e4_usblib.a
+
 NETNDK_INCLUDES =
 
 NETNDK_LIBS = \
@@ -43,7 +47,8 @@ INCLUDES = \
     "-I$(SIMPLELINK_MSP432E4_SDK_INSTALL_DIR)/kernel/tirtos/packages/gnu/targets/arm/libs/install-native/arm-none-eabi/include" \
     "-I$(GCC_ARMCOMPILER)/arm-none-eabi/include"
 
-CFLAGS += -DDeviceFamily_MSP432E4 \
+CFLAGS += \
+    -DDeviceFamily_MSP432E4 \
     -D__MSP432E401Y__ \
     $(INCLUDES) \
     $(NETSL_INCLUDES) \
@@ -63,6 +68,7 @@ LFLAGS = \
     "-L$(SIMPLELINK_MSP432E4_SDK_INSTALL_DIR)/source" \
     -l:ti/net/lib/gcc/m4f/slnetsock_release.a \
     -l:ti/net/sntp/lib/gcc/m4f/sntp_release.a \
+    $(USBLIB_LIBS) \
     $(NETSL_LIBS) \
     -l:ti/display/lib/display.am4fg \
     -l:ti/drivers/lib/drivers_msp432e4.am4fg \

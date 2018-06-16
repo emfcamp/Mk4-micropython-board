@@ -41,7 +41,6 @@
 
 #include <unistd.h>
 
-#include "Board.h"
 #include "wificonfig.h"
 
 SlNetCfgIpV4Args_t ipV4;
