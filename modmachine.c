@@ -66,9 +66,8 @@ void machine_teardown(void) {
     machine_pwm_teardown();
     machine_adc_teardown();
     machine_rtc_teardown();
-
+//TODO: Teardown flash_bdev
     MACHINE_SD_TEARDOWN();
-    MACHINE_NVSBDEV_TEARDOWN();
 
     if (machine_sleep_sem) {
         Semaphore_delete(&machine_sleep_sem);
@@ -260,7 +259,6 @@ STATIC const mp_rom_map_elem_t machine_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_ADC), MP_ROM_PTR(&machine_adc_type) },
     { MP_ROM_QSTR(MP_QSTR_RTC), MP_ROM_PTR(&machine_rtc_type) },
     MACHINE_SD_CLASS
-    MACHINE_NVSBDEV_CLASS
 };
 
 STATIC MP_DEFINE_CONST_DICT(machine_module_globals, machine_module_globals_table);
