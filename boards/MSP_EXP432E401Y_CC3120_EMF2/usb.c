@@ -52,7 +52,7 @@
 #include "usbd_msc.h"
 
 
-#if MICROPY_HW_USB_REPL == 0 && MICROPY_HW_USB_MSC == 1
+#if (MICROPY_HW_USB_REPL == 0) && (MICROPY_HW_USB_MSC == 1)
 #error "Can not enable USB MSC with out USB REPL"
 #endif
 

@@ -42,6 +42,18 @@ extern "C" {
 extern void USBD_MSC_init(tCompositeEntry *psCompEntry);
 
 
+extern void *USBDMSCStorageOpen(uint32_t ui32Drive);
+extern void USBDMSCStorageClose(void *pvDrive);
+extern uint32_t USBDMSCStorageRead(void *pvDrive, uint8_t *pui8Data,
+                                   uint32_t ui32Sector,
+                                   uint32_t ui32NumBlocks);
+extern uint32_t USBDMSCStorageWrite(void *pvDrive, uint8_t *pui8Data,
+                                    uint32_t ui32Sector,
+                                    uint32_t ui32NumBlocks);
+uint32_t USBDMSCStorageNumBlocks(void *pvDrive);
+uint32_t USBDMSCStorageBlockSize(void *pvDrive);
+
+
 #ifdef __cplusplus
 }
 #endif

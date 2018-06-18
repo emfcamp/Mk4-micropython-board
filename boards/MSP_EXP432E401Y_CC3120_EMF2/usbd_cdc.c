@@ -411,10 +411,7 @@ void USBD_CDC_init(tCompositeEntry *psCompEntry)
     /* State specific variables */
     stateCDC = USBCDCD_STATE_UNCONFIGURED;
 
-    /*
-     * Pass our device information to the USB HID device class driver,
-     * initialize the USB controller and connect the device to the bus.
-     */
+    /* Install the composite instances */
     if (!USBDCDCCompositeInit(0, &serialDevice, psCompEntry)) {
         //Can't initialize CDC composite component
         // Display_printf(display, 0, 0, "Can't initialize CDC composite component.\n");
