@@ -28,7 +28,7 @@
 #include "lib/mp-readline/readline.h"
 
 #if MICROPY_HW_USB_REPL
-#include "USBCDCD.h"
+#include "usbd_cdc.h"
 #endif
 
 static char * stack_top;

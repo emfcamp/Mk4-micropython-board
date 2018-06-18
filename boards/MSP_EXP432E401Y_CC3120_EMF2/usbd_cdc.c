@@ -1,69 +1,55 @@
-/* --COPYRIGHT--,BSD
- * Copyright (c) 2017, Texas Instruments Incorporated
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * *  Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * *  Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * *  Neither the name of Texas Instruments Incorporated nor the names of
- *    its contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * --/COPYRIGHT--*/
-
 /*
- *  ======== USBCDCD.c ========
+ * This file is part of the Micro Python project, http://micropython.org/
+ * And the Electromagnetic Field: TiLDA Mk4 Badge
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2017 Electromagnetic Field Badge Team Authors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
+/* Standard Includes */
+#include <stdint.h>
 #include <stdbool.h>
 
-/* Header files */
-#include <ti/display/Display.h>
-
+/* DriverLib Includes */
+#include <ti/devices/msp432e4/driverlib/driverlib.h>
 
 /* BIOS Header files */
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/dpl/MutexP.h>
 #include <ti/drivers/dpl/SemaphoreP.h>
 
-
-/* driverlib Header files */
-#include "ti/devices/msp432e4/driverlib/driverlib.h"
-
-
 /* usblib Header files */
-#include <ti/usblib/msp432e4/usb-ids.h>
 #include <ti/usblib/msp432e4/usblib.h>
 #include <ti/usblib/msp432e4/usbcdc.h>
+#include <ti/usblib/msp432e4/usb-ids.h>
 #include <ti/usblib/msp432e4/device/usbdevice.h>
 #include <ti/usblib/msp432e4/device/usbdcdc.h>
+#include <ti/usblib/msp432e4/device/usbdcomp.h>
 
-/* Example/Board Header files */
-#include "USBCDCD.h"
+/* board Header files */
+#include "usb.h"
+#include "usbd_cdc.h"
 
-typedef uint32_t            USBCDCDEventType;
-
-/* Defines */
-#define USBBUFFERSIZE   512
+#define UART_BUFFER_SIZE        256
 
 /* Typedefs */
 typedef volatile enum {
@@ -73,132 +59,64 @@ typedef volatile enum {
 } USBCDCD_USBState;
 
 /* Static variables and handles */
-static volatile USBCDCD_USBState state;
-static unsigned char receiveBuffer[USBBUFFERSIZE];
-static unsigned char transmitBuffer[USBBUFFERSIZE];
+static volatile USBCDCD_USBState stateCDC;
+static uint8_t receiveBuffer[UART_BUFFER_SIZE];
+static uint8_t transmitBuffer[UART_BUFFER_SIZE];
+tUSBBuffer txBuffer;
+tUSBBuffer rxBuffer;
+static tUSBDCDCDevice serialDevice;
 
 static MutexP_Handle mutexTxSerial;
 static MutexP_Handle mutexRxSerial;
-static MutexP_Handle mutexUSBWait;
 static SemaphoreP_Handle semTxSerial;
 static SemaphoreP_Handle semRxSerial;
-static SemaphoreP_Handle semUSBConnected;
+
+static tLineCoding g_sLineCoding = {
+    115200,                     /* 115200 baud rate. */
+    1,                          /* 1 Stop Bit. */
+    0,                          /* No Parity. */
+    8                           /* 8 Bits of data. */
+};
+
 
 /* Function prototypes */
-static USBCDCDEventType cbRxHandler(void *cbData, USBCDCDEventType event,
-                                    USBCDCDEventType eventMsg,
+uint32_t cbRxHandler(void *cbData, uint32_t event,
+                                    uint32_t eventMsg,
                                     void *eventMsgPtr);
-static USBCDCDEventType cbSerialHandler(void *cbData, USBCDCDEventType event,
-                                        USBCDCDEventType eventMsg,
+uint32_t cbSerialHandler(void *cbData, uint32_t event,
+                                        uint32_t eventMsg,
                                         void *eventMsgPtr);
-static USBCDCDEventType cbTxHandler(void *cbData, USBCDCDEventType event,
-                                    USBCDCDEventType eventMsg,
+uint32_t cbTxHandler(void *cbData, uint32_t event,
+                                    uint32_t eventMsg,
                                     void *eventMsgPtr);
-static void USBCDCD_hwiHandler(uintptr_t arg0);
+
 static unsigned int rxData(unsigned char *pStr,
                            unsigned int length,
                            unsigned int timeout);
 static unsigned int txData(const unsigned char *pStr,
                            int length, unsigned int timeout);
-void USBCDCD_init(bool usbInternal);
+void USBD_CDC_init(tCompositeEntry *psCompEntry);
 unsigned int USBCDCD_receiveData(unsigned char *pStr,
                                  unsigned int length,
                                  unsigned int timeout);
 unsigned int USBCDCD_sendData(const unsigned char *pStr,
                               unsigned int length,
                               unsigned int timeout);
-bool USBCDCD_waitForConnect(unsigned int timeout);
 
-/* The languages supported by this device. */
-const unsigned char langDescriptor[] = {
-    4,
-    USB_DTYPE_STRING,
-    USBShort(USB_LANG_EN_US)
-};
 
-/* The manufacturer string. */
-const unsigned char manufacturerString[] = {
-    (17 + 1) * 2,
-    USB_DTYPE_STRING,
-    'T', 0, 'e', 0, 'x', 0, 'a', 0, 's', 0, ' ', 0, 'I', 0, 'n', 0, 's', 0,
-    't', 0, 'r', 0, 'u', 0, 'm', 0, 'e', 0, 'n', 0, 't', 0, 's', 0,
-};
-
-/* The product string. */
-const unsigned char productString[] = {
-    2 + (16 * 2),
-    USB_DTYPE_STRING,
-    'V', 0, 'i', 0, 'r', 0, 't', 0, 'u', 0, 'a', 0, 'l', 0, ' ', 0,
-    'C', 0, 'O', 0, 'M', 0, ' ', 0, 'P', 0, 'o', 0, 'r', 0, 't', 0
-};
-
-/* The serial number string. */
-const unsigned char serialNumberString[] = {
-    (7 + 1) * 2,
-    USB_DTYPE_STRING,
-    'T', 0, 'i', 0, 'L', 0, 'D', 0, 'A', 0, ' ', 0
-};
-
-/* The interface description string. */
-const unsigned char controlInterfaceString[] = {
-    2 + (21 * 2),
-    USB_DTYPE_STRING,
-    'A', 0, 'C', 0, 'M', 0, ' ', 0, 'C', 0, 'o', 0, 'n', 0, 't', 0,
-    'r', 0, 'o', 0, 'l', 0, ' ', 0, 'I', 0, 'n', 0, 't', 0, 'e', 0,
-    'r', 0, 'f', 0, 'a', 0, 'c', 0, 'e', 0
-};
-
-/* The configuration description string. */
-const unsigned char configString[] = {
-    2 + (26 * 2),
-    USB_DTYPE_STRING,
-    'S', 0, 'e', 0, 'l', 0, 'f', 0, ' ', 0, 'P', 0, 'o', 0, 'w', 0,
-    'e', 0, 'r', 0, 'e', 0, 'd', 0, ' ', 0, 'C', 0, 'o', 0, 'n', 0,
-    'f', 0, 'i', 0, 'g', 0, 'u', 0, 'r', 0, 'a', 0, 't', 0, 'i', 0,
-    'o', 0, 'n', 0
-};
-
-/* The descriptor string table. */
-const unsigned char * const stringDescriptors[] = {
-    langDescriptor,
-    manufacturerString,
-    productString,
-    serialNumberString,
-    controlInterfaceString,
-    configString
-};
-
-#define STRINGDESCRIPTORSCOUNT (sizeof(stringDescriptors) / \
-                                sizeof(unsigned char *))
-
-tUSBBuffer txBuffer;
-tUSBBuffer rxBuffer;
-static tUSBDCDCDevice serialDevice;
-
-tUSBBuffer rxBuffer = {
-    false,                      /* This is a receive buffer. */
-    cbRxHandler,                /* pfnCallback */
-    (void *)&serialDevice,      /* Callback data is our device pointer. */
-    USBDCDCPacketRead,          /* pfnTransfer */
-    USBDCDCRxPacketAvailable,   /* pfnAvailable */
-    (void *)&serialDevice,      /* pvHandle */
-    receiveBuffer,              /* pcBuffer */
-    USBBUFFERSIZE,              /* ulBufferSize */
-    {{0, 0, 0, 0}, 0, 0}        /* private data workspace */
-};
-
-tUSBBuffer txBuffer = {
-    true,                       /* This is a transmit buffer. */
-    cbTxHandler,                /* pfnCallback */
-    (void *)&serialDevice,      /* Callback data is our device pointer. */
-    USBDCDCPacketWrite,         /* pfnTransfer */
-    USBDCDCTxPacketAvailable,   /* pfnAvailable */
-    (void *)&serialDevice,      /* pvHandle */
-    transmitBuffer,             /* pcBuffer */
-    USBBUFFERSIZE,              /* ulBufferSize */
-    {{0, 0, 0, 0}, 0, 0}        /* private data workspace */
-};
-
+//*****************************************************************************
+//
+// The CDC device initialization and customization structures. In this case,
+// we are using USBBuffers between the CDC device class driver and the
+// application code. The function pointers and callback data values are set
+// to insert a buffer in each of the data channels, transmit and receive.
+//
+// With the buffer in place, the CDC channel callback is set to the relevant
+// channel function and the callback data is set to point to the channel
+// instance data. The buffer, in turn, has its callback set to the application
+// function and the callback data set to our CDC instance structure.
+//
+//*****************************************************************************
 static tUSBDCDCDevice serialDevice = {
     USB_VID_TI_1CBE,
     USB_PID_SERIAL,
@@ -214,15 +132,42 @@ static tUSBDCDCDevice serialDevice = {
     USBBufferEventCallback,
     (void *)&txBuffer,
 
-    stringDescriptors,
-    STRINGDESCRIPTORSCOUNT
+    0,
+    0
 };
 
-static tLineCoding g_sLineCoding = {
-    115200,                     /* 115200 baud rate. */
-    1,                          /* 1 Stop Bit. */
-    0,                          /* No Parity. */
-    8                           /* 8 Bits of data. */
+//*****************************************************************************
+//
+// Receive buffer (from the USB perspective).
+//
+//*****************************************************************************
+tUSBBuffer rxBuffer = {
+    false,                      /* This is a receive buffer. */
+    cbRxHandler,                /* pfnCallback */
+    (void *)&serialDevice,      /* Callback data is our device pointer. */
+    USBDCDCPacketRead,          /* pfnTransfer */
+    USBDCDCRxPacketAvailable,   /* pfnAvailable */
+    (void *)&serialDevice,      /* pvHandle */
+    receiveBuffer,              /* pcBuffer */
+    UART_BUFFER_SIZE,              /* ulBufferSize */
+    {{0, 0, 0, 0}, 0, 0}        /* private data workspace */
+};
+
+//*****************************************************************************
+//
+// Transmit buffer (from the USB perspective).
+//
+//*****************************************************************************
+tUSBBuffer txBuffer = {
+    true,                       /* This is a transmit buffer. */
+    cbTxHandler,                /* pfnCallback */
+    (void *)&serialDevice,      /* Callback data is our device pointer. */
+    USBDCDCPacketWrite,         /* pfnTransfer */
+    USBDCDCTxPacketAvailable,   /* pfnAvailable */
+    (void *)&serialDevice,      /* pvHandle */
+    transmitBuffer,             /* pcBuffer */
+    UART_BUFFER_SIZE,              /* ulBufferSize */
+    {{0, 0, 0, 0}, 0, 0}        /* private data workspace */
 };
 
 /*
@@ -242,8 +187,8 @@ static tLineCoding g_sLineCoding = {
  *  @param(eventMsgPtr)     A data pointer associated with a particular event.
  *
  */
-static USBCDCDEventType cbRxHandler(void *cbData, USBCDCDEventType event,
-                                    USBCDCDEventType eventMsg,
+uint32_t cbRxHandler(void *cbData, uint32_t event,
+                                    uint32_t eventMsg,
                                     void *eventMsgPtr)
 {
     switch (event) {
@@ -281,8 +226,8 @@ static USBCDCDEventType cbRxHandler(void *cbData, USBCDCDEventType event,
  *  @param(eventMsgPtr)     A data pointer associated with a particular event.
  *
  */
-static USBCDCDEventType cbSerialHandler(void *cbData, USBCDCDEventType event,
-                                        USBCDCDEventType eventMsg,
+uint32_t cbSerialHandler(void *cbData, uint32_t event,
+                                        uint32_t eventMsg,
                                         void *eventMsgPtr)
 {
     tLineCoding *psLineCoding;
@@ -290,12 +235,11 @@ static USBCDCDEventType cbSerialHandler(void *cbData, USBCDCDEventType event,
     /* Determine what event has happened */
     switch (event) {
         case USB_EVENT_CONNECTED:
-            state = USBCDCD_STATE_INIT;
-            SemaphoreP_post(semUSBConnected);
+            stateCDC = USBCDCD_STATE_INIT;
             break;
 
         case USB_EVENT_DISCONNECTED:
-            state = USBCDCD_STATE_UNCONFIGURED;
+            stateCDC = USBCDCD_STATE_UNCONFIGURED;
             break;
 
         case USBD_CDC_EVENT_GET_LINE_CODING:
@@ -356,8 +300,8 @@ static USBCDCDEventType cbSerialHandler(void *cbData, USBCDCDEventType event,
  *  @param(eventMsgPtr)     A data pointer associated with a particular event.
  *
  */
-static USBCDCDEventType cbTxHandler(void *cbData, USBCDCDEventType event,
-                                    USBCDCDEventType eventMsg,
+uint32_t cbTxHandler(void *cbData, uint32_t event,
+                                    uint32_t eventMsg,
                                     void *eventMsgPtr)
 {
     switch (event) {
@@ -376,14 +320,6 @@ static USBCDCDEventType cbTxHandler(void *cbData, USBCDCDEventType event,
     return (0);
 }
 
-/*
- *  ======== USBCDCD_hwiHandler ========
- *  This function calls the USB library's device interrupt handler.
- */
-static void USBCDCD_hwiHandler(uintptr_t arg0)
-{
-    USB0_IRQDeviceHandler();
-}
 
 /*
  *  ======== rxData ========
@@ -440,33 +376,12 @@ static unsigned int txData(const unsigned char *pStr,
     return (bufferedCount);
 }
 
+
 /*
- *  ======== USBCDCD_init ========
+ *  ======== USBD_CDC_init ========
  */
-void USBCDCD_init(bool usbInternal)
+void USBD_CDC_init(tCompositeEntry *psCompEntry)
 {
-    HwiP_Handle hwi;
-    uint32_t ui32ULPI;
-
-    // LWK TODO: fix these to just go out over the repl uart? mp_hal_stdout_tx_str()??
-    // Display_Handle display;
-
-    // Display_init();
-
-    // /* Open the display for output */
-    // display = Display_open(Display_Type_UART, NULL);
-
-    // if (display == NULL) {
-    //     /* Failed to open display driver */
-    //     while (1);
-    // }
-
-    /* Install interrupt handler */
-    hwi = HwiP_create(INT_USB0, USBCDCD_hwiHandler, NULL);
-    if (hwi == NULL) {
-        // Display_printf(display, 0, 0, "Can't create USB Hwi.\n");
-        while(1);
-    }
 
     /* RTOS primitives */
     semTxSerial = SemaphoreP_createBinary(0);
@@ -478,12 +393,6 @@ void USBCDCD_init(bool usbInternal)
     semRxSerial = SemaphoreP_createBinary(0);
     if (semRxSerial == NULL) {
         // Display_printf(display, 0, 0, "Can't create RX semaphore.\n");
-        while(1);
-    }
-
-    semUSBConnected = SemaphoreP_createBinary(0);
-    if (semUSBConnected == NULL) {
-        // Display_printf(display, 0, 0, "Can't create USB semaphore.\n");
         while(1);
     }
 
@@ -499,37 +408,20 @@ void USBCDCD_init(bool usbInternal)
         while(1);
     }
 
-    mutexUSBWait = MutexP_create(NULL);
-    if (mutexUSBWait == NULL) {
-        // Display_printf(display, 0, 0, "Could not create USB Wait mutex.\n");
-        while(1);
-    }
-
     /* State specific variables */
-    state = USBCDCD_STATE_UNCONFIGURED;
-
-    /* Check if the ULPI mode is to be used or not */
-    if(!(usbInternal)) {
-        ui32ULPI = USBLIB_FEATURE_ULPI_HS;
-        USBDCDFeatureSet(0, USBLIB_FEATURE_USBULPI, &ui32ULPI);
-    }
-
-    // LWK TODO: need to check this to see if its looking at PB1 and or ignoreing it
-    // we should handle via PQ4 or selves if needed
-    
-    /* Set the USB stack mode to Device mode with VBUS monitoring */
-    USBStackModeSet(0, eUSBModeForceDevice, 0);
+    stateCDC = USBCDCD_STATE_UNCONFIGURED;
 
     /*
      * Pass our device information to the USB HID device class driver,
      * initialize the USB controller and connect the device to the bus.
      */
-    if (!USBDCDCInit(0, &serialDevice)) {
-        // Display_printf(display, 0, 0, "Error initializing the serial device.\n");
+    if (!USBDCDCCompositeInit(0, &serialDevice, psCompEntry)) {
+        //Can't initialize CDC composite component
+        // Display_printf(display, 0, 0, "Can't initialize CDC composite component.\n");
         while(1);
     }
-    // Display_close(display);
 }
+
 
 /*
  *  ======== USBCDCD_receiveData ========
@@ -541,9 +433,9 @@ unsigned int USBCDCD_receiveData(unsigned char *pStr,
     unsigned int retValue = 0;
     unsigned int key;
 
-    switch (state) {
+    switch (stateCDC) {
         case USBCDCD_STATE_UNCONFIGURED:
-            USBCDCD_waitForConnect(timeout);
+            USB_waitForConnect(timeout);
             break;
 
         case USBCDCD_STATE_INIT:
@@ -553,7 +445,7 @@ unsigned int USBCDCD_receiveData(unsigned char *pStr,
             USBBufferInit(&txBuffer);
             USBBufferInit(&rxBuffer);
 
-            state = USBCDCD_STATE_IDLE;
+            stateCDC = USBCDCD_STATE_IDLE;
 
             retValue = rxData(pStr, length, timeout);
 
@@ -577,6 +469,7 @@ unsigned int USBCDCD_receiveData(unsigned char *pStr,
 
     return (retValue);
 }
+
 
 /*
  *  ======== USBCDCD_sendData ========
@@ -588,9 +481,9 @@ unsigned int USBCDCD_sendData(const unsigned char *pStr,
     unsigned int retValue = 0;
     unsigned int key;
 
-    switch (state) {
+    switch (stateCDC) {
         case USBCDCD_STATE_UNCONFIGURED:
-            USBCDCD_waitForConnect(timeout);
+            USB_waitForConnect(timeout);
             break;
 
         case USBCDCD_STATE_INIT:
@@ -600,7 +493,7 @@ unsigned int USBCDCD_sendData(const unsigned char *pStr,
             USBBufferInit(&txBuffer);
             USBBufferInit(&rxBuffer);
 
-            state = USBCDCD_STATE_IDLE;
+            stateCDC = USBCDCD_STATE_IDLE;
 
             retValue = txData(pStr, length, timeout);
 
@@ -625,24 +518,3 @@ unsigned int USBCDCD_sendData(const unsigned char *pStr,
     return (retValue);
 }
 
-/*
- *  ======== USBCDCD_waitForConnect ========
- */
-bool USBCDCD_waitForConnect(unsigned int timeout)
-{
-    bool ret = true;
-    unsigned int key;
-
-    /* Need exclusive access to prevent a race condition */
-    key = MutexP_lock(mutexUSBWait);
-
-    if (state == USBCDCD_STATE_UNCONFIGURED) {
-        if (SemaphoreP_pend(semUSBConnected, timeout)== SemaphoreP_TIMEOUT) {
-            ret = false;
-        }
-    }
-
-    MutexP_unlock(mutexUSBWait, key);
-
-    return (ret);
-}
