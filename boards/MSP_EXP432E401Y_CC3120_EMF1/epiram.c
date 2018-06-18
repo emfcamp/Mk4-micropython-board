@@ -109,7 +109,7 @@ void ExternalRAM_init(void)
      * Set the SDRAM size to 64MB with a refresh interval of 468 clock ticks*/
     MAP_EPIConfigSDRAMSet(EPI0_BASE, (EPI_SDRAM_CORE_FREQ_50_100 |
                                       EPI_SDRAM_FULL_POWER |
-                                      EPI_SDRAM_SIZE_64MBIT), 468);
+                                      EPI_SDRAM_SIZE_128MBIT), 468);
 
     /* Set the address map.  The EPI0 is mapped from 0x60000000 to 0x01FFFFFF.
      * For this example, we will start from a base address of 0x60000000 with
