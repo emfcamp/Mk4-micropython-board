@@ -528,9 +528,15 @@ PWMMSP432E4_Object pwmMSP432E4Objects[MSP_EXP432E401Y_PWMCOUNT];
 const PWMMSP432E4_HWAttrs pwmMSP432E4HWAttrs[MSP_EXP432E401Y_PWMCOUNT] = {
     {
         .pwmBaseAddr = PWM0_BASE,
-        .pwmOutput = PWM_OUT_1,
+        .pwmOutput = PWM_OUT_0,
         .pwmGenOpts = PWM_GEN_MODE_DOWN | PWM_GEN_MODE_DBG_RUN,
-        .pinConfig = PWMMSP432E4_PF1_M0PWM1
+        .pinConfig = PWMMSP432E4_PF0_M0PWM0
+    },
+    {
+        .pwmBaseAddr = PWM0_BASE,
+        .pwmOutput = PWM_OUT_3,
+        .pwmGenOpts = PWM_GEN_MODE_DOWN | PWM_GEN_MODE_DBG_RUN,
+        .pinConfig = PWMMSP432E4_PF3_M0PWM3
     }
 };
 
@@ -539,6 +545,11 @@ const PWM_Config PWM_config[MSP_EXP432E401Y_PWMCOUNT] = {
         .fxnTablePtr = &PWMMSP432E4_fxnTable,
         .object = &pwmMSP432E4Objects[MSP_EXP432E401Y_PWM0],
         .hwAttrs = &pwmMSP432E4HWAttrs[MSP_EXP432E401Y_PWM0]
+    },
+    {
+        .fxnTablePtr = &PWMMSP432E4_fxnTable,
+        .object = &pwmMSP432E4Objects[MSP_EXP432E401Y_PWM3],
+        .hwAttrs = &pwmMSP432E4HWAttrs[MSP_EXP432E401Y_PWM3]
     }
 };
 
