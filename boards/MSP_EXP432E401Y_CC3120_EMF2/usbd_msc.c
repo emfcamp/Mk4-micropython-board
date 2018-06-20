@@ -50,17 +50,17 @@
 #include "usbd_msc.h"
 
 /* storage.c function declarations, can't include storage.h due to mp paths */
-void storage_init(void);
-uint32_t storage_get_block_size(void);
-uint32_t storage_get_block_count(void);
-void storage_irq_handler(void);
-void storage_flush(void);
-bool storage_read_block(uint8_t *dest, uint32_t block);
-bool storage_write_block(const uint8_t *src, uint32_t block);
+extern void storage_init(void);
+extern uint32_t storage_get_block_size(void);
+extern uint32_t storage_get_block_count(void);
+extern void storage_irq_handler(void);
+extern void storage_flush(void);
+extern bool storage_read_block(uint8_t *dest, uint32_t block);
+extern bool storage_write_block(const uint8_t *src, uint32_t block);
 
 // these return 0 on success, non-zero on error
-unsigned storage_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_blocks);
-unsigned storage_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t num_blocks);
+extern unsigned storage_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_blocks);
+extern unsigned storage_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t num_blocks);
 
 /* Typedefs */
 typedef volatile enum {
