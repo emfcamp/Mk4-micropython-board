@@ -322,6 +322,7 @@ void USB_Comp_init()
     // init the CDC device as entry 0 in of our composite device
     USBD_CDC_init(&g_psCompEntries[0]);
     #endif
+    
 
 
     //

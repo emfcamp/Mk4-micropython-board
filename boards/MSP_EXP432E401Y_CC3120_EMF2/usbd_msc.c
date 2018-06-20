@@ -48,7 +48,19 @@
 /* board Header files */
 #include "usb.h"
 #include "usbd_msc.h"
-// #include "storage.h"
+
+/* storage.c function declarations, can't include storage.h due to mp paths */
+void storage_init(void);
+uint32_t storage_get_block_size(void);
+uint32_t storage_get_block_count(void);
+void storage_irq_handler(void);
+void storage_flush(void);
+bool storage_read_block(uint8_t *dest, uint32_t block);
+bool storage_write_block(const uint8_t *src, uint32_t block);
+
+// these return 0 on success, non-zero on error
+unsigned storage_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_blocks);
+unsigned storage_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t num_blocks);
 
 /* Typedefs */
 typedef volatile enum {
@@ -64,6 +76,7 @@ static volatile USBMSC_USBState stateMSC;
 
 static tUSBDMSCDevice mscDevice;
 
+static int deviceID = 1;
 
 /* Function prototypes */
 
@@ -210,8 +223,8 @@ USBDMSCStorageOpen(uint32_t ulDrive)
     // return((void *)&g_sDriveInformation);
     
     // LWK
-    // storage_init();
-    return (0);
+    storage_init();
+    return (void *)(&deviceID);
 }
 
 //*****************************************************************************
@@ -241,6 +254,7 @@ USBDMSCStorageClose(void *pvDrive)
 
     // LWK
     // ?????
+    storage_flush();
 }
 
 //*****************************************************************************
@@ -274,9 +288,9 @@ USBDMSCStorageRead(void *pvDrive, uint8_t *pui8Data, uint32_t ui32Sector,
     // return(ui32NumBlocks * MX66L51235F_BLOCK_SIZE);
     
     // LWK
-    // storage_read_blocks(pui8Data, ui32Sector, ui32NumBlocks);
-    // return (ui32NumBlocks * storage_get_block_size());
-    return (0);
+    storage_read_blocks(pui8Data, ui32Sector, ui32NumBlocks);
+    return (ui32NumBlocks * storage_get_block_size());
+    // return (0);
 }
 
 //*****************************************************************************
@@ -336,9 +350,9 @@ USBDMSCStorageWrite(void *pvDrive, uint8_t *pui8Data, uint32_t ui32Sector,
     // return(ui32NumBlocks * MX66L51235F_BLOCK_SIZE);
     
     // LWK
-    // storage_write_blocks(pui8Data, ui32Sector, ui32NumBlocks);
-    // return (ui32NumBlocks * storage_get_block_size());
-    return (0);
+    storage_write_blocks(pui8Data, ui32Sector, ui32NumBlocks);
+    return (ui32NumBlocks * storage_get_block_size());
+    // return (0);
 }
 
 //*****************************************************************************
@@ -358,8 +372,8 @@ uint32_t
 USBDMSCStorageNumBlocks(void *pvDrive)
 {
     // LWK
-    // return storage_get_block_count();
-    return (0);
+    return storage_get_block_count();
+    // return (0);
 }
 
 //*****************************************************************************
@@ -379,8 +393,8 @@ uint32_t
 USBDMSCStorageBlockSize(void *pvDrive)
 {
     // LWK
-    // return storage_get_block_size();
-    return (0);
+    return storage_get_block_size();
+    // return (0);
 }
 
 

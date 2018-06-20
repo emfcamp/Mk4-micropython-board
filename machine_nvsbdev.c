@@ -159,7 +159,7 @@ static uint8_t *flash_cache_get_addr(uint32_t flash_addr, bool write) {
     if (flash_cache_sector_id != flash_sector_id) {
         flash_bdev_ioctl(BDEV_IOCTL_SYNC, 0); //Sync 
         //NVS_lock(nvs_handle, NVS_LOCK_WAIT_FOREVER);
-        uint_fast16_t status = NVS_read(nvs_handle, flash_sector_start, (char *)CACHE_MEM_START_ADDR, flash_sector_size);
+        int_fast16_t status = NVS_read(nvs_handle, flash_sector_start, (char *)CACHE_MEM_START_ADDR, flash_sector_size);
         //NVS_unlock(nvs_handle);
         if (status != NVS_STATUS_SUCCESS) {
             mp_raise_OSError(MP_EIO);
