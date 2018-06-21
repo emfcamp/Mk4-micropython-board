@@ -311,12 +311,16 @@ void USB_Comp_init()
     /* Forcing device mode so that the VBUS and ID pins are not used or monitored by the USB controller. */
     USBStackModeSet(0, eUSBModeForceDevice, 0);
 
+    #if MICROPY_HW_USB_MSC
+    // if we are a CDC+MSC we have to list the MSC first 
+    // if enabled init the MSC device as entry 0 in our composite device 
+    USBD_MSC_init(&g_psCompEntries[0]);
+    // init the CDC device as entry 1 in of our composite device
+    USBD_CDC_init(&g_psCompEntries[1]);
+    #else
+    // for a CDC only device
     // init the CDC device as entry 0 in of our composite device
     USBD_CDC_init(&g_psCompEntries[0]);
-
-    #if MICROPY_HW_USB_MSC
-    // if enabled init the MSC device as entry 1 in our composite device 
-    USBD_MSC_init(&g_psCompEntries[1]);
     #endif
 
 
