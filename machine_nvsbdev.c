@@ -23,17 +23,18 @@
 
 #if MICROPY_MACHINE_NVSBDEV
 #include <ti/drivers/NVS.h>
-#include <ti/drivers/dpl/SemaphoreP.h>
+#include <ti/drivers/dpl/HwiP.h>
+#include <ti/devices/msp432e4/driverlib/interrupt.h>
 #include <ti/sysbios/knl/Task.h>
 #include <xdc/runtime/System.h>
-
-
+#include <ti/drivers/GPIO.h>
 
 #include "py/mpconfig.h"
+#include "py/mphal.h"
 #include "py/misc.h"
 
-static SemaphoreP_Handle flushFlashBdevCache;
-static SemaphoreP_Handle flushFlashBdevClean;
+// LWK TODO: fix up once we have pin names via CSV
+#include "MSP_EXP432E401Y.h"
 
 static NVS_Handle nvs_handle;
 static NVS_Attrs nvs_attrs;
@@ -80,6 +81,10 @@ uint32_t flash_get_sector_info(uint32_t addr, uint32_t *start_addr, uint32_t *si
     return 0;
 }
 
+static void FLASH_hwiHandler(uintptr_t arg0)
+{
+    flash_bdev_flush();
+}
 
 void flash_bdev_init(void) {
     NVS_Params params;
@@ -91,15 +96,8 @@ void flash_bdev_init(void) {
         mp_raise_OSError(MP_ENODEV);
     }
 
-    flushFlashBdevCache = SemaphoreP_createBinary(0);
-    if (flushFlashBdevCache == NULL) {
-        while(1);
-    }
-
-    flushFlashBdevClean = SemaphoreP_createBinary(0);
-    if (flushFlashBdevClean == NULL) {
-        while(1);
-    }
+    HwiP_create(INT_FLASH, FLASH_hwiHandler, NULL);
+    HwiP_setPriority(INT_FLASH, 0); // LWK TODO: find out what level USB actually runs at and make us just one higher
 
     pthread_t thread;
     pthread_attr_t attrs;
@@ -113,9 +111,9 @@ void flash_bdev_init(void) {
 void * flash_bdev_flush_thread(void * arg)
 {
     while(1) {
-        flash_bdev_flush();
+        HwiP_post(INT_FLASH);
         // Sleep 5 seconds
-        SemaphoreP_pend(flushFlashBdevCache,5000);
+        mp_hal_delay_ms(5000);
     }
 }
 
@@ -133,7 +131,7 @@ int32_t flash_bdev_ioctl(uint32_t op, uint32_t arg) {
     switch (op) {
         case BDEV_IOCTL_INIT:
             flash_flags = 0;
-            flash_cache_sector_id = -1; // basicaly set this to max
+            flash_cache_sector_id = -1; // basically set this to max
             flash_bdev_init();
             return 0;
 
@@ -142,9 +140,9 @@ int32_t flash_bdev_ioctl(uint32_t op, uint32_t arg) {
 
         case BDEV_IOCTL_SYNC:
             if (flash_flags & FLASH_FLAG_DIRTY) {
-                SemaphoreP_post(flushFlashBdevCache);
-            
-                SemaphoreP_pend(flushFlashBdevClean, SemaphoreP_WAIT_FOREVER);
+                while (flash_flags & FLASH_FLAG_DIRTY) {
+                   HwiP_post(INT_FLASH); // Firing this interrupt should have such a high priority that we should never loop
+                }
             }
             return 0;
     }
@@ -174,6 +172,7 @@ static uint8_t *flash_cache_get_addr(uint32_t flash_addr, bool write) {
     if (write) {
       flash_flags |= FLASH_FLAG_DIRTY;
       //TODO: led_state(PYB_LED_RED, 1); // indicate a dirty cache with LED on
+      GPIO_write(MSP_EXP432E401Y_GPIO_LED1, 1);
     }
     return (uint8_t*)CACHE_MEM_START_ADDR + flash_addr - flash_sector_start;
 }
@@ -210,8 +209,8 @@ void flash_bdev_flush(void) {
     }
     // clear the flash flags now that we have a clean cache
     flash_flags = 0;
-    SemaphoreP_post(flushFlashBdevClean);
     //TODO: indicate a clean cache with LED off
+    GPIO_write(MSP_EXP432E401Y_GPIO_LED1, 0);
 }
 
 bool flash_bdev_readblock(uint8_t *dest, uint32_t block) {
