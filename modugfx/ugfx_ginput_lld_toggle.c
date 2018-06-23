@@ -1,11 +1,12 @@
 #include "gfx.h"
 
-#if (GFX_USE_GINPUT && GINPUT_NEED_TOGGLE) 
+#if (GFX_USE_GINPUT && GINPUT_NEED_TOGGLE)
 // #include STM32_HAL_H
-#include "py/mphal.h" 
+#include "py/mphal.h"
 // #include "pin.h"
 // #include "genhdr/pins.h"
 #include "src/ginput/ginput_driver_toggle.h"
+#include <ti/drivers/GPIO.h>
 
 GINPUT_TOGGLE_DECLARE_STRUCTURE();
 
@@ -21,6 +22,7 @@ void ginput_lld_toggle_init(const GToggleConfig *ptc) {
 
 unsigned ginput_lld_toggle_getbits(const GToggleConfig *ptc) {
 	// return ((GPIO_TypeDef*)(ptc->id))->IDR;
+	return GPIO_read(ptc->id);
 }
 
 #endif /* GFX_USE_GINPUT && GINPUT_NEED_TOGGLE */

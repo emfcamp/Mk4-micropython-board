@@ -21,7 +21,7 @@
 
 // Describes how the toggle bits are obtained
 typedef struct GToggleConfig_t {
-	void		*id;
+	unsigned	id;
 	unsigned	mask;
 	unsigned	invert;
 	unsigned	mode;
@@ -36,7 +36,7 @@ extern "C" {
 #endif
 
 	extern const GToggleConfig GInputToggleConfigTable[GINPUT_TOGGLE_CONFIG_ENTRIES];
-	
+
 	void ginput_lld_toggle_init(const GToggleConfig *ptc);
 	unsigned ginput_lld_toggle_getbits(const GToggleConfig *ptc);
 
@@ -58,4 +58,3 @@ extern "C" {
 
 #endif /* _LLD_GINPUT_TOGGLE_H */
 /** @} */
-

@@ -8,17 +8,18 @@
 
 // The below are example values
 
-#define GINPUT_TOGGLE_NUM_PORTS			8			// The total number of toggle inputs
-#define GINPUT_TOGGLE_CONFIG_ENTRIES	8			// The total number of GToggleConfig entries
+#define GINPUT_TOGGLE_NUM_PORTS			5			// The total number of toggle inputs
+#define GINPUT_TOGGLE_CONFIG_ENTRIES	5			// The total number of GToggleConfig entries
 
 #define GINPUT_TOGGLE_RIGHT   0				// Joystick Right
 #define GINPUT_TOGGLE_UP      1				// Joystick Up
-#define GINPUT_TOGGLE_A       2				// Switch 1
-#define GINPUT_TOGGLE_B       3				// Switch 2
-#define GINPUT_TOGGLE_MENU    4
-#define GINPUT_TOGGLE_DOWN    5				// Joystick Down
-#define GINPUT_TOGGLE_LEFT    6				// Joystick Left
-#define GINPUT_TOGGLE_CENTER  7				// Joystick Center
+#define GINPUT_TOGGLE_DOWN    2				// Joystick Down
+#define GINPUT_TOGGLE_LEFT    3				// Joystick Left
+#define GINPUT_TOGGLE_CENTER  4				// Joystick Center
+#define GINPUT_TOGGLE_A       5				// Switch 1
+#define GINPUT_TOGGLE_B       5				// Switch 2
+#define GINPUT_TOGGLE_MENU    7
+
 
 /*
 PD3 - RIGHT - AH
@@ -32,9 +33,19 @@ PA15 - LEFT - AH
 */
 
 
+
 #define GINPUT_TOGGLE_DECLARE_STRUCTURE()											 \
 const GToggleConfig GInputToggleConfigTable[GINPUT_TOGGLE_CONFIG_ENTRIES] = {    \
+	{ MICROPY_HW_UGFX_JOY_RIGHT, 1,  1, 0},  /*  - Joy Right  */   \
+	{MICROPY_HW_UGFX_JOY_UP,     1,  1, 0},  /*  - Joy Up     */   \
+	{MICROPY_HW_UGFX_JOY_DOWN,   1,  1, 0},  /*  - Joy Down   */   \
+	{MICROPY_HW_UGFX_JOY_LEFT,   1,  1, 0},  /*  - Joy Left   */   \
+	{MICROPY_HW_UGFX_JOY_CENTRE, 1,  1, 0},  /*  - Joy Centre */   \
 }
+
+//	{void, GPIO_PIN_8,  GPIO_PIN_8, 0}, /*   - A Button */
+//	{void, GPIO_PIN_9,  GPIO_PIN_9, 0}, /*   - B Button */
+//	{void, GPIO_PIN_10, GPIO_PIN_10, 0}, /*  - Menu Button */
 
 
 //this could be used if the const is removed...
