@@ -10,120 +10,231 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
+#include <pthread.h>
+#include "storage.h"
+#include "machine_nvsbdev.h"
 
 #include "py/runtime.h"
 #include "py/mperrno.h"
 
+#include "py/obj.h"
+
+
 #if MICROPY_MACHINE_NVSBDEV
 #include <ti/drivers/NVS.h>
+#include <ti/drivers/dpl/HwiP.h>
+#include <ti/devices/msp432e4/driverlib/interrupt.h>
+#include <ti/sysbios/knl/Task.h>
+#include <xdc/runtime/System.h>
+#include <ti/drivers/GPIO.h>
 
-typedef struct _machine_nvsbdev_obj_t {
-    mp_obj_base_t base;
-    NVS_Handle nvs;
-    uint8_t id;
-    NVS_Attrs attrs;
-} machine_nvsbdev_obj_t;
+#include "py/mpconfig.h"
+#include "py/mphal.h"
+#include "py/misc.h"
 
-void machine_nvsbdev_teardown() {
+// LWK TODO: fix up once we have pin names via CSV
+#include "MSP_EXP432E401Y.h"
+
+static NVS_Handle nvs_handle;
+static NVS_Attrs nvs_attrs;
+
+typedef struct {
+    uint32_t base_address;
+    uint32_t sector_size;
+    uint32_t sector_count;
+} flash_layout_t;
+
+static const flash_layout_t flash_layout[] = {
+    { (uint32_t)0, (uint32_t)0x4000, 20 },
+};
+
+STATIC byte flash_cache_mem[0x4000] __attribute__((aligned(4))); // 16k
+#define CACHE_MEM_START_ADDR (&flash_cache_mem[0])
+#define FLASH_SECTOR_SIZE_MAX (0x4000) // 16k max due to size of cache buffer
+#define FLASH_MEM_SEG1_NUM_BLOCKS (640) 
+#define FLASH_PART1_START_BLOCK (0x100) // FAT data starts at block 256
+
+// TODO: Use self->attrs.regionSize & self->attrs.sectorSize
+
+uint32_t flash_get_sector_info(uint32_t addr, uint32_t *start_addr, uint32_t *size) {
+    if (addr >= flash_layout[0].base_address) {
+        uint32_t sector_index = 0;
+        for (int i = 0; i < MP_ARRAY_SIZE(flash_layout); ++i) {
+            for (int j = 0; j < flash_layout[i].sector_count; ++j) {
+                uint32_t sector_start_next = flash_layout[i].base_address
+                    + (j + 1) * flash_layout[i].sector_size;
+                if (addr < sector_start_next) {
+                    if (start_addr != NULL) {
+                        *start_addr = flash_layout[i].base_address
+                            + j * flash_layout[i].sector_size;
+                    }
+                    if (size != NULL) {
+                        *size = flash_layout[i].sector_size;
+                    }
+                    return sector_index;
+                }
+                ++sector_index;
+            }
+        }
+    }
+    return 0;
 }
 
-STATIC mp_obj_t machine_nvsbdev_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-    mp_arg_check_num(n_args, n_kw, 1, MP_OBJ_FUN_ARGS_MAX, true);
-    mp_int_t id = mp_obj_get_int(args[0]);
-    machine_nvsbdev_obj_t *self = m_new_obj(machine_nvsbdev_obj_t);
-    self->base.type = type;
-    self->id = id;
+static void FLASH_hwiHandler(uintptr_t arg0)
+{
+    flash_bdev_flush();
+}
 
+void flash_bdev_init(void) {
     NVS_Params params;
     NVS_Params_init(&params);
-    if ((self->nvs = NVS_open(self->id, &params))) {
-        NVS_getAttrs(self->nvs, &self->attrs);
+    if ((nvs_handle = NVS_open(0, &params))) {
+        NVS_getAttrs(nvs_handle, &nvs_attrs);
     }
     else {
-        m_del_obj(machine_nvsbdev_obj_t, self);
         mp_raise_OSError(MP_ENODEV);
     }
-    return MP_OBJ_FROM_PTR(self);
+
+    HwiP_create(INT_FLASH, FLASH_hwiHandler, NULL);
+    HwiP_setPriority(INT_FLASH, 0); // LWK TODO: find out what level USB actually runs at and make us just one higher
+
+    pthread_t thread;
+    pthread_attr_t attrs;
+
+    pthread_attr_init(&attrs);
+    pthread_attr_setstacksize(&attrs, 512); //TODO: Make stacksize a define
+    pthread_create(&thread, &attrs, flash_bdev_flush_thread, NULL);
+    pthread_attr_destroy(&attrs);
 }
 
-STATIC void machine_nvsbdev_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
-    machine_nvsbdev_obj_t *self = self_in;
-    mp_printf(print, "<machine_nvsbdev.%p> %u", self, self->id);
-    if (self->nvs) {
-        mp_printf(print, ", nvs=%p", (void *)self->nvs);
+void * flash_bdev_flush_thread(void * arg)
+{
+    while(1) {
+        HwiP_post(INT_FLASH);
+        // Sleep 5 seconds
+        mp_hal_delay_ms(5000);
     }
-    mp_printf(print, ")");
 }
 
-STATIC mp_obj_t machine_nvsbdev_readblocks(mp_obj_t self_in, mp_obj_t offset_in, mp_obj_t buf_in) {
-    machine_nvsbdev_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_int_t offset = mp_obj_get_int(offset_in);
-    mp_buffer_info_t buf_info;
-    mp_get_buffer_raise(buf_in, &buf_info, MP_BUFFER_WRITE);
 
-    uint_fast16_t status = NVS_read(self->nvs, offset * self->attrs.sectorSize,
-                                    (char *)buf_info.buf, buf_info.len);
-    if (status != NVS_STATUS_SUCCESS) {
-        mp_raise_OSError(MP_EIO);
-    }
+#define FLASH_FLAG_DIRTY        (1)
+#define FLASH_FLAG_ERASED       (4)
+static volatile uint8_t flash_flags = 0;
+static uint32_t flash_cache_sector_id;
+static volatile uint32_t flash_cache_sector_start;
+static uint32_t flash_cache_sector_size;
 
-    return mp_const_none;
-}
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(machine_nvsbdev_readblocks_obj, machine_nvsbdev_readblocks);
-
-STATIC mp_obj_t machine_nvsbdev_writeblocks(mp_obj_t self_in, mp_obj_t offset_in, mp_obj_t buf_in) {
-    machine_nvsbdev_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_int_t offset = mp_obj_get_int(offset_in);
-    mp_buffer_info_t buf_info;
-    mp_get_buffer_raise(buf_in, &buf_info, MP_BUFFER_READ);
-
-    uint_fast16_t status = NVS_write(self->nvs, offset * self->attrs.sectorSize,
-                       buf_info.buf, buf_info.len, NVS_WRITE_POST_VERIFY);
-
-    if (status != NVS_STATUS_SUCCESS) {
-        mp_raise_OSError(MP_EIO);
-    }
-
-    return mp_const_none;
-}
-
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(machine_nvsbdev_writeblocks_obj, machine_nvsbdev_writeblocks);
-
-STATIC mp_obj_t machine_nvsbdev_ioctl(size_t n_args, const mp_obj_t *args) {
-    machine_nvsbdev_obj_t *self = MP_OBJ_TO_PTR(args[0]);
-    mp_int_t op = mp_obj_get_int(args[1]);
-    // optional args in args[2++]
-
+int32_t flash_bdev_ioctl(uint32_t op, uint32_t arg) {
+    (void)arg;
     switch (op) {
-        case 4:
-            return MP_OBJ_NEW_SMALL_INT(self->attrs.regionSize / self->attrs.sectorSize);
-            break;
-        case 5:
-            return MP_OBJ_NEW_SMALL_INT(self->attrs.sectorSize);
-            break;
-        default:
-            return mp_const_none;
-    }
+        case BDEV_IOCTL_INIT:
+            flash_flags = 0;
+            flash_cache_sector_id = -1; // basically set this to max
+            flash_bdev_init();
+            return 0;
 
-    return mp_const_none;
+        case BDEV_IOCTL_NUM_BLOCKS:
+            return FLASH_MEM_SEG1_NUM_BLOCKS;
+
+        case BDEV_IOCTL_SYNC:
+            if (flash_flags & FLASH_FLAG_DIRTY) {
+                while (flash_flags & FLASH_FLAG_DIRTY) {
+                   HwiP_post(INT_FLASH); // Firing this interrupt should have such a high priority that we should never loop
+                }
+            }
+            return 0;
+    }
+    return -MP_EINVAL;
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(machine_nvsbdev_ioctl_obj, 2, machine_nvsbdev_ioctl);
+static uint8_t *flash_cache_get_addr(uint32_t flash_addr, bool write) {
+    uint32_t flash_sector_start;
+    uint32_t flash_sector_size;
+    uint32_t flash_sector_id = flash_get_sector_info(flash_addr, &flash_sector_start, &flash_sector_size);
+    if (flash_sector_size > FLASH_SECTOR_SIZE_MAX) {
+        flash_sector_size = FLASH_SECTOR_SIZE_MAX;
+    }
+    if (flash_cache_sector_id != flash_sector_id) {
+        flash_bdev_ioctl(BDEV_IOCTL_SYNC, 0); //Sync 
+        //NVS_lock(nvs_handle, NVS_LOCK_WAIT_FOREVER);
+        int_fast16_t status = NVS_read(nvs_handle, flash_sector_start, (char *)CACHE_MEM_START_ADDR, flash_sector_size);
+        //NVS_unlock(nvs_handle);
+        if (status != NVS_STATUS_SUCCESS) {
+            mp_raise_OSError(MP_EIO);
+        }
 
-STATIC const mp_rom_map_elem_t machine_nvsbdev_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_readblocks), MP_ROM_PTR(&machine_nvsbdev_readblocks_obj) },
-    { MP_ROM_QSTR(MP_QSTR_writeblocks), MP_ROM_PTR(&machine_nvsbdev_writeblocks_obj) },
-    { MP_ROM_QSTR(MP_QSTR_ioctl), MP_ROM_PTR(&machine_nvsbdev_ioctl_obj) },
-};
+        flash_cache_sector_id = flash_sector_id;
+        flash_cache_sector_start = flash_sector_start;
+        flash_cache_sector_size = flash_sector_size;
+    }
+    if (write) {
+      flash_flags |= FLASH_FLAG_DIRTY;
+      //TODO: led_state(PYB_LED_RED, 1); // indicate a dirty cache with LED on
+      GPIO_write(MSP_EXP432E401Y_GPIO_LED1, 1);
+    }
+    return (uint8_t*)CACHE_MEM_START_ADDR + flash_addr - flash_sector_start;
+}
 
-STATIC MP_DEFINE_CONST_DICT(machine_nvsbdev_locals_dict, machine_nvsbdev_locals_dict_table);
+static uint8_t *flash_cache_get_addr_for_read(uint32_t flash_addr) {
+    return flash_cache_get_addr(flash_addr, false);
+}
 
-const mp_obj_type_t machine_nvsbdev_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_NVSBdev,
-    .make_new = machine_nvsbdev_make_new,
-    .print = machine_nvsbdev_print,
-    .locals_dict = (mp_obj_dict_t*)&machine_nvsbdev_locals_dict,
-};
+static uint8_t *flash_cache_get_addr_for_write(uint32_t flash_addr) {
+    return flash_cache_get_addr(flash_addr, true);
+}
+
+
+static uint32_t convert_block_to_flash_addr(uint32_t block) {
+    if (block < FLASH_MEM_SEG1_NUM_BLOCKS) {
+        return block * FLASH_BLOCK_SIZE;
+    }
+
+    // bad block
+    return -1;
+}
+
+void flash_bdev_flush(void) {
+    if (!(flash_flags & FLASH_FLAG_DIRTY)) {
+        return;
+    }
+    // sync the cache RAM buffer by writing it to the flash page
+    //NVS_lock(nvs_handle, NVS_LOCK_WAIT_FOREVER);
+    int_fast16_t status = NVS_write(nvs_handle, flash_cache_sector_start,
+                       CACHE_MEM_START_ADDR, 0x4000, NVS_WRITE_ERASE | NVS_WRITE_POST_VERIFY);
+    //NVS_unlock(nvs_handle);
+    if (status != NVS_STATUS_SUCCESS) {
+        mp_raise_OSError(MP_EIO);
+    }
+    // clear the flash flags now that we have a clean cache
+    flash_flags = 0;
+    //TODO: indicate a clean cache with LED off
+    GPIO_write(MSP_EXP432E401Y_GPIO_LED1, 0);
+}
+
+bool flash_bdev_readblock(uint8_t *dest, uint32_t block) {
+    // non-MBR block, get data from flash memory, possibly via cache
+    uint32_t flash_addr = convert_block_to_flash_addr(block);
+    if (flash_addr == -1) {
+        // bad block number
+        return false;
+    }
+    uint8_t *src = flash_cache_get_addr_for_read(flash_addr);
+    memcpy(dest, src, FLASH_BLOCK_SIZE);
+    return true;
+}
+
+bool flash_bdev_writeblock(const uint8_t *src, uint32_t block) {
+    // non-MBR block, copy to cache
+    uint32_t flash_addr = convert_block_to_flash_addr(block);
+    if (flash_addr == -1) {
+        // bad block number
+        return false;
+    }
+    uint8_t *dest = flash_cache_get_addr_for_write(flash_addr);
+    memcpy(dest, src, FLASH_BLOCK_SIZE);
+    return true;
+}
+
 #endif

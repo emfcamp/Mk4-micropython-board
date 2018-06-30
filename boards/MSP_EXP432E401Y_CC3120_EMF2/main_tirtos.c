@@ -50,7 +50,7 @@
 
 /* USBS Composit CDC device rom TI RTOS usb_serial_device example */
 #if MICROPY_HW_USB_REPL
-#include "USBCDCD.h"
+#include "usb.h"
 #endif
 
 //extern void ti_ndk_config_Global_startupFxn();
@@ -94,7 +94,7 @@ int main(void)
 
     #if MICROPY_HW_USB_REPL
     MSP_EXP432E401Y_initUSB(MSP_EXP432E401Y_USBDEVICE);
-    USBCDCD_init(MSP_EXP432E401Y_USBDEVICE);
+    USB_Comp_init();
     #endif
 
 //    ti_ndk_config_Global_startupFxn();

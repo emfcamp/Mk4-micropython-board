@@ -448,8 +448,8 @@ const uint_least8_t I2C_count = MSP_EXP432E401Y_I2CCOUNT;
 #include <ti/drivers/nvs/NVSMSP432E4.h>
 
 #define SECTORSIZE       (0x4000)
-#define NVS_REGIONS_BASE (0xF8000)
-#define REGIONSIZE       (SECTORSIZE * 2)
+#define NVS_REGIONS_BASE (0xAC000) // Not used in GCC, see linker script
+#define REGIONSIZE       (SECTORSIZE * 20)
 
 /*
  * Reserve flash sectors for NVS driver use
