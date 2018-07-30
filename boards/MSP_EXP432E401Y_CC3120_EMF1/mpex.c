@@ -44,6 +44,7 @@
 #include <ti/drivers/I2C.h>
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/SD.h>
+#include <ti/drivers/NVS.h>
 
 #include <ti/drivers/net/wifi/slnetifwifi.h>
 
@@ -52,6 +53,7 @@
 // Micropython RTOS thread stack size
 #define STACKSIZE 8192U
 #define MPHEAPSIZE (8388608 - 30720) // 8 Meg SRAM - GFX_OS_HEAP_SIZE (30K)
+//#define   MPHEAPSIZE (65535 + 14384)
 
 // Simplelink network task
 #define SLNET_IF_WIFI_PRIO       (5)
@@ -110,6 +112,7 @@ void *mainThread(void *arg0)
     SPI_init();
     UART_init();
     PWM_init();
+    NVS_init();
 
     pthread_t thread;
     pthread_attr_t attrs;

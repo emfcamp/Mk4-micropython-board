@@ -7,7 +7,7 @@ KERNEL_BUILD := ./kernel/build
 
 all: mpex.out mpex.bin
 
-mpex.out: main_tirtos.o mpex.o netwifi.o ndkstub.o inetaddr.o epiram.o USBCDCD.o MSP_EXP432E401Y.o ../../build-$(BOARD)/libmicropython.a
+mpex.out: main_tirtos.o mpex.o netwifi.o ndkstub.o inetaddr.o epiram.o usb.o usbd_cdc.o usbd_msc.o MSP_EXP432E401Y.o ../../build-$(BOARD)/libmicropython.a
 	@ echo building kernel ...
 	@ make -C kernel
 	@ echo linking ...
@@ -15,7 +15,7 @@ mpex.out: main_tirtos.o mpex.o netwifi.o ndkstub.o inetaddr.o epiram.o USBCDCD.o
 	@ $(SIZE) $@
 
 mpex.bin: mpex.out
-	@ echo creating downloadable binary	
+	@ echo creating downloadable binary
 	@ $(GCC_ARMCOMPILER)/arm-none-eabi/bin/objcopy -O binary $^ $@
 
 ../../build-$(BOARD)/libmicropython.a:
