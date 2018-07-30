@@ -616,7 +616,7 @@ const SPIMSP432E4DMA_HWAttrs spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPICOUNT] = {
         .rxDmaChannel = UDMA_CH10_SSI0RX,
         .txDmaChannel = UDMA_CH11_SSI0TX,
         .clkPinMask = SPIMSP432E4_PA2_SSI0CLK,
-        .fssPinMask = SPIMSP432E4_PA3_SSI0FSS,
+//        .fssPinMask = SPIMSP432E4_PA3_SSI0FSS,
         .xdat0PinMask = SPIMSP432E4_PA4_SSI0XDAT0,
         .xdat1PinMask = SPIMSP432E4_PA5_SSI0XDAT1
     }
