@@ -19,6 +19,9 @@
 //SPI_HandleTypeDef ili_spi;
 SPI_Handle spi_h;
 
+SPI_Transaction trans;
+uint8_t dma_buffer[200];
+
 extern orientation_t blit_rotation;
 
 /*
@@ -73,9 +76,10 @@ static GFXINLINE void init_board(GDisplay *g) {
 
     SPI_Params params;
     SPI_Params_init(&params);
-    params.bitRate = 1000000;
+    params.bitRate = 10000000;
     params.dataSize = 8;
     params.frameFormat = 0;
+    //params.transferMode = SPI_MODE_CALLBACK;
 
 
     spi_h = SPI_open(MICROPY_HW_UGFX_SPI, &params);
@@ -226,23 +230,59 @@ static GFXINLINE void write_index(GDisplay *g, uint16_t index) {
 
 	//HAL_SPI_Transmit(&ili_spi, &index, 1, 1000);
 
-    SPI_Transaction trans;
+
     trans.txBuf = &index;
     trans.rxBuf = NULL;
     trans.count = 1;
+
     (void)SPI_transfer(spi_h, &trans);
 	//GPIOPinWrite(MICROPY_HW_UGFX_PORT_A0, MICROPY_HW_UGFX_PIN_A0, MICROPY_HW_UGFX_PIN_A0);  //CMD high
     GPIO_write(MICROPY_HW_UGFX_PIN_A0, 1);
+    GPIO_write(MICROPY_HW_UGFX_PIN_CS, 1);
 }
 static GFXINLINE void write_data(GDisplay *g, uint16_t data) {
 	(void) g;
 	//HAL_SPI_Transmit(&ili_spi, &data, 1, 1000);
-    SPI_Transaction trans;
+GPIO_write(MICROPY_HW_UGFX_PIN_CS, 0);
     trans.txBuf = &data;
     trans.rxBuf = NULL;
     trans.count = 1;
     (void)SPI_transfer(spi_h, &trans);
+    //GPIO_write(MICROPY_HW_UGFX_PIN_CS, 1);
 }
+
+static GFXINLINE void write_data16_repeated(GDisplay *g, uint16_t data, uint32_t cnt) {
+	(void) g;
+   
+   GPIO_write(MICROPY_HW_UGFX_PIN_CS, 0);
+   
+   
+   uint8_t c_low = data&0xff;
+      uint8_t c_high = data>>8;
+      for (int i = 0; i < 200;){
+         dma_buffer[i] = c_high;
+         i++;
+         dma_buffer[i] = c_low;
+         i++;
+      }
+      
+      trans.txBuf = &dma_buffer;
+      trans.rxBuf = NULL;
+      
+      while(cnt >= 100){         
+         trans.count = 200;
+         (void)SPI_transfer(spi_h, &trans);
+         cnt -= 100;
+      }
+      trans.count = cnt*2;
+      (void)SPI_transfer(spi_h, &trans);
+   
+   
+   //GPIO_write(MICROPY_HW_UGFX_PIN_CS, 1);
+   
+   
+}
+
 static GFXINLINE uint16_t read_data(GDisplay *g) {
 	(void) g;
 	uint8_t d;

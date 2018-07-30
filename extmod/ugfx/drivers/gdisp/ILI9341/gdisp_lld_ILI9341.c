@@ -401,6 +401,19 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 	}
 #endif
 
+#if GDISP_HARDWARE_FILLS
+   LLDSPEC  void gdisp_lld_fill_area(GDisplay *g) {
+      uint32_t	area;
+      area = (uint32_t)g->p.cx * g->p.cy;
+      uint16_t c = gdispColor2Native(g->p.color);
+      
+      gdisp_lld_write_start(g);
+      write_data16_repeated(g, c, area);
+      gdisp_lld_write_stop(g);
+      
+	}
+#endif
+
 #if GDISP_HARDWARE_STREAM_READ
 	LLDSPEC	void gdisp_lld_read_start(GDisplay *g) {
 		acquire_bus(g);
