@@ -61,19 +61,25 @@ static void set_viewport(GDisplay *g) {
 		write_index(g, 0x2B);
 	else
 		write_index(g, 0x2A);
-	write_data(g, (g->p.x >> 8));
-	write_data(g, (uint8_t) g->p.x);
-	write_data(g, (g->p.x + g->p.cx - 1) >> 8);
-	write_data(g, (uint8_t) (g->p.x + g->p.cx - 1));
+	//write_data(g, (g->p.x >> 8));
+	//write_data(g, (uint8_t) g->p.x);
+   write_data16_block(g, g->p.x);
+	//write_data(g, (g->p.x + g->p.cx - 1) >> 8);
+	//write_data(g, (uint8_t) (g->p.x + g->p.cx - 1));
+   write_data16_block(g, (g->p.x + g->p.cx - 1));
+   write_data16_block_flush(g);
 
 	if (g->g.Width > g->g.Height)
 		write_index(g, 0x2A);
 	else
 		write_index(g, 0x2B);
-	write_data(g, (g->p.y >> 8));
-	write_data(g, (uint8_t) g->p.y);
-	write_data(g, (g->p.y + g->p.cy - 1) >> 8);
-	write_data(g, (uint8_t) (g->p.y + g->p.cy - 1));
+	//write_data(g, (g->p.y >> 8));
+	//write_data(g, (uint8_t) g->p.y);
+   write_data16_block(g, g->p.y);
+	//write_data(g, (g->p.y + g->p.cy - 1) >> 8);
+	//write_data(g, (uint8_t) (g->p.y + g->p.cy - 1));
+   write_data16_block(g, (g->p.y + g->p.cy - 1));
+   write_data16_block_flush(g);
 }
 
 /*===========================================================================*/
