@@ -20,7 +20,9 @@
 SPI_Handle spi_h;
 
 SPI_Transaction trans;
-uint8_t dma_buffer[200];
+#define DMA_BUFF_LEN 100
+uint8_t dma_buffer[DMA_BUFF_LEN*2];
+uint16_t dma_buffer_i;
 
 extern orientation_t blit_rotation;
 
@@ -250,33 +252,56 @@ GPIO_write(MICROPY_HW_UGFX_PIN_CS, 0);
     (void)SPI_transfer(spi_h, &trans);
     //GPIO_write(MICROPY_HW_UGFX_PIN_CS, 1);
 }
+   
+static GFXINLINE void write_data16_block_flush(GDisplay *g) {
+   (void) g;
+      
+   GPIO_write(MICROPY_HW_UGFX_PIN_CS, 0);
+   
+   trans.txBuf = &dma_buffer;
+   trans.rxBuf = NULL;           
+   trans.count = dma_buffer_i;
+   (void)SPI_transfer(spi_h, &trans);
+   
+   dma_buffer_i = 0;
+   
+   //GPIO_write(MICROPY_HW_UGFX_PIN_CS, 1);
+}
+
+static GFXINLINE void write_data16_block(GDisplay *g, uint16_t data) {
+      
+   dma_buffer[dma_buffer_i++] = data>>8;
+   dma_buffer[dma_buffer_i++] = data&0xFF;
+   
+   if (dma_buffer_i >= DMA_BUFF_LEN*2)
+      write_data16_block_flush(g);
+}
 
 static GFXINLINE void write_data16_repeated(GDisplay *g, uint16_t data, uint32_t cnt) {
 	(void) g;
    
-   GPIO_write(MICROPY_HW_UGFX_PIN_CS, 0);
-   
+   GPIO_write(MICROPY_HW_UGFX_PIN_CS, 0);   
    
    uint8_t c_low = data&0xff;
-      uint8_t c_high = data>>8;
-      for (int i = 0; i < 200;){
-         dma_buffer[i] = c_high;
-         i++;
-         dma_buffer[i] = c_low;
-         i++;
-      }
-      
-      trans.txBuf = &dma_buffer;
-      trans.rxBuf = NULL;
-      
-      while(cnt >= 100){         
-         trans.count = 200;
-         (void)SPI_transfer(spi_h, &trans);
-         cnt -= 100;
-      }
-      trans.count = cnt*2;
-      (void)SPI_transfer(spi_h, &trans);
+   uint8_t c_high = data>>8;
+   for (int i = 0; i < DMA_BUFF_LEN*2;){
+      dma_buffer[i] = c_high;
+      i++;
+      dma_buffer[i] = c_low;
+      i++;
+   }
    
+   trans.txBuf = &dma_buffer;
+   trans.rxBuf = NULL;
+   
+   while(cnt >= DMA_BUFF_LEN){         
+      trans.count = DMA_BUFF_LEN*2;
+      (void)SPI_transfer(spi_h, &trans);
+      cnt -= DMA_BUFF_LEN;
+   }
+   trans.count = cnt*2;
+   (void)SPI_transfer(spi_h, &trans);
+
    
    //GPIO_write(MICROPY_HW_UGFX_PIN_CS, 1);
    

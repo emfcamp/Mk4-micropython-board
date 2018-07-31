@@ -285,9 +285,8 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 				b1 = buffer+srcy*srccx+srcx;
 				for (x = 0; x < cx; x++){
 					buffer = b1;
-					for (y = 0; y < cy; y++){
-						g->p.color = *buffer;
-						gdisp_lld_write_color(g);
+					for (y = 0; y < cy; y++){                  
+						write_data16_block(g, gdispColor2Native(*buffer));
 						buffer += srccx;
 					}
 					b1++;
@@ -298,8 +297,7 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 		        srccx += cx;
 		        for (y = 0; y < cy; y++){
 		            for (x = 0; x < cx; x++){
-		              g->p.color = *buffer++;
-		              gdisp_lld_write_color(g);
+		              write_data16_block(g, gdispColor2Native(*buffer++));
 		            }
 		            buffer -= srccx;
 		        }
@@ -309,8 +307,7 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 				for (x = 0; x < cx; x++){
 					buffer = b1;
 					for (y = 0; y < cy; y++){
-						g->p.color = *buffer;
-						gdisp_lld_write_color(g);
+						write_data16_block(g, gdispColor2Native(*buffer));
 						buffer -= srccx;
 					}
 					b1--;
@@ -322,8 +319,7 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 		        srccx += cx;
 		        for (y = 0; y < cy; y++){
 		            for (x = 0; x < cx; x++){
-		              g->p.color = *buffer--;
-		              gdisp_lld_write_color(g);
+		              write_data16_block(g, gdispColor2Native(*buffer--));
 		            }
 		            buffer += srccx;
 		        }
@@ -337,19 +333,17 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 				srccx -= cx;
 				for (y = 0; y < cy; y++){
 					for (x = 0; x < cx; x++){
-					  g->p.color = *buffer++;
-					  gdisp_lld_write_color(g);
+					  write_data16_block(g, gdispColor2Native(*buffer++));
 					}
 					buffer += srccx;
 				}
 			}
 			else if (blit_rotation == GDISP_ROTATE_90){
 				b1 = buffer+(srcy+cy-1)*srccx+srcx;
-				for (x = 0; x < cx; x++){				
+				for (x = 0; x < cx; x++){
 					buffer = b1;
 					for (y = 0; y < cy; y++){					
-					  g->p.color = *buffer;
-					  gdisp_lld_write_color(g);
+					  write_data16_block(g, gdispColor2Native(*buffer));
 					  buffer -= srccx;
 					}
 					b1++;
@@ -361,8 +355,7 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 				srccx -= cx;
 				for (y = 0; y < cy; y++){
 					for (x = 0; x < cx; x++){
-					  g->p.color = *buffer--;
-					  gdisp_lld_write_color(g);
+					  write_data16_block(g, gdispColor2Native(*buffer--));
 					}
 					buffer -= srccx;
 				}
@@ -372,8 +365,7 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 				for (x = 0; x < cx; x++){				
 					buffer = b1;
 					for (y = 0; y < cy; y++){					
-					  g->p.color = *buffer;
-					  gdisp_lld_write_color(g);
+					  write_data16_block(g, gdispColor2Native(*buffer));
 					  buffer += srccx;
 					}
 					b1--;
@@ -382,7 +374,7 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 			}
 	    }
 
-
+      write_data16_block_flush(g);
 		release_bus(g);
 	}
 #endif
