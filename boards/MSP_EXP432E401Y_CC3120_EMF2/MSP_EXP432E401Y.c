@@ -94,6 +94,43 @@ const ADC_Config ADC_config[MSP_EXP432E401Y_ADCCOUNT] = {
 const uint_least8_t ADC_count = MSP_EXP432E401Y_ADCCOUNT;
 
 /*
+ *  ============================= Display =============================
+ */
+#include <ti/display/Display.h>
+#include <ti/display/DisplayUart.h>
+#define MAXPRINTLEN 1024
+
+DisplayUart_Object displayUartObject;
+
+static char displayBuf[MAXPRINTLEN];
+
+const DisplayUart_HWAttrs displayUartHWAttrs = {
+    .uartIdx = MSP_EXP432E401Y_UART4,
+    .baudRate = 115200,
+    .mutexTimeout = (unsigned int)(-1),
+    .strBuf = displayBuf,
+    .strBufLen = MAXPRINTLEN
+};
+
+#ifndef BOARD_DISPLAY_USE_UART_ANSI
+#define BOARD_DISPLAY_USE_UART_ANSI 0
+#endif
+
+const Display_Config Display_config[] = {
+    {
+#  if (BOARD_DISPLAY_USE_UART_ANSI)
+        .fxnTablePtr = &DisplayUartAnsi_fxnTable,
+#  else /* Default to minimal UART with no cursor placement */
+        .fxnTablePtr = &DisplayUartMin_fxnTable,
+#  endif
+        .object = &displayUartObject,
+        .hwAttrs = &displayUartHWAttrs
+    }
+};
+
+const uint_least8_t Display_count = sizeof(Display_config) / sizeof(Display_Config);
+
+/*
  *  =============================== DMA ===============================
  */
 #include <ti/drivers/dma/UDMAMSP432E4.h>
@@ -649,7 +686,7 @@ const uint_least8_t SPI_count = MSP_EXP432E401Y_SPICOUNT;
 #include <ti/drivers/uart/UARTMSP432E4.h>
 
 UARTMSP432E4_Object uartMSP432E4Objects[MSP_EXP432E401Y_UARTCOUNT];
-unsigned char uartMSP432E4RingBuffer[MSP_EXP432E401Y_UARTCOUNT][32];
+unsigned char uartMSP432E4RingBuffer[MSP_EXP432E401Y_UARTCOUNT][2048];
 
 /* UART configuration structure */
 const UARTMSP432E4_HWAttrs uartMSP432E4HWAttrs[MSP_EXP432E401Y_UARTCOUNT] = {

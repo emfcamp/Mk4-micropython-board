@@ -59,6 +59,8 @@
 #define TASKSTACKSIZE            2048
 #define SPAWN_TASK_PRIORITY      9
 
+extern void CC3120_fwUpdate(void);
+
 extern int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize, UART_Handle uart);
 
 __attribute__((section(".ExternalSRAM")))
@@ -112,6 +114,8 @@ void *mainThread(void *arg0)
     UART_init();
     PWM_init();
     NVS_init();
+
+    CC3120_fwUpdate();
 
     pthread_t thread;
     pthread_attr_t attrs;
