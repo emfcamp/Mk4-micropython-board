@@ -15,7 +15,7 @@
 #define _FATFS_WRAPPER
 
 // Include the fatfs configuration from the local directory not the original source folder
-#include "ffconf.h"
+//#include "ffconf.h"
 
 // Prevent preprocessor redefinition warnings
 #include "../../3rdparty/fatfs-0.10b/src/integer.h"
@@ -24,7 +24,8 @@
 #endif
 
 // Include the fatfs API
-#include "../../3rdparty/fatfs-0.10b/src/ff.h"
+//#include "../../3rdparty/fatfs-0.10b/src/ff.h"
+#include "lib/oofatfs/ff.h"
 
 // Include the fatfs diskio API
 #include "../../3rdparty/fatfs-0.10b/src/diskio.h"
