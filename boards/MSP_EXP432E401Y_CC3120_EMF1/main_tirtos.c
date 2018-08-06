@@ -67,7 +67,7 @@ extern void *mainThread(void *arg0);
 {
     if (FLASH_CTRL->BOOTCFG & FLASH_BOOTCFG_NW) {
         FLASH_CTRL->FMA = 0x75100000; // BOOTCFG write address
-        FLASH_CTRL->FMD = 0x7FFFB0FE; // new BOOTCFG value with PF4 boot pin
+        FLASH_CTRL->FMD = 0x7FFFB2FE; // new BOOTCFG value with PF4 boot pin
         FLASH_CTRL->FMC = FLASH_FMC_WRKEY | FLASH_FMC_COMT;
     }
 }
