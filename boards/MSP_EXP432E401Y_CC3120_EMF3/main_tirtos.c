@@ -59,6 +59,20 @@ extern void *mainThread(void *arg0);
 /* Stack size in bytes */
 #define THREADSTACKSIZE    4096
 
+/* 
+ * Enable bootloader selection via Pin PB2 HIGH  (JOY Right)
+ */
+#include "ti/devices/msp432e4/driverlib/driverlib.h"
+
+void checkBOOTCFG()
+{
+    if (FLASH_CTRL->BOOTCFG & FLASH_BOOTCFG_NW) {
+        FLASH_CTRL->FMA = 0x75100000; // BOOTCFG write address
+        FLASH_CTRL->FMD = 0x7FFF2AFE; // new BOOTCFG value with PB2 boot pin
+        FLASH_CTRL->FMC = FLASH_FMC_WRKEY | FLASH_FMC_COMT;
+    }
+}
+
 /*
  * Custom reset function called by TI-RTOS before main so we can setup the EPI SRAM
  */
@@ -74,6 +88,7 @@ void tildaResetFxn()
 void tildaStartFxn()
 {
     ExternalRAM_init();
+    checkBOOTCFG();
     return;
 }
 
