@@ -59,8 +59,8 @@ extern "C" {
  *  @brief  Enum of ADC channels on the MSP_EXP432E401Y dev board
  */
 typedef enum MSP_EXP432E401Y_ADCName {
-    MSP_EXP432E401Y_ADC6 = 0,
-    MSP_EXP432E401Y_ADC1,
+    MSP_EXP432E401Y_ADC6 = 0,   // Speaker
+    MSP_EXP432E401Y_ADC1,       // Hall Effect
 
     MSP_EXP432E401Y_ADCCOUNT
 } MSP_EXP432E401Y_ADCName;
@@ -123,8 +123,8 @@ typedef enum MSP_EXP432E401Y_GPIOName {
  *  @brief  Enum of I2C names on the MSP_EXP432E401Y dev board
  */
 typedef enum MSP_EXP432E401Y_I2CName {
-    MSP_EXP432E401Y_I2C4 = 0,
-    MSP_EXP432E401Y_I2C5,
+    MSP_EXP432E401Y_I2C4 = 0,   // Internal
+    MSP_EXP432E401Y_I2C5,       // External
 
     MSP_EXP432E401Y_I2CCOUNT
 } MSP_EXP432E401Y_I2CName;
@@ -144,9 +144,9 @@ typedef enum MSP_EXP432E401Y_NVSName {
  *  @brief  Enum of PWM names on the MSP_EXP432E401Y dev board
  */
 typedef enum MSP_EXP432E401Y_PWMName {
-    MSP_EXP432E401Y_PWM3 = 0,
-    MSP_EXP432E401Y_PWM6,
-    MSP_EXP432E401Y_PWM2,
+    MSP_EXP432E401Y_PWM3 = 0,   // MIC
+    MSP_EXP432E401Y_PWM6,       // LCD Back Light
+    MSP_EXP432E401Y_PWM2,       // Speaker
 
     MSP_EXP432E401Y_PWMCOUNT
 } MSP_EXP432E401Y_PWMName;
@@ -156,9 +156,9 @@ typedef enum MSP_EXP432E401Y_PWMName {
  *  @brief  Enum of SPI names on the MSP_EXP432E401Y dev board
  */
 typedef enum MSP_EXP432E401Y_SPIName {
-    MSP_EXP432E401Y_SPI2 = 0,
-    MSP_EXP432E401Y_SPI3,
-    MSP_EXP432E401Y_SPI0,
+    MSP_EXP432E401Y_SPI2 = 0,   // CC
+    MSP_EXP432E401Y_SPI3,       // FLASH
+    MSP_EXP432E401Y_SPI0,       // LCD
 
     MSP_EXP432E401Y_SPICOUNT
 } MSP_EXP432E401Y_SPIName;
@@ -168,10 +168,10 @@ typedef enum MSP_EXP432E401Y_SPIName {
  *  @brief  Enum of UARTs on the MSP_EXP432E401Y dev board
  */
 typedef enum MSP_EXP432E401Y_UARTName {
-    MSP_EXP432E401Y_UART0 = 0,
-    MSP_EXP432E401Y_UART6,
-    MSP_EXP432E401Y_UART4,
-    MSP_EXP432E401Y_UART3,
+    MSP_EXP432E401Y_UART0 = 0,  // Console
+    MSP_EXP432E401Y_UART6,      // SIM
+    MSP_EXP432E401Y_UART4,      // External
+    MSP_EXP432E401Y_UART3,      // CC
 
     MSP_EXP432E401Y_UARTCOUNT
 } MSP_EXP432E401Y_UARTName;
