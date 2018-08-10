@@ -88,6 +88,7 @@
 #define MICROPY_VFS_FAT                (1)
 #define MICROPY_READER_VFS             (1)
 #define MICROPY_FATFS_MULTI_PARTITION  (1)
+#define MICROPY_FATFS_USE_LABEL        (1)
 
 // use vfs's functions for import stat and builtin open
 #define mp_import_stat mp_vfs_import_stat
@@ -182,4 +183,6 @@ extern const struct _mp_obj_module_t mp_module_ugfx;
 
 #define MICROPY_PORT_ROOT_POINTERS \
     const char *readline_hist[8]; \
-    mp_obj_t pinirq_callback[10];
+    mp_obj_t pinirq_callback[10]; \
+    mp_obj_t pyb_config_main; \
+
