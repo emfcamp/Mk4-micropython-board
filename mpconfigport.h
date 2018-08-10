@@ -129,6 +129,7 @@ extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_socket;
 extern const struct _mp_obj_module_t mp_module_network;
 extern const struct _mp_obj_module_t mp_module_ugfx;
+extern const struct _mp_obj_module_t mp_module_tilda;
 
 #if MICROPY_PY_SOCKET
 #define SOCKET_BUILTIN_MODULE    { MP_ROM_QSTR(MP_QSTR_usocket), MP_ROM_PTR(&mp_module_socket) },
@@ -150,6 +151,12 @@ extern const struct _mp_obj_module_t mp_module_ugfx;
 #define UGFX_BUILTIN_MODULE 
 #endif
 
+#if MICROPY_PY_TILDA
+#define TILDA_BUILTIN_MODULE    { MP_ROM_QSTR(MP_QSTR_tilda), MP_ROM_PTR(&mp_module_tilda) },
+#else
+#define TILDA_BUILTIN_MODULE
+#endif
+
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_ROM_QSTR(MP_QSTR_umachine), MP_ROM_PTR(&machine_module) }, \
     { MP_ROM_QSTR(MP_QSTR_machine), MP_ROM_PTR(&machine_module) },  \
@@ -158,6 +165,7 @@ extern const struct _mp_obj_module_t mp_module_ugfx;
     SOCKET_BUILTIN_MODULE \
     NETWORK_BUILTIN_MODULE \
     UGFX_BUILTIN_MODULE \
+    TILDA_BUILTIN_MODULE \
 
 /*
     { MP_ROM_QSTR(MP_QSTR_json),        MP_ROM_PTR(&mp_module_ujson) }, \
@@ -184,5 +192,5 @@ extern const struct _mp_obj_module_t mp_module_ugfx;
 #define MICROPY_PORT_ROOT_POINTERS \
     const char *readline_hist[8]; \
     mp_obj_t pinirq_callback[10]; \
-    mp_obj_t pyb_config_main; \
+    mp_obj_t tilda_config_main; \
 

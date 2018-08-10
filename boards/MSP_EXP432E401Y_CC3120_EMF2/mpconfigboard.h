@@ -8,6 +8,7 @@
 
 #define MICROPY_PY_SOCKET            (1)
 #define MICROPY_PY_NETWORK           (1)
+#define MICROPY_PY_TILDA             (1)
 #define MICROPY_PY_NETWORK_NDK       (0)   /* TI NDK Ethernet */
 #define MICROPY_PY_NETWORK_WIFI      (1)   /* TI WiFi */
 #define MICROPY_MACHINE_NVSBDEV      (1)
@@ -17,7 +18,6 @@
 #define MICROPY_HW_UART_REPL         MSP_EXP432E401Y_UART4
 #define MICROPY_HW_UART_REPL_BAUD    115200
 #define MICROPY_HW_HAS_UGFX          (MICROPY_PY_UGFX)  // set in mpconfigbpard.mk
-
 #define MICROPY_HW_ENABLE_STORAGE    (1)
 #define MICROPY_HW_ENABLE_INTERNAL_FLASH_STORAGE (1)
 

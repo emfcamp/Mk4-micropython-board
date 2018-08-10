@@ -21,6 +21,7 @@ SRC_C = mpmain.c \
 	modmachine.c \
 	modsocket.c \
 	modnetwork.c \
+	modtilda.c \
 	network_ndklan.c \
 	network_stalan.c \
 	moduos.c \

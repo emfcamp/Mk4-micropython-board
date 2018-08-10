@@ -178,13 +178,13 @@ void MP_WEAK __assert_func(const char *file, int line, const char *func, const c
 }
 #endif
 
-STATIC mp_obj_t pyb_main(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+STATIC mp_obj_t tilda_main(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_opt, MP_ARG_INT, {.u_int = 0} }
     };
 
     if (MP_OBJ_IS_STR(pos_args[0])) {
-        MP_STATE_PORT(pyb_config_main) = pos_args[0];
+        MP_STATE_PORT(tilda_config_main) = pos_args[0];
 
         // parse args
         mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
@@ -193,7 +193,7 @@ STATIC mp_obj_t pyb_main(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_a
     }
     return mp_const_none;
 }
-//MP_DEFINE_CONST_FUN_OBJ_KW(pyb_main_obj, 1, pyb_main);
+MP_DEFINE_CONST_FUN_OBJ_KW(tilda_main_obj, 1, tilda_main);
 
 #if MICROPY_HW_ENABLE_STORAGE
 static const char fresh_boot_py[] =
@@ -493,7 +493,7 @@ soft_reset:
     }
 
     // reset config variables; they should be set by boot.py
-    MP_STATE_PORT(pyb_config_main) = MP_OBJ_NULL;
+    MP_STATE_PORT(tilda_config_main) = MP_OBJ_NULL;
 
     // run boot.py, if it exists
     // TODO perhaps have pyb.reboot([bootpy]) function to soft-reboot and execute custom boot.py
@@ -529,10 +529,10 @@ soft_reset:
     // Run the main script from the current directory.
     if ((reset_mode == 1 || reset_mode == 3) && pyexec_mode_kind == PYEXEC_MODE_FRIENDLY_REPL) {
         const char *main_py;
-        if (MP_STATE_PORT(pyb_config_main) == MP_OBJ_NULL) {
+        if (MP_STATE_PORT(tilda_config_main) == MP_OBJ_NULL) {
             main_py = "main.py";
         } else {
-            main_py = mp_obj_str_get_str(MP_STATE_PORT(pyb_config_main));
+            main_py = mp_obj_str_get_str(MP_STATE_PORT(tilda_config_main));
         }
         mp_import_stat_t stat = mp_import_stat(main_py);
         if (stat == MP_IMPORT_STAT_FILE) {
