@@ -418,10 +418,13 @@ GPIO_PinConfig gpioPinConfigs[] = {
  * NOTE: Pins not used for interrupts can be omitted from callbacks array to
  *       reduce memory usage (if placed at end of gpioPinConfigs array).
  */
-GPIO_CallbackFxn gpioCallbackFunctions[] = {
-//    NULL,  /* MSP_EXP432E401Y_USR_SW1 */
-//    NULL   /* MSP_EXP432E401Y_USR_SW2 */
+GPIO_CallbackFxn gpioCallbackFunctions[MSP_EXP432E401Y_GPIOCOUNT] = { 
+    NULL
 };
+// As above, this only needs to be big enough for highest numbered GPIO that needs an
+// input callback registered.  let's be safe here and make this big enought or
+//  in case someone reconfigures an input pin as an output and registers a callback...
+// Note, could also declare as 	gpioCallbackFunctions[MSP_EXP432E401Y_GPIOCOUNT] = {0};
 
 /* The device-specific GPIO_config structure */
 const GPIOMSP432E4_Config GPIOMSP432E4_config = {
@@ -637,7 +640,7 @@ const SPIMSP432E4DMA_HWAttrs spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPICOUNT] = {
         .defaultTxBufValue = 0xFF,
         .rxDmaChannel = UDMA_CH12_SSI2RX,
         .txDmaChannel = UDMA_CH13_SSI2TX,
-        .minDmaTransferSize = 10,
+        .minDmaTransferSize = 8192, // TODO: temp disable DMA for WiFi
         .clkPinMask = SPIMSP432E4_PD3_SSI2CLK,
         .fssPinMask = SPIMSP432E4_PD2_SSI2FSS,
         .xdat0PinMask = SPIMSP432E4_PD1_SSI2XDAT0,
