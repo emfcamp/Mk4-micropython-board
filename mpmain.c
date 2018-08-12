@@ -490,6 +490,7 @@ soft_reset:
     if (mounted_flash) {
         mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash));
         mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
+        mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_upip));
     }
 
     // reset config variables; they should be set by boot.py
@@ -522,7 +523,7 @@ soft_reset:
     led_state(3, 0);
     led_state(4, 0);
 
- 
+
 
     // At this point everything is fully configured and initialised.
 
