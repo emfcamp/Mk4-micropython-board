@@ -49,6 +49,7 @@
 #include <ti/drivers/net/wifi/slnetifwifi.h>
 
 #include "mpconfigboard.h"
+#include "i2c_thread.h"
 
 // Micropython RTOS thread stack size
 #define STACKSIZE 8192U
@@ -58,6 +59,9 @@
 #define SLNET_IF_WIFI_PRIO       (5)
 #define TASKSTACKSIZE            2048
 #define SPAWN_TASK_PRIORITY      9
+
+#define I2C_TASK_STACKSIZE       2048
+#define I2C_TASK_PRIORITY        10
 
 extern void CC3120_fwUpdate(void);
 
@@ -116,6 +120,17 @@ void *mainThread(void *arg0)
     NVS_init();
 
     CC3120_fwUpdate();
+
+    pthread_t i2cThread;
+    pthread_attr_t i2cAttrs;
+    struct sched_param i2cParam;
+
+    pthread_attr_init(&i2cAttrs);
+    i2cParam.sched_priority = I2C_TASK_PRIORITY;
+    pthread_attr_setschedparam(&i2cAttrs, &i2cParam);
+    pthread_attr_setstacksize(&i2cAttrs, I2C_TASK_STACKSIZE);
+    pthread_create(&i2cThread, &i2cAttrs, i2cThread, NULL);
+
 
     pthread_t thread;
     pthread_attr_t attrs;

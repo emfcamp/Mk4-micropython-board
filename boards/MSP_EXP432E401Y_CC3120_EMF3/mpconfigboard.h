@@ -10,6 +10,7 @@
 #define MICROPY_PY_NETWORK           (1)
 #define MICROPY_PY_NETWORK_NDK       (0)   /* TI NDK Ethernet */
 #define MICROPY_PY_NETWORK_WIFI      (1)   /* TI WiFi */
+#define MICROPY_PY_TILDA             (1)   /* TiLDA module */
 #define MICROPY_MACHINE_NVSBDEV      (1)
 #define MICROPY_MACHINE_SD           (0)
 #define MICROPY_HW_USB_REPL          (1)   /* Enable the USB and REPL */

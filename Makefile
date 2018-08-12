@@ -35,6 +35,8 @@ SRC_C = mpmain.c \
 	machine_nvsbdev.c \
 	machine_pwm.c \
 	machine_rtc.c \
+	tilda_buttons.c \
+	tilda_sensors.c \
 	led.c \
 	storage.c \
 	fatfs_port.c \

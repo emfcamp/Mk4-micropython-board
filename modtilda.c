@@ -31,6 +31,8 @@
 #include "py/mphal.h"
 #include "lib/utils/pyexec.h"
 #include "led.h"
+#include "tilda_buttons.h"
+#include "tilda_sensors.h"
 
 #include "modmachine.h"
 
@@ -56,6 +58,11 @@ STATIC const mp_rom_map_elem_t tilda_module_globals_table[] = {
     #if defined(MICROPY_HW_LED1)
     { MP_ROM_QSTR(MP_QSTR_LED), MP_ROM_PTR(&tilda_led_type) },
     #endif
+
+    { MP_ROM_QSTR(MP_QSTR_Buttons), MP_ROM_PTR(&tilda_buttons_type) },
+    { MP_ROM_QSTR(MP_QSTR_Sensors), MP_ROM_PTR(&tilda_sensors_type) },
+
+
 };
 
 STATIC MP_DEFINE_CONST_DICT(tilda_module_globals, tilda_module_globals_table);
