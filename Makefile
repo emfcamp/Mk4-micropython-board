@@ -97,6 +97,13 @@ flash-jlink: all
 	$(ECHO) "r\nh\nloadbin boards/$(BOARD)/mpex.bin 0x00\nr\nexit\n" |\
 	JLinkExe -if swd -device MSP432E401Y -speed 4000 -autoconnect 1
 
+flash-dfu: all
+	cp boards/$(BOARD)/mpex.bin boards/$(BOARD)/mpex.dfu
+	dfu-suffix -a boards/$(BOARD)/mpex.dfu -v 0x1cbe -p 0x00ff
+	dfu-prefix -s 0x0000 -a boards/$(BOARD)/mpex.dfu
+	dfu-util -D boards/$(BOARD)/mpex.dfu
+
+
 clean: clean-board
 
 clean-board:
