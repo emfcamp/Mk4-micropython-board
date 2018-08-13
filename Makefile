@@ -66,7 +66,7 @@ SRC_C += ./modugfx/ugfx_styles.c
 SRC_UGFX += ./modugfx/ugfx_ginput_lld_toggle.c
 endif
 
-HDR_QSTR = machine_nvsbdev.h machine_sd.h
+HDR_QSTR = machine_nvsbdev.h machine_sd.h $(BUILD)/$(BOARD)_qstr.h
 
 INC += -I.
 INC += -I$(TOP)
@@ -109,6 +109,11 @@ clean: clean-board
 clean-board:
 	$(ECHO) cleaning $(BOARD) ...
 	$(Q)make BUILD=$(BUILD) -C boards/$(BOARD) clean
+
+$(OBJ): $(BUILD)/$(BOARD)_qstr.h
+
+$(BUILD)/$(BOARD)_qstr.h: boards/$(BOARD)/$(BOARD).csv
+	./idgen.py -o $(BUILD)/$(BOARD) -p $(BOARD) $^
 
 $(BUILD)/libmicropython.a: $(OBJ)
 	$(ECHO) AR $@ ...

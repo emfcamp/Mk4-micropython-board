@@ -201,6 +201,9 @@ STATIC const mp_rom_map_elem_t machine_spi_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_MASTER), MP_ROM_INT(3) },
     { MP_ROM_QSTR(MP_QSTR_MSB), MP_ROM_INT(0) },
     { MP_ROM_QSTR(MP_QSTR_LSB), MP_ROM_INT(1) },
+#ifdef MACHINE_SPI_IDS
+    MACHINE_SPI_IDS
+#endif
 };
 
 STATIC MP_DEFINE_CONST_DICT(machine_spi_locals_dict, machine_spi_locals_dict_table);

@@ -288,6 +288,9 @@ STATIC const mp_rom_map_elem_t machine_pin_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_LOW_POWER), MP_ROM_INT(GPIO_CFG_OUT_STR_LOW) },
     { MP_ROM_QSTR(MP_QSTR_MED_POWER), MP_ROM_INT(GPIO_CFG_OUT_STR_MED) },
     { MP_ROM_QSTR(MP_QSTR_HIGH_POWER), MP_ROM_INT(GPIO_CFG_OUT_STR_HIGH) },
+#ifdef MACHINE_PIN_IDS
+    MACHINE_PIN_IDS
+#endif
 };
 
 STATIC MP_DEFINE_CONST_DICT(machine_pin_locals_dict, machine_pin_locals_dict_table);
