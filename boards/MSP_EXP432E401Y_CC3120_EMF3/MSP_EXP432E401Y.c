@@ -50,6 +50,7 @@
 #include <ti/devices/msp432e4/driverlib/udma.h>
 
 #include <ti/drivers/Power.h>
+#include <ti/drivers/power/PowerMSP432E4.h>
 
 #include "MSP_EXP432E401Y.h"
 
@@ -211,6 +212,8 @@ static void MSP_EXP432E401Y_usbBusFaultHwi(uintptr_t arg)
 void MSP_EXP432E401Y_initGeneral(void)
 {
     Power_init();
+
+    Power_setDependency(PowerMSP432E4_PERIPH_EPI0);
 
     /* Grant the DMA access to all FLASH memory */
     FLASH_CTRL->PP |= FLASH_PP_DFA;
@@ -640,7 +643,7 @@ const SPIMSP432E4DMA_HWAttrs spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPICOUNT] = {
         .defaultTxBufValue = 0xFF,
         .rxDmaChannel = UDMA_CH12_SSI2RX,
         .txDmaChannel = UDMA_CH13_SSI2TX,
-        .minDmaTransferSize = 8192, // TODO: temp disable DMA for WiFi
+        .minDmaTransferSize = 10,
         .clkPinMask = SPIMSP432E4_PD3_SSI2CLK,
         .fssPinMask = SPIMSP432E4_PD2_SSI2FSS,
         .xdat0PinMask = SPIMSP432E4_PD1_SSI2XDAT0,
