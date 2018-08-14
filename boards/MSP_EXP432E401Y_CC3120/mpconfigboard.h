@@ -11,4 +11,6 @@
 #define MICROPY_MACHINE_NVSBDEV      (0)
 #define MICROPY_MACHINE_SD           (1)
 
+#include "MSP_EXP432E401Y_CC3120_qstr.h"
+
 #endif

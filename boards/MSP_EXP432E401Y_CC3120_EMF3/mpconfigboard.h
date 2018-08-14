@@ -45,4 +45,6 @@
 #define MICROPY_HW_FLASH_FS_LABEL "tildamk4"
 #endif
 
+#include "MSP_EXP432E401Y_CC3120_EMF3_qstr.h"
+
 #endif
