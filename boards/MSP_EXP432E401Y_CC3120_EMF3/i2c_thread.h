@@ -48,13 +48,14 @@ Event_Handle i2cEvtHandle;
 
 // shared states
 typedef struct i2c_shared_states_t {
+    uint32_t sampleRate;
     uint32_t batteryVoltage;
     uint32_t vbusAttached;
     uint32_t chargeState;
     uint32_t tmpTemperature;
     uint32_t hcdTemperatue;
     uint32_t hcdHumidity;
-    uint32_t optLux;
+    float optLux;
     bool button1;
     bool button2;
     bool button3;
@@ -64,7 +65,9 @@ typedef struct i2c_shared_states_t {
     bool button7;
     bool button8;
     bool button9;
+    bool buttonStar;
     bool button0;
+    bool buttonHash;
     bool buttonA;
     bool buttonB;
     bool buttonCall;
@@ -73,9 +76,6 @@ typedef struct i2c_shared_states_t {
 
 i2c_shared_states_t i2cSharedStates;
 static MutexP_Handle mutexSharedStates;
-
-// shared sample rate
-uint32_t sampleRate;
 
 void * i2cThread(void *arg);
 

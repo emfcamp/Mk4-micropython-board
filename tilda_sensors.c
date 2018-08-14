@@ -17,11 +17,18 @@
 #include "i2c_thread.h"
 #include "tilda_sensors.h"
 
-STATIC mp_obj_t tilda_sensors_change_sample_rate()
+STATIC mp_obj_t tilda_sensors_sample_rate(size_t n_args, const mp_obj_t *args)
 {
-    return mp_const_none; //true/false
+    if (n_args == 0) {
+        return MP_OBJ_NEW_SMALL_INT(i2cSharedStates.sampleRate);
+    }
+
+    int newSampleRate = mp_obj_get_int(args[0]);
+    i2cSharedStates.sampleRate = newSampleRate;
+
+    return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_sensors_change_sample_rate_obj, tilda_sensors_change_sample_rate);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(tilda_sensors_sample_rate_obj, 0, tilda_sensors_sample_rate);
 
 STATIC mp_obj_t tilda_sensors_get_vbus_connected()
 {
@@ -72,7 +79,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_sensors_get_lux_obj, tilda_sensors_get_lu
 
 
 STATIC const mp_rom_map_elem_t tilda_sensors_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_change_sample_rate), MP_ROM_PTR(&tilda_sensors_change_sample_rate_obj) },
+    { MP_ROM_QSTR(MP_QSTR_sample_rate), MP_ROM_PTR(&tilda_sensors_sample_rate_obj) },
     { MP_ROM_QSTR(MP_QSTR_get_vbus_connected), MP_ROM_PTR(&tilda_sensors_get_vbus_connected_obj) },
     { MP_ROM_QSTR(MP_QSTR_get_charge_status), MP_ROM_PTR(&tilda_sensors_get_charge_status_obj) },
     { MP_ROM_QSTR(MP_QSTR_get_battery_voltage), MP_ROM_PTR(&tilda_sensors_get_battery_voltage_obj) },

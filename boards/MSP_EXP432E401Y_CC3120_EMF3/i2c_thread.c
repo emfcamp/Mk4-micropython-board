@@ -66,7 +66,7 @@ void *i2cThread(void *arg)
     I2C_Params      i2cParams;
     I2C_Transaction i2cTransaction;
 
-    sampleRate = 500; // default to 0.5 Sec sample rate
+    i2cSharedStates.sampleRate = 500; // default to 0.5 Sec sample rate
 
     // setup Event
     Event_construct(&evtStruct, NULL);
@@ -111,7 +111,7 @@ void *i2cThread(void *arg)
         posted = Event_pend(i2cEvtHandle, 
             Event_Id_NONE,                                  /* andMask */
             Event_BQ_INT + Event_TCA_INT + Event_HDC_INT,   /* orMack */
-            sampleRate);
+            i2cSharedStates.sampleRate);
 
         // if TCA event 
         if (posted & Event_TCA_INT) {
