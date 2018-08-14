@@ -7,7 +7,7 @@ KERNEL_BUILD := ./kernel/build
 
 all: mpex.out mpex.bin
 
-mpex.out: main_tirtos.o mpex.o netwifi.o ndkstub.o inetaddr.o epiram.o USBCDCD.o MSP_EXP432E401Y.o ../../build-$(BOARD)/libmicropython.a
+mpex.out: main_tirtos.o mpex.o netwifi.o cc3120_fw.o ndkstub.o inetaddr.o epiram.o usb.o usbd_cdc.o usbd_msc.o MSP_EXP432E401Y.o ../../build-$(BOARD)/libmicropython.a
 	@ echo building kernel ...
 	@ make -C kernel
 	@ echo linking ...

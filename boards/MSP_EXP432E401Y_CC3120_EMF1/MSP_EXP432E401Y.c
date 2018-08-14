@@ -95,6 +95,43 @@ const ADC_Config ADC_config[MSP_EXP432E401Y_ADCCOUNT] = {
 const uint_least8_t ADC_count = MSP_EXP432E401Y_ADCCOUNT;
 
 /*
+ *  ============================= Display =============================
+ */
+#include <ti/display/Display.h>
+#include <ti/display/DisplayUart.h>
+#define MAXPRINTLEN 1024
+
+DisplayUart_Object displayUartObject;
+
+static char displayBuf[MAXPRINTLEN];
+
+const DisplayUart_HWAttrs displayUartHWAttrs = {
+    .uartIdx = MSP_EXP432E401Y_UART3,
+    .baudRate = 115200,
+    .mutexTimeout = (unsigned int)(-1),
+    .strBuf = displayBuf,
+    .strBufLen = MAXPRINTLEN
+};
+
+#ifndef BOARD_DISPLAY_USE_UART_ANSI
+#define BOARD_DISPLAY_USE_UART_ANSI 0
+#endif
+
+const Display_Config Display_config[] = {
+    {
+#  if (BOARD_DISPLAY_USE_UART_ANSI)
+        .fxnTablePtr = &DisplayUartAnsi_fxnTable,
+#  else /* Default to minimal UART with no cursor placement */
+        .fxnTablePtr = &DisplayUartMin_fxnTable,
+#  endif
+        .object = &displayUartObject,
+        .hwAttrs = &displayUartHWAttrs
+    }
+};
+
+const uint_least8_t Display_count = sizeof(Display_config) / sizeof(Display_Config);
+
+/*
  *  =============================== DMA ===============================
  */
 #include <ti/drivers/dma/UDMAMSP432E4.h>
@@ -266,8 +303,8 @@ GPIO_PinConfig gpioPinConfigs[] = {
     //MSP_EXP432E401Y_GPIO_JOYR,
     GPIOMSP432E4_PB2 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
     
-    //MSP_EXP432E401Y_GPIO_BNT_MENU,
-    // GPIOMSP432E4_PK7 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
+    //MSP_EXP432E401Y_GPIO_BTN_MENU,
+    //GPIOMSP432E4_PK7 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
 
     //MSP_EXP432E401Y_GPIO_SIM_STATUS,
     GPIOMSP432E4_PQ4 | GPIO_CFG_IN_NOPULL | GPIO_CFG_IN_INT_RISING,
@@ -454,8 +491,8 @@ const uint_least8_t I2C_count = MSP_EXP432E401Y_I2CCOUNT;
 #include <ti/drivers/nvs/NVSMSP432E4.h>
 
 #define SECTORSIZE       (0x4000)
-#define NVS_REGIONS_BASE (0xF8000)
-#define REGIONSIZE       (SECTORSIZE * 2)
+#define NVS_REGIONS_BASE (0xAC000) // Not used in GCC, see linker script
+#define REGIONSIZE       (SECTORSIZE * 20)
 
 /*
  * Reserve flash sectors for NVS driver use
@@ -644,7 +681,7 @@ const uint_least8_t SPI_count = MSP_EXP432E401Y_SPICOUNT;
 #include <ti/drivers/uart/UARTMSP432E4.h>
 
 UARTMSP432E4_Object uartMSP432E4Objects[MSP_EXP432E401Y_UARTCOUNT];
-unsigned char uartMSP432E4RingBuffer[MSP_EXP432E401Y_UARTCOUNT][32];
+unsigned char uartMSP432E4RingBuffer[MSP_EXP432E401Y_UARTCOUNT][2048];
 
 /* UART configuration structure */
 const UARTMSP432E4_HWAttrs uartMSP432E4HWAttrs[MSP_EXP432E401Y_UARTCOUNT] = {
