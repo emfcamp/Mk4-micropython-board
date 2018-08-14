@@ -148,7 +148,7 @@ extern const struct _mp_obj_module_t mp_module_tilda;
 #if MICROPY_HW_HAS_UGFX
 #define UGFX_BUILTIN_MODULE    { MP_ROM_QSTR(MP_QSTR_ugfx), MP_ROM_PTR(&mp_module_ugfx) },
 #else
-#define UGFX_BUILTIN_MODULE 
+#define UGFX_BUILTIN_MODULE
 #endif
 
 #if MICROPY_PY_TILDA
@@ -160,17 +160,14 @@ extern const struct _mp_obj_module_t mp_module_tilda;
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_ROM_QSTR(MP_QSTR_umachine), MP_ROM_PTR(&machine_module) }, \
     { MP_ROM_QSTR(MP_QSTR_machine), MP_ROM_PTR(&machine_module) },  \
+    { MP_ROM_QSTR(MP_QSTR_json), MP_ROM_PTR(&mp_module_ujson) }, \
+    { MP_ROM_QSTR(MP_QSTR_binascii), MP_ROM_PTR(&mp_module_ubinascii) }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos), (mp_obj_t)&mp_module_uos },     \
     { MP_OBJ_NEW_QSTR(MP_QSTR_utime), (mp_obj_t)&mp_module_utime }, \
     SOCKET_BUILTIN_MODULE \
     NETWORK_BUILTIN_MODULE \
     UGFX_BUILTIN_MODULE \
     TILDA_BUILTIN_MODULE \
-
-/*
-    { MP_ROM_QSTR(MP_QSTR_json),        MP_ROM_PTR(&mp_module_ujson) }, \
-    { MP_ROM_QSTR(MP_QSTR_binascii),    MP_ROM_PTR(&mp_module_ubinascii) }, \
- */
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_ROM_QSTR(MP_QSTR_struct),      MP_ROM_PTR(&mp_module_ustruct) },   \

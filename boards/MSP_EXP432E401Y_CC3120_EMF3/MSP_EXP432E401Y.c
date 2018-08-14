@@ -50,6 +50,7 @@
 #include <ti/devices/msp432e4/driverlib/udma.h>
 
 #include <ti/drivers/Power.h>
+#include <ti/drivers/power/PowerMSP432E4.h>
 
 #include "MSP_EXP432E401Y.h"
 
@@ -212,6 +213,8 @@ void MSP_EXP432E401Y_initGeneral(void)
 {
     Power_init();
 
+    Power_setDependency(PowerMSP432E4_PERIPH_EPI0);
+
     /* Grant the DMA access to all FLASH memory */
     FLASH_CTRL->PP |= FLASH_PP_DFA;
 
@@ -300,7 +303,7 @@ GPIO_PinConfig gpioPinConfigs[] = {
     //MSP_EXP432E401Y_GPIO_JOYR,
     GPIOMSP432E4_PB2 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,
     
-    //MSP_EXP432E401Y_GPIO_BNT_MENU,
+    //MSP_EXP432E401Y_GPIO_BTN_MENU,
     GPIOMSP432E4_PQ4 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
 
     //MSP_EXP432E401Y_GPIO_SIM_STATUS,
@@ -418,10 +421,13 @@ GPIO_PinConfig gpioPinConfigs[] = {
  * NOTE: Pins not used for interrupts can be omitted from callbacks array to
  *       reduce memory usage (if placed at end of gpioPinConfigs array).
  */
-GPIO_CallbackFxn gpioCallbackFunctions[] = {
-//    NULL,  /* MSP_EXP432E401Y_USR_SW1 */
-//    NULL   /* MSP_EXP432E401Y_USR_SW2 */
+GPIO_CallbackFxn gpioCallbackFunctions[MSP_EXP432E401Y_GPIOCOUNT] = { 
+    NULL
 };
+// As above, this only needs to be big enough for highest numbered GPIO that needs an
+// input callback registered.  let's be safe here and make this big enought or
+//  in case someone reconfigures an input pin as an output and registers a callback...
+// Note, could also declare as 	gpioCallbackFunctions[MSP_EXP432E401Y_GPIOCOUNT] = {0};
 
 /* The device-specific GPIO_config structure */
 const GPIOMSP432E4_Config GPIOMSP432E4_config = {

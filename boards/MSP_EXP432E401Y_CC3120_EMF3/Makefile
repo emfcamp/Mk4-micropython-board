@@ -1,6 +1,8 @@
 include ../../$(BUILD)/defs.mk
 include mpconfigboard.mk
 
+CFLAGS += "-I../../$(BUILD)"
+
 BOARD := $(notdir $(CURDIR))
 
 KERNEL_BUILD := ./kernel/build

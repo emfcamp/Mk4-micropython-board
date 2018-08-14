@@ -185,6 +185,9 @@ STATIC const mp_rom_map_elem_t machine_sd_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_eraseblock), MP_ROM_PTR(&machine_sd_eraseblock_obj) },
     { MP_ROM_QSTR(MP_QSTR_writeblocks), MP_ROM_PTR(&machine_sd_writeblocks_obj) },
     { MP_ROM_QSTR(MP_QSTR_ioctl), MP_ROM_PTR(&machine_sd_ioctl_obj) },
+#ifdef MACHINE_SD_IDS
+    MACHINE_SD_IDS
+#endif
 };
 
 STATIC MP_DEFINE_CONST_DICT(machine_sd_locals_dict, machine_sd_locals_dict_table);

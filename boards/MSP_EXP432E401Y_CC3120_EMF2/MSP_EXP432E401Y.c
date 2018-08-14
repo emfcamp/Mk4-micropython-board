@@ -50,6 +50,7 @@
 #include <ti/devices/msp432e4/driverlib/udma.h>
 
 #include <ti/drivers/Power.h>
+#include <ti/drivers/power/PowerMSP432E4.h>
 
 #include "MSP_EXP432E401Y.h"
 
@@ -212,6 +213,8 @@ void MSP_EXP432E401Y_initGeneral(void)
 {
     Power_init();
 
+    Power_setDependency(PowerMSP432E4_PERIPH_EPI0);
+
     /* Grant the DMA access to all FLASH memory */
     FLASH_CTRL->PP |= FLASH_PP_DFA;
 
@@ -300,7 +303,7 @@ GPIO_PinConfig gpioPinConfigs[] = {
     //MSP_EXP432E401Y_GPIO_JOYR,
     GPIOMSP432E4_PB2 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,
     
-    //MSP_EXP432E401Y_GPIO_BNT_MENU,
+    //MSP_EXP432E401Y_GPIO_BTN_MENU,
     GPIOMSP432E4_PK7 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
 
     //MSP_EXP432E401Y_GPIO_SIM_STATUS,
@@ -416,8 +419,52 @@ GPIO_PinConfig gpioPinConfigs[] = {
  *       reduce memory usage (if placed at end of gpioPinConfigs array).
  */
 GPIO_CallbackFxn gpioCallbackFunctions[] = {
-//    NULL,  /* MSP_EXP432E401Y_USR_SW1 */
-//    NULL   /* MSP_EXP432E401Y_USR_SW2 */
+// As above, this only needs to be big enough for highest numbered GPIO that needs an
+// input callback registered.  let's be safe here and make this big enought or
+//  in case someone reconfigures an input pin as an output and registers a callback...
+// Note, could also declare as 	gpioCallbackFunctions[MSP_EXP432E401Y_GPIOCOUNT] = {0};
+
+// Inputs
+    NULL, //MSP_EXP432E401Y_GPIO_JOYC,
+    NULL, //MSP_EXP432E401Y_GPIO_JOYU,
+    NULL, //MSP_EXP432E401Y_GPIO_JOYD,
+    NULL, //MSP_EXP432E401Y_GPIO_JOYL,
+    NULL, //MSP_EXP432E401Y_GPIO_JOYR,
+    NULL, //MSP_EXP432E401Y_GPIO_BNT_MENU,
+    NULL, //MSP_EXP432E401Y_GPIO_SIM_STATUS,
+    NULL, //MSP_EXP432E401Y_GPIO_SIM_NETLIGHT,
+    NULL, //MSP_EXP432E401Y_GPIO_SIM_RI,
+    NULL, //MSP_EXP432E401Y_GPIO_BQ_INT,
+    NULL, //MSP_EXP432E401YG_GPIO_TCA_INT,
+    NULL, //MSP_EXP432E401Y_GPIO_LCD_TEAR,
+    NULL, //MSP_EXP432E401Y_CC_HOST_IRQ,
+    NULL, //MSP_EXP432E401Y_GPIO_VBUS_DET,
+    NULL, //MSP_EXP432E401Y_ADC_A_X,
+    NULL, //MSP_EXP432E401Y_ADC_A_Y,
+    NULL, //MSP_EXP432E401Y_ADC_CH3,
+    NULL, //MSP_EXP432E401Y_ADC_SPK,
+// Outputs
+    NULL, //MSP_EXP432E401Y_GPIO_ETHLED0,
+    NULL, //MSP_EXP432E401Y_GPIO_ETHLED1,
+    NULL, //MSP_EXP432E401Y_GPIO_LED1,
+    NULL, //MSP_EXP432E401Y_GPIO_LED2,
+    NULL, //MSP_EXP432E401Y_TIM_WS2812,
+    NULL, //MSP_EXP432E401Y_GPIO_SIM_PWR_KEY,
+    NULL, //MSP_EXP432E401Y_PWM_MIC,
+    NULL, //MSP_EXP432E401Y_PWM_LCD_BLIGHT,
+    NULL, //MSP_EXP432E401Y_GPIO_LCD_DCX,
+    NULL, //MSP_EXP432E401Y_GPIO_LCD_RST,
+    NULL, //MSP_EXP432E401Y_LCD_CS,
+    NULL, //MSP_EXP432E401Y_GPIO_MUX_A,
+    NULL, //MSP_EXP432E401Y_GPIO_MUX_B,
+    NULL, //MSP_EXP432E401Y_GPIO_T_X,
+    NULL, //MSP_EXP432E401Y_GPIO_T_Y,
+    NULL, //MSP_EXP432E401Y_GPIO_FET,
+    NULL, //MSP_EXP432E401Y_GPIO_CH4,
+    NULL, //MSP_EXP432E401Y_FLASH_CS,
+    NULL, //MSP_EXP432E401Y_CC_RST,
+    NULL, //MSP_EXP432E401Y_CC_nHIB_pin,
+    NULL, //MSP_EXP432E401Y_CC_CS_pin,
 };
 
 /* The device-specific GPIO_config structure */
@@ -885,3 +932,26 @@ const WiFi_Config WiFi_config[1] =
         .hwAttrs = &wifiMSP432HWAttrs,
     }
 };
+
+/*
+ *  =============================== OPT3001 ===============================
+ */
+#include <ti/sail/opt3001/opt3001.h>
+
+OPT3001_Object OPT3001_object[MSP_EXP432E401Y_OPT3001COUNT];
+
+const OPT3001_HWAttrs OPT3001_hwAttrs[MSP_EXP432E401Y_OPT3001COUNT] = {
+        {
+            .slaveAddress = OPT3001_SA1,
+            //.gpioIndex = MSP_EXP432E401Y_OPT3001_INT,
+        },
+};
+
+const OPT3001_Config OPT3001_config[] = {
+    {
+        .hwAttrs = &OPT3001_hwAttrs[0],
+        .object  = &OPT3001_object[0],
+    },
+    {NULL, NULL}
+};
+
