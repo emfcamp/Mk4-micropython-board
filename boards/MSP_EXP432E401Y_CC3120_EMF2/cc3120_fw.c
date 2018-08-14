@@ -521,7 +521,7 @@ int CC3120_checkIfUpdateNeeded(void)
     else {
         Display_printf(display, 0, 0,
                        "CC3120 Versions : \n"
-                       "- CHIP %d\n"
+                       "- CHIP 0x%08x\n"
                        "- MAC  31.%d.%d.%d.%d\n"
                        "- PHY  %d.%d.%d.%d\n"
                        "- NWP  %d.%d.%d.%d\n"
