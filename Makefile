@@ -8,7 +8,7 @@ include ../../py/mkenv.mk
 QSTR_DEFS = qstrdefsport.h
 
 # directory containing scripts to be frozen as bytecode
-FROZEN_MPY_DIR ?= modules
+FROZEN_MPY_DIR = boards/$(BOARD)/frozen
 
 # include py core make definitions
 include $(TOP)/py/py.mk
@@ -17,7 +17,7 @@ include $(TOP)/py/py.mk
 -include $(BUILD)/defs.mk
 include boards/$(BOARD)/mpconfigboard.mk
 
-SRC_C = mpmain.c \
+SRC_C = \
 	modmachine.c \
 	modsocket.c \
 	modnetwork.c \
@@ -34,6 +34,7 @@ SRC_C = mpmain.c \
 	machine_nvsbdev.c \
 	machine_pwm.c \
 	machine_rtc.c \
+	$(BOARD_SRC_C) \
 	led.c \
 	storage.c \
 	fatfs_port.c \
