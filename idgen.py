@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Utility class and app for generating constants for machine classes"""
 
 from csv import DictReader
 from collections import defaultdict
-from io import StringIO
+from StringIO import StringIO
 
 class MappingGen():
     """Generate QSTR/ROM_INT's and enums for device and pin indexes"""
@@ -72,7 +72,7 @@ def main():
                                        "SD": "SDFatFS", "SDSPI": "SD",
                                        "SDCARD": "SD"})
 
-    with open(args.input_csv, "r", newline="") as mpg_file:
+    with open(args.input_csv, "r") as mpg_file:
         mpg_gen.read(mpg_file)
 
     base_output = args.output if args.output else splitext(basename(args.input_csv))[0]
