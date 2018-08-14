@@ -121,7 +121,7 @@ void *mainThread(void *arg0)
 
     CC3120_fwUpdate();
 
-    pthread_t i2cThread;
+    pthread_t i2cThreadHandle;
     pthread_attr_t i2cAttrs;
     struct sched_param i2cParam;
 
@@ -129,8 +129,8 @@ void *mainThread(void *arg0)
     i2cParam.sched_priority = I2C_TASK_PRIORITY;
     pthread_attr_setschedparam(&i2cAttrs, &i2cParam);
     pthread_attr_setstacksize(&i2cAttrs, I2C_TASK_STACKSIZE);
-    pthread_create(&i2cThread, &i2cAttrs, i2cThread, NULL);
-
+    pthread_create(&i2cThreadHandle, &i2cAttrs, i2cThread, NULL);
+    pthread_attr_destroy(&i2cAttrs);
 
     pthread_t thread;
     pthread_attr_t attrs;
