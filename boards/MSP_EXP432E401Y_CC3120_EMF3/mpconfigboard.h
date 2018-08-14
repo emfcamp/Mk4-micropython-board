@@ -37,6 +37,8 @@
 
 #define MICROPY_HW_LED1             MSP_EXP432E401Y_GPIO_LED1
 #define MICROPY_HW_LED2             MSP_EXP432E401Y_GPIO_LED2
+#define MICROPY_HW_MODE_GPIO        MSP_EXP432E401Y_GPIO_BTN_MENU
+#define MICROPY_HW_MODE_GPIO_STATE  (0)
 
 // The volume label used when creating the flash filesystem
 #ifndef MICROPY_HW_FLASH_FS_LABEL

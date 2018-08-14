@@ -324,14 +324,16 @@ MP_NOINLINE STATIC bool init_flash_fs(uint reset_mode) {
 }
 #endif
 
+
+
 STATIC uint update_reset_mode(uint reset_mode) {
-    if ((GPIO_read(5)==0)) {
+    if ((GPIO_read(MICROPY_HW_MODE_GPIO)==MICROPY_HW_MODE_GPIO_STATE)) {
 
         // The original method used on the pyboard is appropriate if you have 2
         // or more LEDs.
         #if defined(MICROPY_HW_LED2)
         for (uint i = 0; i < 3000; i++) {
-            if (!(GPIO_read(5)==0)) {
+            if (!(GPIO_read(MICROPY_HW_MODE_GPIO)==MICROPY_HW_MODE_GPIO_STATE)) {
                 break;
             }
             mp_hal_delay_ms(20);
@@ -364,7 +366,7 @@ STATIC uint update_reset_mode(uint reset_mode) {
         for (uint i = 0; i < 10; i++) {
             led_state(1, 0);
             for (uint j = 0; j < reset_mode; j++) {
-                if (!(GPIO_read(5)==0)) {
+                if (!(GPIO_read(MICROPY_HW_MODE_GPIO)==MICROPY_HW_MODE_GPIO_STATE)) {
                     break;
                 }
                 led_state(1, 1);
@@ -373,7 +375,7 @@ STATIC uint update_reset_mode(uint reset_mode) {
                 mp_hal_delay_ms(200);
             }
             mp_hal_delay_ms(400);
-            if (!(GPIO_read(5)==0)) {
+            if (!(GPIO_read(MICROPY_HW_MODE_GPIO)==MICROPY_HW_MODE_GPIO_STATE)) {
                 break;
             }
             if (++reset_mode > 3) {
