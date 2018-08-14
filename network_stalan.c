@@ -103,13 +103,19 @@ STATIC mp_obj_t network_stalan_connect(size_t n_args, const mp_obj_t *pos_args, 
         { MP_QSTR_bssid,       MP_ARG_KW_ONLY  | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_autoconnect, MP_ARG_KW_ONLY  | MP_ARG_BOOL,{.u_bool = false} },
         /* TODO - Add enterprise security config - review */
+        { MP_QSTR_enterprise,  MP_ARG_KW_ONLY  | MP_ARG_BOOL,{.u_bool = false} },
+        { MP_QSTR_entuser,     MP_ARG_KW_ONLY  | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_entmethod,   MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_entserverauth,MP_ARG_KW_ONLY  | MP_ARG_BOOL,{.u_bool = true} },
     };
-    enum { ARG_service_id, ARG_key, ARG_bssid, ARG_autoconnect };
+    enum { ARG_service_id, ARG_key, ARG_bssid, ARG_autoconnect,
+           ARG_enterprise, ARG_entuser, ARG_entmethod, ARG_entserverauth };
 
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args,
                      MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 
+    // TODO: Big stack usage here..
     size_t len;
     const char *p;
     char ssid[33] = {0};
@@ -117,6 +123,11 @@ STATIC mp_obj_t network_stalan_connect(size_t n_args, const mp_obj_t *pos_args, 
     char bssid[18] = {0};
     uint8_t mac[6];
     bool autoconnect = false;
+
+    bool enterprise = false;
+    char entuser[65] = {0};
+    uint32_t entmethod = SL_WLAN_ENT_EAP_METHOD_TLS;
+    bool entserverauth = true;
 
     // set parameters based on given args
     if (args[ARG_service_id].u_obj != MP_OBJ_NULL) {
@@ -148,7 +159,21 @@ STATIC mp_obj_t network_stalan_connect(size_t n_args, const mp_obj_t *pos_args, 
     }
     autoconnect = args[ARG_autoconnect].u_bool;
 
+    enterprise = args[ARG_enterprise].u_bool;
+    if (args[ARG_entuser].u_obj != MP_OBJ_NULL) {
+        p = mp_obj_str_get_data(args[ARG_entuser].u_obj, &len);
+        // TODO : review throw error if ENTUSER > 64 instead of truncate?
+        len = MIN(len, (sizeof(entuser) - 1));
+        memcpy(entuser, p, len);
+    }
+    if (args[ARG_entmethod].u_int != 0) {
+        // TODO : should we validate that the int is one of the valid methods?
+        entmethod = args[ARG_entmethod].u_int;
+    }
+    entserverauth = args[ARG_entserverauth].u_bool;
+
     SlWlanSecParams_t secParams = {0};
+    SlWlanSecParamsExt_t secExtParams = {0};
     int16_t ret;
 
     ret = sl_WlanDisconnect();
@@ -202,11 +227,36 @@ STATIC mp_obj_t network_stalan_connect(size_t n_args, const mp_obj_t *pos_args, 
         }
     }
 
-    if (sl_WlanConnect((const int8_t *)ssid, strlen((const char *)ssid),
-                       (const uint8_t *)((strlen(bssid) > 0) ? mac : NULL),
-                       &secParams, NULL) < 0) {
-        mp_raise_msg(&mp_type_OSError, "Connect failed");
+    if (enterprise) {
+        secParams.Type = SL_WLAN_SEC_TYPE_WPA_ENT;
+        secExtParams.User = (signed char *) entuser;
+        secExtParams.UserLen = strlen((const char *) secExtParams.User);
+        secExtParams.AnonUser = NULL;
+        secExtParams.AnonUserLen = 0;
+        secExtParams.CertIndex = 0;
+        secExtParams.EapMethod = entmethod;
+
+	// configure server certificate authentication
+        _u8 param = entserverauth;
+        if (sl_WlanSet(SL_WLAN_CFG_GENERAL_PARAM_ID,
+                       SL_WLAN_GENERAL_PARAM_DISABLE_ENT_SERVER_AUTH, 1, &param) < 0) {
+            mp_raise_msg(&mp_type_OSError, "Failed to set enterprise server auth mode");
+        }
+
+        if (sl_WlanConnect((const int8_t *)ssid, strlen((const char *)ssid),
+                           (const uint8_t *)((strlen(bssid) > 0) ? mac : NULL),
+                           &secParams, &secExtParams) < 0) {
+            mp_raise_msg(&mp_type_OSError, "Connect failed");
+        }
     }
+    else {
+        if (sl_WlanConnect((const int8_t *)ssid, strlen((const char *)ssid),
+                           (const uint8_t *)((strlen(bssid) > 0) ? mac : NULL),
+                           &secParams, NULL) < 0) {
+            mp_raise_msg(&mp_type_OSError, "Connect failed");
+        }
+
+    } 
 
     return mp_const_none;
 }
@@ -367,7 +417,19 @@ STATIC const mp_rom_map_elem_t network_stalan_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_scan), MP_ROM_PTR(&network_stalan_scan_obj) },
     { MP_ROM_QSTR(MP_QSTR_status), MP_ROM_PTR(&network_stalan_status_obj) },
     { MP_ROM_QSTR(MP_QSTR_ifconfig), MP_ROM_PTR(&network_stalan_ifconfig_obj) },
+
+    // TODO - where does this constant '40' come from?
     { MP_ROM_QSTR(MP_QSTR_DHCP), MP_ROM_INT(STA_DHCP_ADDR) },
+
+    { MP_ROM_QSTR(MP_QSTR_EAP_METHOD_TLS), MP_ROM_INT(SL_WLAN_ENT_EAP_METHOD_TLS) },
+    { MP_ROM_QSTR(MP_QSTR_EAP_METHOD_TTLS_TLS), MP_ROM_INT(SL_WLAN_ENT_EAP_METHOD_TTLS_TLS) },
+    { MP_ROM_QSTR(MP_QSTR_EAP_METHOD_TTLS_MSCHAPv2), MP_ROM_INT(SL_WLAN_ENT_EAP_METHOD_TTLS_MSCHAPv2) },
+    { MP_ROM_QSTR(MP_QSTR_EAP_METHOD_TTLS_PSK), MP_ROM_INT(SL_WLAN_ENT_EAP_METHOD_TTLS_PSK) },
+    { MP_ROM_QSTR(MP_QSTR_EAP_METHOD_PEAP0_TLS), MP_ROM_INT(SL_WLAN_ENT_EAP_METHOD_PEAP0_TLS) },
+    { MP_ROM_QSTR(MP_QSTR_EAP_METHOD_PEAP0_MSCHAPv2), MP_ROM_INT(SL_WLAN_ENT_EAP_METHOD_PEAP0_MSCHAPv2) },
+    { MP_ROM_QSTR(MP_QSTR_EAP_METHOD_PEAP0_PSK), MP_ROM_INT(SL_WLAN_ENT_EAP_METHOD_PEAP0_PSK) },
+    { MP_ROM_QSTR(MP_QSTR_EAP_METHOD_PEAP1_TLS), MP_ROM_INT(SL_WLAN_ENT_EAP_METHOD_PEAP1_TLS) },
+    { MP_ROM_QSTR(MP_QSTR_EAP_METHOD_PEAP1_PSK), MP_ROM_INT(SL_WLAN_ENT_EAP_METHOD_PEAP1_PSK) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(network_stalan_locals_dict, network_stalan_locals_dict_table);
