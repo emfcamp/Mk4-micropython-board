@@ -923,3 +923,25 @@ const WiFi_Config WiFi_config[1] =
         .hwAttrs = &wifiMSP432HWAttrs,
     }
 };
+
+/*
+ *  =============================== OPT3001 ===============================
+ */
+#include <ti/sail/opt3001/opt3001.h>
+
+OPT3001_Object OPT3001_object[MSP_EXP432E401Y_OPT3001COUNT];
+
+const OPT3001_HWAttrs OPT3001_hwAttrs[MSP_EXP432E401Y_OPT3001COUNT] = {
+        {
+            .slaveAddress = OPT3001_SA1,
+            //.gpioIndex = MSP_EXP432E401Y_OPT3001_INT,
+        },
+};
+
+const OPT3001_Config OPT3001_config[] = {
+    {
+        .hwAttrs = &OPT3001_hwAttrs[0],
+        .object  = &OPT3001_object[0],
+    },
+    {NULL, NULL}
+};

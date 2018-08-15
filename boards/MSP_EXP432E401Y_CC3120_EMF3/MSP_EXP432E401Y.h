@@ -207,6 +207,16 @@ typedef enum MSP_EXP432E401Y_WatchdogName {
 } MSP_EXP432E401Y_WatchdogName;
 
 /*!
+ *  @def    MSP_EXP432E401Y_OPT3001
+ *  @brief  Enum of OPT3001 names on the MSP_EXP432E401Y dev board
+ */
+typedef enum MSP_EXP432E401Y_OPT3001Name {
+    MSP_EXP432E401Y_OPT3001_0 = 0,
+
+    MSP_EXP432E401Y_OPT3001COUNT
+} MSP_EXP432E401Y_OPT3001Name;
+
+/*!
  *  @brief  Initialize the general board specific settings
  *
  *  This function initializes the general board specific settings.
