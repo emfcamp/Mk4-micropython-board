@@ -73,8 +73,7 @@ def main():
     print(gsm.get_info())
     year, mon, day, hour, minute, _ = gsm.get_time()
 
-    number = "+447973362384"
-    # number = "+18056891691"
+    number = "+15555555555"
 
     print(gsm.send_sms(number, "hello there from MP SIM800: {}:{}".format(hour, minute)))
 
