@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 """Utility class and app for generating constants for machine classes"""
 
 from csv import DictReader
