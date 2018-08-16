@@ -341,20 +341,17 @@ STATIC uint update_reset_mode(uint reset_mode) {
                 if (++reset_mode > 3) {
                     reset_mode = 1;
                 }
-                led_state(2, reset_mode & 1);
-                led_state(3, reset_mode & 2);
-                led_state(4, reset_mode & 4);
+                led_state(1, reset_mode & 1);
+                led_state(2, reset_mode & 2);
             }
         }
         // flash the selected reset mode
         for (uint i = 0; i < 6; i++) {
+            led_state(1, 0);
             led_state(2, 0);
-            led_state(3, 0);
-            led_state(4, 0);
             mp_hal_delay_ms(50);
-            led_state(2, reset_mode & 1);
-            led_state(3, reset_mode & 2);
-            led_state(4, reset_mode & 4);
+            led_state(1, reset_mode & 1);
+            led_state(2, reset_mode & 2);
             mp_hal_delay_ms(50);
         }
         mp_hal_delay_ms(400);
