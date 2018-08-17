@@ -328,6 +328,9 @@ MP_NOINLINE STATIC bool init_flash_fs(uint reset_mode) {
 
 STATIC uint update_reset_mode(uint reset_mode) {
     if ((GPIO_read(MICROPY_HW_MODE_GPIO)==MICROPY_HW_MODE_GPIO_STATE)) {
+        // Setup inital led state:
+        led_state(TILDA_LED_RED, reset_mode & 1);
+        led_state(TILDA_LED_GREEN, reset_mode & 2);
 
         // The original method used on the pyboard is appropriate if you have 2
         // or more LEDs.
@@ -415,7 +418,7 @@ soft_reset:
 
     #if defined(MICROPY_HW_LED2)
     led_state(TILDA_LED_RED, 0);
-    led_state(TILDA_LED_GREEN, 1);
+    led_state(TILDA_LED_GREEN, 0);
     #else
     led_state(TILDA_LED_RED, 1);
     led_state(TILDA_LED_GREEN, 0);
