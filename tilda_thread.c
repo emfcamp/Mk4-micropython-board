@@ -126,12 +126,11 @@ void *tildaThread(void *arg)
     readTCAButtons();
     lastButtonState = buttonState;
 
-    // OPT3001_Handle opt3001Handle = NULL;
-    // OPT3001_Params opt3001Params;
-    // OPT3001_Params_init(&opt3001Params);
-    // opt3001Handle = OPT3001_open(MSP_EXP432E401Y_OPT3001_0, i2cHandle,
-    //         &opt3001Params);
-    // do initial i2c read to populate shared states?
+    OPT3001_Handle opt3001Handle = NULL;
+    OPT3001_Params opt3001Params;
+    OPT3001_Params_init(&opt3001Params);
+    opt3001Handle = OPT3001_open(MSP_EXP432E401Y_OPT3001_0, i2cHandle,
+            &opt3001Params);
 
     uint32_t posted;
     bool scheduled;
@@ -185,7 +184,7 @@ void *tildaThread(void *arg)
             // grab TMP temp readings
             
             // grab lux readings
-            // OPT3001_getLux(opt3001Handle, &tildaSharedStates.optLux);
+            OPT3001_getLux(opt3001Handle, &tildaSharedStates.optLux);
             // grab battery updates?
             
             // kick off Humidity conversion
