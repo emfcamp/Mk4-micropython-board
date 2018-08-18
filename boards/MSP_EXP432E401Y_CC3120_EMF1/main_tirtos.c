@@ -60,7 +60,7 @@ extern void *mainThread(void *arg0);
 #define THREADSTACKSIZE    4096
 
 /* 
- * Enable bootloader selection via Pin PF4 LOW  (D2 on SSI header)
+ * Enable bootloader selection via Pin PF4 HIGH  (D2 on SSI header)
  */
 #include "ti/devices/msp432e4/driverlib/driverlib.h"
  void checkBOOTCFG()
@@ -87,7 +87,7 @@ void tildaResetFxn()
 void tildaStartFxn()
 {
     ExternalRAM_init();
-    checkBOOTCFG();
+    //checkBOOTCFG();
     return;
 }
 

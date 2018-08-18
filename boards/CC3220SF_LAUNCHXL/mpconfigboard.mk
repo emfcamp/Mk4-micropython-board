@@ -1,3 +1,5 @@
+BOARD_SRC_C = mpmain.c
+
 CC = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 LNK = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 LD = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"

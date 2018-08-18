@@ -3,7 +3,7 @@
 
 #include "MSP_EXP432E401Y.h"
 
-#define MICROPY_HW_BOARD_NAME        "TiLDA Mk4 Dev Board"
+#define MICROPY_HW_BOARD_NAME        "TiLDA Mk4 Prototype EMF1"
 #define MICROPY_HW_MCU_NAME          "TI MSP432E4"
 
 #define MICROPY_PY_SOCKET            (1)
@@ -34,5 +34,17 @@
 #define MICROPY_HW_UGFX_PIN_RST     MSP_EXP432E401Y_GPIO_LCD_RST
 #define MICROPY_HW_UGFX_PIN_A0      MSP_EXP432E401Y_GPIO_LCD_DCX
 #endif
+
+#define MICROPY_HW_LED1             MSP_EXP432E401Y_GPIO_LED1
+#define MICROPY_HW_LED2             MSP_EXP432E401Y_GPIO_LED2
+#define MICROPY_HW_MODE_GPIO        MSP_EXP432E401Y_GPIO_JOYU
+#define MICROPY_HW_MODE_GPIO_STATE  (0)
+
+// The volume label used when creating the flash filesystem
+#ifndef MICROPY_HW_FLASH_FS_LABEL
+#define MICROPY_HW_FLASH_FS_LABEL "tildamk4"
+#endif
+
+#include "MSP_EXP432E401Y_CC3120_EMF1_qstr.h"
 
 #endif

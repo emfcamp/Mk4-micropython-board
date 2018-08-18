@@ -80,6 +80,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_adc_convert_obj, machine_adc_convert);
 
 STATIC const mp_rom_map_elem_t machine_adc_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_convert), MP_ROM_PTR(&machine_adc_convert_obj) },
+#ifdef MACHINE_ADC_IDS
+    MACHINE_ADC_IDS
+#endif
 };
 
 STATIC MP_DEFINE_CONST_DICT(machine_adc_locals_dict, machine_adc_locals_dict_table);

@@ -8,7 +8,7 @@ include ../../py/mkenv.mk
 QSTR_DEFS = qstrdefsport.h
 
 # directory containing scripts to be frozen as bytecode
-FROZEN_MPY_DIR ?= modules
+FROZEN_MPY_DIR = boards/$(BOARD)/frozen
 
 # include py core make definitions
 include $(TOP)/py/py.mk
@@ -17,7 +17,7 @@ include $(TOP)/py/py.mk
 -include $(BUILD)/defs.mk
 include boards/$(BOARD)/mpconfigboard.mk
 
-SRC_C = mpmain.c \
+SRC_C = \
 	modmachine.c \
 	modsocket.c \
 	modnetwork.c \
@@ -34,6 +34,8 @@ SRC_C = mpmain.c \
 	machine_nvsbdev.c \
 	machine_pwm.c \
 	machine_rtc.c \
+	$(BOARD_SRC_C) \
+	led.c \
 	storage.c \
 	fatfs_port.c \
 	lib/utils/printf.c \
@@ -65,7 +67,7 @@ SRC_C += ./modugfx/ugfx_styles.c
 SRC_UGFX += ./modugfx/ugfx_ginput_lld_toggle.c
 endif
 
-HDR_QSTR = machine_nvsbdev.h machine_sd.h
+HDR_QSTR = machine_nvsbdev.h machine_sd.h $(BUILD)/$(BOARD)_qstr.h
 
 INC += -I.
 INC += -I$(TOP)
@@ -96,11 +98,23 @@ flash-jlink: all
 	$(ECHO) "r\nh\nloadbin boards/$(BOARD)/mpex.bin 0x00\nr\nexit\n" |\
 	JLinkExe -if swd -device MSP432E401Y -speed 4000 -autoconnect 1
 
+flash-dfu: all
+	cp boards/$(BOARD)/mpex.bin boards/$(BOARD)/mpex.dfu
+	dfu-suffix -a boards/$(BOARD)/mpex.dfu -v 0x1cbe -p 0x00ff
+	dfu-prefix -s 0x0000 -a boards/$(BOARD)/mpex.dfu
+	dfu-util -D boards/$(BOARD)/mpex.dfu
+
+
 clean: clean-board
 
 clean-board:
 	$(ECHO) cleaning $(BOARD) ...
 	$(Q)make BUILD=$(BUILD) -C boards/$(BOARD) clean
+
+$(OBJ): $(BUILD)/$(BOARD)_qstr.h
+
+$(BUILD)/$(BOARD)_qstr.h: boards/$(BOARD)/$(BOARD).csv
+	./idgen.py -o $(BUILD)/$(BOARD) -p $(BOARD) $^
 
 $(BUILD)/libmicropython.a: $(OBJ)
 	$(ECHO) AR $@ ...

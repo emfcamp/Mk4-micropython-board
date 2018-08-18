@@ -27,11 +27,11 @@
 #include <ti/devices/msp432e4/driverlib/interrupt.h>
 #include <ti/sysbios/knl/Task.h>
 #include <xdc/runtime/System.h>
-#include <ti/drivers/GPIO.h>
 
 #include "py/mpconfig.h"
 #include "py/mphal.h"
 #include "py/misc.h"
+#include "led.h"
 
 // LWK TODO: fix up once we have pin names via CSV
 #include "MSP_EXP432E401Y.h"
@@ -171,8 +171,9 @@ static uint8_t *flash_cache_get_addr(uint32_t flash_addr, bool write) {
     }
     if (write) {
       flash_flags |= FLASH_FLAG_DIRTY;
-      //TODO: led_state(PYB_LED_RED, 1); // indicate a dirty cache with LED on
-      GPIO_write(MSP_EXP432E401Y_GPIO_LED1, 1);
+      // indicate a dirty cache with LED on
+      led_state(TILDA_LED_RED, 1);
+
     }
     return (uint8_t*)CACHE_MEM_START_ADDR + flash_addr - flash_sector_start;
 }
@@ -210,7 +211,7 @@ void flash_bdev_flush(void) {
     // clear the flash flags now that we have a clean cache
     flash_flags = 0;
     //TODO: indicate a clean cache with LED off
-    GPIO_write(MSP_EXP432E401Y_GPIO_LED1, 0);
+    led_state(TILDA_LED_RED, 0);
 }
 
 bool flash_bdev_readblock(uint8_t *dest, uint32_t block) {

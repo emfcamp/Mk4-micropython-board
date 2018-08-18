@@ -11,4 +11,6 @@
 #define MICROPY_MACHINE_NVSBDEV      (1)
 #define MICROPY_MACHINE_SD           (1)
 
+#include "CC3220SF_LAUNCHXL_qstr.h"
+
 #endif
