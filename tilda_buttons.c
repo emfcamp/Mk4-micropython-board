@@ -21,17 +21,14 @@
 // https://github.com/emfcamp/Mk4-Apps/blob/master/lib/buttons.py
 
 
-STATIC mp_obj_t tilda_buttons_is_pressed() //(button)
+STATIC mp_obj_t tilda_buttons_is_pressed(mp_obj_t button_in) //(button)
 {
-
-    // if id ison GPIO
-        // direct gpio read
-    // if id ison expander
-        // read from i2cSharedStates
-
-    return mp_const_none; //true/false
+    TILDA_BUTTONS_Names button = mp_obj_get_int(button_in);
+    // if button > 22
+        // error out of range
+    return getButtonState(button) ? mp_const_true : mp_const_false;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_buttons_is_pressed_obj, tilda_buttons_is_pressed);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(tilda_buttons_is_pressed_obj, tilda_buttons_is_pressed);
 
 STATIC mp_obj_t tilda_buttons_is_triggered() //(button)
 {

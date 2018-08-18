@@ -46,38 +46,62 @@ extern "C" {
 // Event handle for use intrenal and from mod tilda
 Event_Handle i2cEvtHandle;
 
+typedef enum TILDA_BUTTONS_Names 
+{
+    Buttons_BTN_1 = 0,
+    Buttons_BTN_End,
+    Buttons_BTN_2,
+    Buttons_BTN_3,
+    Buttons_BTN_6,
+    Buttons_BTN_5,
+    Buttons_BTN_4,
+    Buttons_BTN_7,
+    Buttons_BTN_8,
+    Buttons_BTN_9,
+    Buttons_BTN_Hash,
+    Buttons_BTN_0,
+    Buttons_BTN_Star,
+    Buttons_BTN_Call,
+    Buttons_BTN_A,
+    Buttons_BTN_B,
+    Buttons_JOY_Center,
+    Buttons_JOY_Up,
+    Buttons_JOY_Down,
+    Buttons_JOY_Left,
+    Buttons_JOY_Right,
+    Buttons_BTN_Menu,
+} TILDA_BUTTONS_Names;
+
 // shared states
 typedef struct i2c_shared_states_t {
     uint32_t sampleRate;
-    uint32_t batteryVoltage;
-    uint32_t vbusAttached;
-    uint32_t chargeState;
-    uint32_t tmpTemperature;
-    uint32_t hcdTemperatue;
-    uint32_t hcdHumidity;
+    // uint32_t batteryVoltage;
+    bool vbusAttached;
+    uint8_t chargeState; 
+    float tmpTemperature;
+    float hcdTemperatue;
+    float hcdHumidity;
     float optLux;
-    bool button1;
-    bool button2;
-    bool button3;
-    bool button4;
-    bool button5;
-    bool button6;
-    bool button7;
-    bool button8;
-    bool button9;
-    bool buttonStar;
-    bool button0;
-    bool buttonHash;
-    bool buttonA;
-    bool buttonB;
-    bool buttonCall;
-    bool buttonEnd;
 } i2c_shared_states_t;
 
 i2c_shared_states_t i2cSharedStates;
-static MutexP_Handle mutexSharedStates;
+
+uint16_t buttonState;
+uint16_t lastButtonState;
+
+typedef struct i2c_tca_callbacks_t {
+    void* tca_callback_irq;
+    bool on_press;
+    bool on_release;
+} i2c_tca_callbacks_t;
+
+i2c_tca_callbacks_t i2cTCACallbacks[16];
 
 void * i2cThread(void *arg);
+
+bool getButtonState(TILDA_BUTTONS_Names button);
+void registerTCACallback(uint8_t button, void* tca_callback_irq,  bool on_press, bool on_release);
+void unregisterTCACallback(uint8_t button);
 
 
 #ifdef __cplusplus

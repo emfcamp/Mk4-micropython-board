@@ -62,7 +62,7 @@ void bqInterruptHandler(uint8_t index)
 
 void *i2cThread(void *arg)
 {
-    I2C_Handle      i2c;
+    I2C_Handle      i2cHandle;
     I2C_Params      i2cParams;
     I2C_Transaction i2cTransaction;
 
@@ -72,18 +72,11 @@ void *i2cThread(void *arg)
     Event_construct(&evtStruct, NULL);
     i2cEvtHandle = Event_handle(&evtStruct);
 
-    // setup Mutex
-    mutexSharedStates = MutexP_create(NULL);
-    // if (mutexSharedStates == NULL) {
-    //     // Display_printf(display, 0, 0, "Could not create USB Wait mutex.\n");
-    //     while(1);
-    // }
-
     // Init Internal I2C bus
     I2C_Params_init(&i2cParams);
     i2cParams.bitRate = I2C_400kHz;
-    i2c = I2C_open(MSP_EXP432E401Y_I2C4, &i2cParams);
-    // if (i2c == NULL) {
+    i2cHandle = I2C_open(MSP_EXP432E401Y_I2C4, &i2cParams);
+    // if (i2cHandle == NULL) {
     //     // Display_printf(display, 0, 0, "Error Initializing I2C\n");
     //     while (1);
     // }
@@ -115,10 +108,23 @@ void *i2cThread(void *arg)
 
         // if TCA event 
         if (posted & Event_TCA_INT) {
-            //  read button states update shared state 
+            lastButtonState = buttonState;
+            //  read button states 
+            
+            //  update shared state 
              
+
             //  fire any callbacks if needed
-             
+            //  comparing new and last buttons states
+            for (int button = 0; button < 16; ++button)
+            {
+                if (i2cTCACallbacks[button].tca_callback_irq != NULL) {
+                    // if button is now pressed and i2cTCACallbacks[button].on_press
+                        // mp_sched_schedule(*i2cTCACallbacks[button].tca_callback_irq, mp_const_none);
+                    // if button is now relesase and i2cTCACallbacks[button].on_release
+                        // mp_sched_schedule(*i2cTCACallbacks[button].tca_callback_irq, mp_const_none);
+                }
+            }
             // wake the mp?
             // extern Semaphore_Handle machine_sleep_sem;
             // Semaphore_post(machine_sleep_sem);
@@ -150,4 +156,38 @@ void *i2cThread(void *arg)
     }
     
     return NULL;
+}
+
+bool getButtonState(TILDA_BUTTONS_Names button)
+{
+    if (button < 16) {
+        // TCA button
+        // shift and mask buttonState
+        // 0 == button pressed, and shouold return true
+        // 1 == button not pressed and should return false
+        return !((buttonState >> button) & 0x1);
+    } else if (button < 21) {
+        // joystick 
+        // 1 == button pressed, and shouold return true
+        return GPIO_read(button - 16);
+    } else if (button == Buttons_BTN_Menu) {
+        // 0 == button pressed, and shouold return true
+        return !GPIO_read(button - 16);
+    }
+    return false;
+}
+
+void registerTCACallback(uint8_t button, void* tca_callback_irq,  bool on_press, bool on_release)
+{
+    i2cTCACallbacks[button].tca_callback_irq = tca_callback_irq;
+    i2cTCACallbacks[button].on_press = on_press;
+    i2cTCACallbacks[button].on_release = on_release;
+}
+
+
+void unregisterTCACallback(uint8_t button)
+{
+    i2cTCACallbacks[button].tca_callback_irq = NULL;
+    i2cTCACallbacks[button].on_press = false;
+    i2cTCACallbacks[button].on_release = false;
 }
