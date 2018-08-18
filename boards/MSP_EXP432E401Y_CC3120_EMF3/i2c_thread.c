@@ -82,13 +82,19 @@ void *i2cThread(void *arg)
     // }
 
     // register BQ25601 Int handler
+    GPIO_disableInt(MSP_EXP432E401Y_GPIO_BQ_INT);
     GPIO_setCallback(MSP_EXP432E401Y_GPIO_BQ_INT, bqInterruptHandler);
-    
+    GPIO_enableInt(MSP_EXP432E401Y_GPIO_BQ_INT);
+
     // register TCA9555 Int handler
+    GPIO_disableInt(MSP_EXP432E401Y_GPIO_TCA_INT);
     GPIO_setCallback(MSP_EXP432E401Y_GPIO_TCA_INT, tcaInterruptHandler);
+    GPIO_enableInt(MSP_EXP432E401Y_GPIO_TCA_INT);
 
     // register HDC2080 Int handler
+    GPIO_disableInt(MSP_EXP432E401Y_GPIO_HDC_INT);
     GPIO_setCallback(MSP_EXP432E401Y_GPIO_HDC_INT, hdcInterruptHandler);
+    GPIO_enableInt(MSP_EXP432E401Y_GPIO_HDC_INT);
 
     // setup charger?
     
