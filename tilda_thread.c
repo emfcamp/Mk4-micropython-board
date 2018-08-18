@@ -38,7 +38,7 @@
 /* Example/Board Header files */
 #include "MSP_EXP432E401Y.h"
 
-#include "i2c_thread.h"
+#include "tilda_thread.h"
 
 Event_Struct evtStruct;
 I2C_Handle      i2cHandle;
@@ -46,19 +46,19 @@ I2C_Handle      i2cHandle;
 void tcaInterruptHandler(uint8_t index)
 {
     // set TCA event flag
-    Event_post(i2cEvtHandle, Event_TCA_INT);
+    Event_post(tildaEvtHandle, Event_TCA_INT);
 }
 
 void hdcInterruptHandler(uint8_t index)
 {
     // set hcd data ready event flag
-    Event_post(i2cEvtHandle, Event_HDC_INT);
+    Event_post(tildaEvtHandle, Event_HDC_INT);
 }
 
 void bqInterruptHandler(uint8_t index)
 {
     // set bq data ready event flag
-    Event_post(i2cEvtHandle, Event_BQ_INT);
+    Event_post(tildaEvtHandle, Event_BQ_INT);
 }
 
 void readTCAButtons() 
@@ -84,15 +84,15 @@ void readTCAButtons()
     buttonState = (buttonState << 8) | readBuffer[0];
 }
 
-void *i2cThread(void *arg)
+void *tildaThread(void *arg)
 {
     I2C_Params      i2cParams;
 
-    i2cSharedStates.sampleRate = 500; // default to 0.5 Sec sample rate
+    tildaSharedStates.sampleRate = 500; // default to 0.5 Sec sample rate
 
     // setup Event
     Event_construct(&evtStruct, NULL);
-    i2cEvtHandle = Event_handle(&evtStruct);
+    tildaEvtHandle = Event_handle(&evtStruct);
 
     // Init Internal I2C bus
     I2C_Params_init(&i2cParams);
@@ -139,10 +139,10 @@ void *i2cThread(void *arg)
     // loop
     for (;;) {
         // wait for TCA or HDC evnt or time out (default 500ms, might be settable)
-        posted = Event_pend(i2cEvtHandle, 
+        posted = Event_pend(tildaEvtHandle, 
             Event_Id_NONE,                                  /* andMask */
             Event_BQ_INT + Event_TCA_INT + Event_HDC_INT,   /* orMack */
-            i2cSharedStates.sampleRate);
+            tildaSharedStates.sampleRate);
 
         // if TCA event 
         if (posted & Event_TCA_INT) {
@@ -152,12 +152,12 @@ void *i2cThread(void *arg)
             //  comparing new and last buttons states
             for (int button = 0; button < 16; ++button)
             {
-                if (i2cTCACallbacks[button].tca_callback_irq != NULL) {
-                    // if button is now pressed and i2cTCACallbacks[button].on_press
-                        // mp_sched_schedule(*i2cTCACallbacks[button].tca_callback_irq, mp_const_none);
+                if (tildaButtonCallbacks[button].tca_callback_irq != NULL) {
+                    // if button is now pressed and tildaButtonCallbacks[button].on_press
+                        // mp_sched_schedule(*tildaButtonCallbacks[button].tca_callback_irq, mp_const_none);
                         // scheduled = true;
-                    // if button is now relesase and i2cTCACallbacks[button].on_release
-                        // mp_sched_schedule(*i2cTCACallbacks[button].tca_callback_irq, mp_const_none);
+                    // if button is now relesase and tildaButtonCallbacks[button].on_release
+                        // mp_sched_schedule(*tildaButtonCallbacks[button].tca_callback_irq, mp_const_none);
                         // scheduled = true;
                 }
             }
@@ -185,7 +185,7 @@ void *i2cThread(void *arg)
             // grab TMP temp readings
             
             // grab lux readings
-            // OPT3001_getLux(opt3001Handle, &i2cSharedStates.optLux);
+            // OPT3001_getLux(opt3001Handle, &tildaSharedStates.optLux);
             // grab battery updates?
             
             // kick off Humidity conversion
@@ -215,17 +215,17 @@ bool getButtonState(TILDA_BUTTONS_Names button)
     return false;
 }
 
-void registerTCACallback(uint8_t button, void* tca_callback_irq,  bool on_press, bool on_release)
+void registerButtonCallback(uint8_t button, void* tca_callback_irq,  bool on_press, bool on_release)
 {
-    i2cTCACallbacks[button].tca_callback_irq = tca_callback_irq;
-    i2cTCACallbacks[button].on_press = on_press;
-    i2cTCACallbacks[button].on_release = on_release;
+    tildaButtonCallbacks[button].tca_callback_irq = tca_callback_irq;
+    tildaButtonCallbacks[button].on_press = on_press;
+    tildaButtonCallbacks[button].on_release = on_release;
 }
 
 
-void unregisterTCACallback(uint8_t button)
+void unregisterButtonCallback(uint8_t button)
 {
-    i2cTCACallbacks[button].tca_callback_irq = NULL;
-    i2cTCACallbacks[button].on_press = false;
-    i2cTCACallbacks[button].on_release = false;
+    tildaButtonCallbacks[button].tca_callback_irq = NULL;
+    tildaButtonCallbacks[button].on_press = false;
+    tildaButtonCallbacks[button].on_release = false;
 }

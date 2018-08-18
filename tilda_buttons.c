@@ -15,7 +15,7 @@
 #include "py/runtime.h"
 #include "py/mperrno.h"
 
-#include "i2c_thread.h"
+#include "tilda_thread.h"
 #include "tilda_buttons.h"
 
 // ***LWK*** a lot of this should have the same functions as buttons.py

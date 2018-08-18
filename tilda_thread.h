@@ -25,8 +25,8 @@
  * THE SOFTWARE.
  */
 
-#ifndef __I2C_THREAD_H
-#define __I2C_THREAD_H
+#ifndef __TIDLA_THREAD_H
+#define __TIDLA_THREAD_H
 
 /* BIOS module Headers */
 #include <ti/sysbios/knl/Event.h>
@@ -44,7 +44,7 @@ extern "C" {
 #endif
 
 // Event handle for use intrenal and from mod tilda
-Event_Handle i2cEvtHandle;
+Event_Handle tildaEvtHandle;
 
 /*
  * first 16 entries of this matchs the pin order of the TCA port expander
@@ -77,7 +77,7 @@ typedef enum TILDA_BUTTONS_Names
 } TILDA_BUTTONS_Names;
 
 // shared states
-typedef struct i2c_shared_states_t {
+typedef struct tilda_shared_states_t {
     uint32_t sampleRate;
     // uint32_t batteryVoltage;
     bool vbusAttached;
@@ -86,26 +86,26 @@ typedef struct i2c_shared_states_t {
     float hcdTemperatue;
     float hcdHumidity;
     float optLux;
-} i2c_shared_states_t;
+} tilda_shared_states_t;
 
-i2c_shared_states_t i2cSharedStates;
+tilda_shared_states_t tildaSharedStates;
 
 uint16_t buttonState;
 uint16_t lastButtonState;
 
-typedef struct i2c_tca_callbacks_t {
+typedef struct tilda_tca_callbacks_t {
     void* tca_callback_irq;
     bool on_press;
     bool on_release;
-} i2c_tca_callbacks_t;
+} tilda_tca_callbacks_t;
 
-i2c_tca_callbacks_t i2cTCACallbacks[16];
+tilda_tca_callbacks_t tildaButtonCallbacks[22];
 
-void * i2cThread(void *arg);
+void * tildaThread(void *arg);
 
 bool getButtonState(TILDA_BUTTONS_Names button);
-void registerTCACallback(uint8_t button, void* tca_callback_irq,  bool on_press, bool on_release);
-void unregisterTCACallback(uint8_t button);
+void registerButtonCallback(uint8_t button, void* tca_callback_irq,  bool on_press, bool on_release);
+void unregisterButtonCallback(uint8_t button);
 
 
 #ifdef __cplusplus
@@ -113,4 +113,4 @@ void unregisterTCACallback(uint8_t button);
 #endif
 
 
-#endif // __I2C_THREAD_H
+#endif // __TIDLA_THREAD_H

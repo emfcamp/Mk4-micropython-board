@@ -59,6 +59,13 @@
 #include "usbd_cdc.h"
 #endif
 
+#if MICROPY_PY_TILDA
+#include <pthread.h>
+#include "tilda_thread.h"
+#define TILDA_TASK_STACKSIZE       2048
+#define TILDA_TASK_PRIORITY        10
+#endif
+
 static char * stack_top;
 
 static UART_Handle console;
@@ -413,6 +420,18 @@ int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize, UART_Handle uart
     storage_init();
     #endif
 
+    #if MICROPY_PY_TILDA
+    pthread_t tildaThreadHandle;
+    pthread_attr_t tildaAttrs;
+    struct sched_param tildaParam;
+
+    pthread_attr_init(&tildaAttrs);
+    tildaParam.sched_priority = TILDA_TASK_PRIORITY;
+    pthread_attr_setschedparam(&tildaAttrs, &tildaParam);
+    pthread_attr_setstacksize(&tildaAttrs, TILDA_TASK_STACKSIZE);
+    pthread_create(&tildaThreadHandle, &tildaAttrs, tildaThread, NULL);
+    pthread_attr_destroy(&tildaAttrs);
+    #endif    
 
 soft_reset:
 
