@@ -16,6 +16,13 @@
 #include "gfile_fs.h"
 #include "gfile_fatfs_wrapper.h"
 
+#include "py/mpconfig.h"
+#include "py/obj.h"
+#include "py/compile.h"
+#include "py/runtime.h"
+#include "extmod/vfs.h"
+#include "extmod/vfs_fat.h"
+
 /********************************************************
  * The FAT file-system VMT
  ********************************************************/
@@ -67,7 +74,7 @@ const GFILEVMT FsFatFSVMT = {
 // Our directory list structure
 typedef struct fatfsList {
 	gfileList	fl;					// This must be the first element.
-	DIR			dir;
+	FF_DIR		dir;
 	FILINFO		fno;
 	#if _USE_LFN
 		char	lfn[_MAX_LFN + 1];   /* Buffer to store the LFN */
@@ -77,6 +84,12 @@ typedef struct fatfsList {
 // optimize these later on. Use an array to have multiple FatFS
 static bool_t fatfs_mounted = FALSE;
 static FATFS fatfs_fs;
+
+static FATFS* flash_fatfs (void){
+   mp_vfs_mount_t *vfs = MP_STATE_VM(vfs_mount_table);
+   fs_user_mount_t *vfs_fat = (vfs->obj);
+   return &vfs_fat->fatfs;
+}
 
 static BYTE fatfs_flags2mode(GFILE* f)
 {
@@ -99,7 +112,7 @@ static bool_t fatfsDel(const char* fname)
 {
 	FRESULT ferr;
 
-	ferr = f_unlink( (const TCHAR*)fname );
+	ferr = f_unlink(flash_fatfs(), (const TCHAR*)fname );
 	if (ferr != FR_OK)
 		return FALSE;
 
@@ -111,7 +124,7 @@ static bool_t fatfsExists(const char* fname)
 	FRESULT ferr;
 	FILINFO fno;
 
-	ferr = f_stat( (const TCHAR*)fname, &fno);
+	ferr = f_stat(flash_fatfs(), (const TCHAR*)fname, &fno);
 	if (ferr != FR_OK)
 		return FALSE;
 
@@ -123,7 +136,7 @@ static long int fatfsFileSize(const char* fname)
 	FRESULT ferr;
 	FILINFO fno;
 
-	ferr = f_stat( (const TCHAR*)fname, &fno );
+	ferr = f_stat(flash_fatfs(), (const TCHAR*)fname, &fno );
 	if (ferr != FR_OK)
 		return 0;
 
@@ -134,7 +147,7 @@ static bool_t fatfsRename(const char* oldname, const char* newname)
 {
 	FRESULT ferr;
 
-	ferr = f_rename( (const TCHAR*)oldname, (const TCHAR*)newname );
+	ferr = f_rename(flash_fatfs(), (const TCHAR*)oldname, (const TCHAR*)newname );
 	if (ferr != FR_OK)
 		return FALSE;
 
@@ -153,7 +166,9 @@ static bool_t fatfsOpen(GFILE* f, const char* fname)
 	if (!(fd = gfxAlloc(sizeof(FIL))))
 		return FALSE;
 
-	if (f_open(fd, fname, fatfs_flags2mode(f)) != FR_OK) {
+   
+   
+	if (f_open(flash_fatfs(), fd, fname, fatfs_flags2mode(f)) != FR_OK) {
 		gfxFree(fd);
 		f->obj = 0;
 
@@ -226,7 +241,7 @@ static bool_t fatfsEOF(GFILE* f)
 }
 
 static bool_t fatfsMount(const char* drive)
-{
+{/*
 	FRESULT ferr;
 
 	if (!fatfs_mounted) {
@@ -235,7 +250,7 @@ static bool_t fatfsMount(const char* drive)
 			return FALSE;
 		fatfs_mounted = TRUE;
 		return TRUE;
-	}
+	}*/
 
 	return FALSE;
 }
