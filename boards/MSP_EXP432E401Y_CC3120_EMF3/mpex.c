@@ -114,6 +114,7 @@ void *mainThread(void *arg0)
     UART_init();
     PWM_init();
     NVS_init();
+    ADC_init();
 
     CC3120_fwUpdate();
 
