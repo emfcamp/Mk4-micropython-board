@@ -13,6 +13,7 @@
 
 #include "py/nlr.h"
 #include "py/runtime.h"
+#include "py/mperrno.h"
 
 #include "i2c_thread.h"
 #include "tilda_buttons.h"
@@ -24,8 +25,9 @@
 STATIC mp_obj_t tilda_buttons_is_pressed(mp_obj_t button_in) //(button)
 {
     TILDA_BUTTONS_Names button = mp_obj_get_int(button_in);
-    // if button > 22
-        // error out of range
+    if (button > Buttons_BTN_Menu) {
+        mp_raise_OSError(MP_ENODEV);
+    }
     return getButtonState(button) ? mp_const_true : mp_const_false;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(tilda_buttons_is_pressed_obj, tilda_buttons_is_pressed);

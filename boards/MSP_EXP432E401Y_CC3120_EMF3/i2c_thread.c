@@ -40,7 +40,7 @@
 #include "i2c_thread.h"
 
 Event_Struct evtStruct;
-
+I2C_Handle      i2cHandle;
 
 void tcaInterruptHandler(uint8_t index)
 {
@@ -60,11 +60,32 @@ void bqInterruptHandler(uint8_t index)
     Event_post(i2cEvtHandle, Event_BQ_INT);
 }
 
+void readTCAButtons() 
+{
+    //  read button states 
+    uint8_t readBuffer[2];
+    uint8_t writeBuffer[1];
+    writeBuffer[0] = 0x00;
+    I2C_Transaction i2cTransaction;
+    i2cTransaction.slaveAddress = 0x20;
+    i2cTransaction.writeBuf = writeBuffer;
+    i2cTransaction.writeCount = 1;
+    i2cTransaction.readBuf = readBuffer;
+    i2cTransaction.readCount = 2;
+    bool status = I2C_transfer(i2cHandle, &i2cTransaction);
+    if (status == false) {
+        // Unsuccessful I2C transfer
+        return;
+    }
+    lastButtonState = buttonState;
+    //  update shared state 
+    buttonState = readBuffer[1];
+    buttonState = (buttonState << 8) | readBuffer[0];
+}
+
 void *i2cThread(void *arg)
 {
-    I2C_Handle      i2cHandle;
     I2C_Params      i2cParams;
-    I2C_Transaction i2cTransaction;
 
     i2cSharedStates.sampleRate = 500; // default to 0.5 Sec sample rate
 
@@ -100,6 +121,10 @@ void *i2cThread(void *arg)
     
     // setup sensors
     
+    // do an inital button read
+    readTCAButtons();
+    lastButtonState = buttonState;
+
     // do initial i2c read to populate shared states?
 
     uint32_t posted;
@@ -114,11 +139,7 @@ void *i2cThread(void *arg)
 
         // if TCA event 
         if (posted & Event_TCA_INT) {
-            lastButtonState = buttonState;
-            //  read button states 
-            
-            //  update shared state 
-             
+            readTCAButtons();
 
             //  fire any callbacks if needed
             //  comparing new and last buttons states
