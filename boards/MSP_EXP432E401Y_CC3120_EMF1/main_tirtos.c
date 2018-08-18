@@ -60,21 +60,14 @@ extern void *mainThread(void *arg0);
 #define THREADSTACKSIZE    4096
 
 /* 
- * Enable bootloader selection via Pin PB2 HIGH  (JOY Right)
+ * Enable bootloader selection via Pin PF4 HIGH  (D2 on SSI header)
  */
 #include "ti/devices/msp432e4/driverlib/driverlib.h"
-
-void checkBOOTCFG()
+ void checkBOOTCFG()
 {
-    // new BOOTCFG value with PM4 boot pin (JoyStick Right)
     if (FLASH_CTRL->BOOTCFG & FLASH_BOOTCFG_NW) {
-        FLASH_CTRL->FMA = 0x75100000;             // BOOTCFG write address
-        FLASH_CTRL->FMD = 0x7FFF00EC |            // Reserved (must be 1)
-                          FLASH_BOOTCFG_PORT_M |  // Port M
-                          FLASH_BOOTCFG_PIN_4  |  // Pin 4
-                          //FLASH_BOOTCFG_POL    |  // Low Polarity
-                          FLASH_BOOTCFG_DBG1;     // DBG1=1, DBG0=0 to Enable
-
+        FLASH_CTRL->FMA = 0x75100000; // BOOTCFG write address
+        FLASH_CTRL->FMD = 0x7FFFB2FE; // new BOOTCFG value with PF4 boot pin
         FLASH_CTRL->FMC = FLASH_FMC_WRKEY | FLASH_FMC_COMT;
     }
 }

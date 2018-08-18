@@ -147,8 +147,8 @@ void flash_error(int n) {
 void NORETURN __fatal_error(const char *msg) {
     for (volatile uint delay = 0; delay < 10000000; delay++) {
     }
-    led_state(1, 1);
-    led_state(2, 1);
+    led_state(TILDA_LED_RED, 1);
+    led_state(TILDA_LED_GREEN, 1);
     led_state(3, 1);
     led_state(4, 1);
     mp_hal_stdout_tx_strn("\nFATAL ERROR:\n", 14);
@@ -328,6 +328,9 @@ MP_NOINLINE STATIC bool init_flash_fs(uint reset_mode) {
 
 STATIC uint update_reset_mode(uint reset_mode) {
     if ((GPIO_read(MICROPY_HW_MODE_GPIO)==MICROPY_HW_MODE_GPIO_STATE)) {
+        // Setup inital led state:
+        led_state(TILDA_LED_RED, reset_mode & 1);
+        led_state(TILDA_LED_GREEN, reset_mode & 2);
 
         // The original method used on the pyboard is appropriate if you have 2
         // or more LEDs.
@@ -341,17 +344,17 @@ STATIC uint update_reset_mode(uint reset_mode) {
                 if (++reset_mode > 3) {
                     reset_mode = 1;
                 }
-                led_state(1, reset_mode & 1);
-                led_state(2, reset_mode & 2);
+                led_state(TILDA_LED_RED, reset_mode & 1);
+                led_state(TILDA_LED_GREEN, reset_mode & 2);
             }
         }
         // flash the selected reset mode
         for (uint i = 0; i < 6; i++) {
-            led_state(1, 0);
-            led_state(2, 0);
+            led_state(TILDA_LED_RED, 0);
+            led_state(TILDA_LED_GREEN, 0);
             mp_hal_delay_ms(50);
-            led_state(1, reset_mode & 1);
-            led_state(2, reset_mode & 2);
+            led_state(TILDA_LED_RED, reset_mode & 1);
+            led_state(TILDA_LED_GREEN, reset_mode & 2);
             mp_hal_delay_ms(50);
         }
         mp_hal_delay_ms(400);
@@ -361,14 +364,14 @@ STATIC uint update_reset_mode(uint reset_mode) {
         // For boards with only a single LED, we'll flash that LED the
         // appropriate number of times, with a pause between each one
         for (uint i = 0; i < 10; i++) {
-            led_state(1, 0);
+            led_state(TILDA_LED_RED, 0);
             for (uint j = 0; j < reset_mode; j++) {
                 if (!(GPIO_read(MICROPY_HW_MODE_GPIO)==MICROPY_HW_MODE_GPIO_STATE)) {
                     break;
                 }
-                led_state(1, 1);
+                led_state(TILDA_LED_RED, 1);
                 mp_hal_delay_ms(100);
-                led_state(1, 0);
+                led_state(TILDA_LED_RED, 0);
                 mp_hal_delay_ms(200);
             }
             mp_hal_delay_ms(400);
@@ -382,9 +385,9 @@ STATIC uint update_reset_mode(uint reset_mode) {
         // Flash the selected reset mode
         for (uint i = 0; i < 2; i++) {
             for (uint j = 0; j < reset_mode; j++) {
-                led_state(1, 1);
+                led_state(TILDA_LED_RED, 1);
                 mp_hal_delay_ms(100);
-                led_state(1, 0);
+                led_state(TILDA_LED_RED, 0);
                 mp_hal_delay_ms(200);
             }
             mp_hal_delay_ms(400);
@@ -414,11 +417,11 @@ int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize, UART_Handle uart
 soft_reset:
 
     #if defined(MICROPY_HW_LED2)
-    led_state(1, 0);
-    led_state(2, 1);
+    led_state(TILDA_LED_RED, 0);
+    led_state(TILDA_LED_GREEN, 0);
     #else
-    led_state(1, 1);
-    led_state(2, 0);
+    led_state(TILDA_LED_RED, 1);
+    led_state(TILDA_LED_GREEN, 0);
     #endif
     led_state(3, 0);
     led_state(4, 0);
@@ -516,9 +519,9 @@ soft_reset:
     // If there is only one LED on the board then it's used to signal boot-up
     // and so we turn it off here.  Otherwise LED(1) is used to indicate dirty
     // flash cache and so we shouldn't change its state.
-    led_state(1, 0);
+    led_state(TILDA_LED_RED, 0);
     #endif
-    led_state(2, 0);
+    led_state(TILDA_LED_GREEN, 0);
     led_state(3, 0);
     led_state(4, 0);
 
