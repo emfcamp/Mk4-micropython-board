@@ -14,10 +14,12 @@
 //#include "genhdr/pins.h"
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/GPIO.h>
+#include <ti/drivers/PWM.h>
 
 
 //SPI_HandleTypeDef ili_spi;
 SPI_Handle spi_h;
+PWM_Handle pwm_h;
 
 SPI_Transaction trans;
 #define DMA_BUFF_LEN 100
@@ -97,6 +99,20 @@ static GFXINLINE void init_board(GDisplay *g) {
 
 
     spi_h = SPI_open(MICROPY_HW_UGFX_SPI, &params);
+    
+#ifdef MICROPY_HW_UGFX_BL_PWM
+    PWM_Params pwmParams;    
+    PWM_Params_init(&pwmParams);
+    pwmParams.idleLevel = PWM_IDLE_LOW;      // Output low when PWM is not running
+    pwmParams.periodUnits = PWM_PERIOD_HZ;   // Period is in Hz
+    pwmParams.periodValue = 10000;           // 10kHz
+    pwmParams.dutyUnits = PWM_DUTY_FRACTION; // Duty is in fractional percentage
+    pwmParams.dutyValue = PWM_DUTY_FRACTION_MAX/2; // 50% initial duty cycle
+    
+    pwm_h = PWM_open(MICROPY_HW_UGFX_BL_PWM, &pwmParams);
+    
+    PWM_start(pwm_h);
+#endif
 
     /*
 
@@ -212,16 +228,9 @@ static GFXINLINE void setpin_reset(GDisplay *g, bool_t state) {
 
 static GFXINLINE void set_backlight(GDisplay *g, uint8_t percent) {
 	(void) g;
-
-	//TIM17->CCR1 = percent;
-	/*
-		// turn back light on
-		GPIO_set_pin(MICROPY_HW_UGFX_PORT_BL, MICROPY_HW_UGFX_PIN_BL);
-	} else {
-		// turn off
-		GPIO_clear_pin(MICROPY_HW_UGFX_PORT_BL, MICROPY_HW_UGFX_PIN_BL);
-	}
-	*/
+#ifdef MICROPY_HW_UGFX_BL_PWM
+   PWM_setDuty(pwm_h,(PWM_DUTY_FRACTION_MAX / 100)*percent);
+#endif
 }
 
 static GFXINLINE void acquire_bus(GDisplay *g) {
