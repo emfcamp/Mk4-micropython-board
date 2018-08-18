@@ -79,6 +79,11 @@
 #define MICROPY_PY_FRAMEBUF         (1)
 #define MICROPY_PY_UJSON            (1)
 #define MICROPY_PY_UBINASCII        (1)
+#define MICROPY_PY_UHASHLIB         (1)
+#define MICROPY_PY_URANDOM          (1)
+#define MICROPY_PY_URANDOM_EXTRA_FUNCS (1)
+#define MICROPY_PY_URE              (1)
+#define MICROPY_PY_URE_SUB          (1)
 
 #define MICROPY_VFS                    (1)
 #define MICROPY_FATFS_ENABLE_LFN       (1)
@@ -124,6 +129,7 @@ typedef long mp_off_t;
 
 // extra built in modules to add to the list of known ones
 extern const struct _mp_obj_module_t machine_module;
+extern const struct _mp_obj_module_t mp_module_uhashlib;
 extern const struct _mp_obj_module_t mp_module_uos;
 extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_socket;
@@ -163,6 +169,7 @@ extern const struct _mp_obj_module_t mp_module_ugfx;
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_ROM_QSTR(MP_QSTR_struct),      MP_ROM_PTR(&mp_module_ustruct) },   \
+    { MP_ROM_QSTR(MP_QSTR_hashlib), MP_ROM_PTR(&mp_module_uhashlib) }, \
     { MP_ROM_QSTR(MP_QSTR_os),          MP_ROM_PTR(&mp_module_uos) },       \
     { MP_ROM_QSTR(MP_QSTR_time),        MP_ROM_PTR(&mp_module_utime) },     \
     { MP_ROM_QSTR(MP_QSTR_random),      MP_ROM_PTR(&mp_module_urandom) },   \
