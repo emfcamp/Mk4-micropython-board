@@ -1,5 +1,5 @@
-key = USB_VID val = f055
-key = USB_PID_CDC_MSC val = 9800
+key = USB_VID val = 1cbe
+key = USB_PID_CDC_MSC val = 0007
 key = USB_PID_CDC_HID val = 9801
 key = USB_PID_CDC val = 9802
 ; Windows USB CDC ACM Setup File
@@ -81,16 +81,16 @@ ServiceBinary=%12%\usbser.sys
 [SourceDisksFiles]
 [SourceDisksNames]
 [DeviceList]
-%DESCRIPTION%=DriverInstall, USB\VID_f055&PID_9800&MI_00, USB\VID_f055&PID_9800&MI_01, USB\VID_f055&PID_9801&MI_00, USB\VID_f055&PID_9801&MI_01, USB\VID_f055&PID_9802
+%DESCRIPTION%=DriverInstall, USB\VID_1cbe&PID_0007&MI_00, USB\VID_1cbe&PID_0007&MI_01, USB\VID_1cbe&PID_9801&MI_00, USB\VID_1cbe&PID_9801&MI_01, USB\VID_1cbe&PID_9802
 
 [DeviceList.NTamd64]
-%DESCRIPTION%=DriverInstall, USB\VID_f055&PID_9800&MI_00, USB\VID_f055&PID_9800&MI_01, USB\VID_f055&PID_9801&MI_00, USB\VID_f055&PID_9801&MI_01, USB\VID_f055&PID_9802
+%DESCRIPTION%=DriverInstall, USB\VID_1cbe&PID_0007&MI_00, USB\VID_1cbe&PID_0007&MI_01, USB\VID_1cbe&PID_9801&MI_00, USB\VID_1cbe&PID_9801&MI_01, USB\VID_1cbe&PID_9802
 
 ;---------------------------------------------------------------------
 ;  String Definitions
 
 [Strings]
 MFGFILENAME="pybcdc"
-MFGNAME="MicroPython"
-DESCRIPTION="Pyboard USB Comm Port"
+MFGNAME="EMFCamp"
+DESCRIPTION="TiLDA Mk4 USB Comm Port"
 SERVICE="USB Serial Driver"
