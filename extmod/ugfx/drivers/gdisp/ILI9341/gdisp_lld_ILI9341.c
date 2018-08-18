@@ -502,6 +502,14 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
             g->g.Backlight = (unsigned)g->p.ptr;
             return;
 
+        case GDISP_CONTROL_SPICLK:
+            if ((uint32_t)g->p.ptr > 60000000)
+            	g->p.ptr = (void *)60000000;
+            if ((uint32_t)g->p.ptr < 100000)
+            	g->p.ptr = (void *)100000;
+            change_spi_speed((uint32_t)g->p.ptr);            
+            return;
+            
 		//case GDISP_CONTROL_CONTRAST:
         default:
             return;

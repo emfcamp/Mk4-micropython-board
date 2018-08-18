@@ -66,6 +66,18 @@ static void pwm_timer_init(void)
 
 }*/
 
+static GFXINLINE void change_spi_speed(uint32_t clk) {
+    SPI_close(spi_h);
+    SPI_Params params;
+    SPI_Params_init(&params);
+    params.bitRate = clk;
+    params.dataSize = 8;
+    params.frameFormat = 0;
+    //params.transferMode = SPI_MODE_CALLBACK;
+    spi_h = SPI_open(MICROPY_HW_UGFX_SPI, &params);   
+}
+
+
 static GFXINLINE void init_board(GDisplay *g) {
 	// As we are not using multiple displays we set g->board to NULL as we don't use it.
 /*
