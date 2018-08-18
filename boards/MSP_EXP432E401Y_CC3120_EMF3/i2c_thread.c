@@ -33,6 +33,7 @@
 /* Driver Header files */
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/I2C.h>
+#include <ti/sail/opt3001/opt3001.h>
 
 /* Example/Board Header files */
 #include "MSP_EXP432E401Y.h"
@@ -125,9 +126,15 @@ void *i2cThread(void *arg)
     readTCAButtons();
     lastButtonState = buttonState;
 
+    // OPT3001_Handle opt3001Handle = NULL;
+    // OPT3001_Params opt3001Params;
+    // OPT3001_Params_init(&opt3001Params);
+    // opt3001Handle = OPT3001_open(MSP_EXP432E401Y_OPT3001_0, i2cHandle,
+    //         &opt3001Params);
     // do initial i2c read to populate shared states?
 
     uint32_t posted;
+    bool scheduled;
 
     // loop
     for (;;) {
@@ -140,7 +147,7 @@ void *i2cThread(void *arg)
         // if TCA event 
         if (posted & Event_TCA_INT) {
             readTCAButtons();
-
+            scheduled = false;
             //  fire any callbacks if needed
             //  comparing new and last buttons states
             for (int button = 0; button < 16; ++button)
@@ -148,13 +155,17 @@ void *i2cThread(void *arg)
                 if (i2cTCACallbacks[button].tca_callback_irq != NULL) {
                     // if button is now pressed and i2cTCACallbacks[button].on_press
                         // mp_sched_schedule(*i2cTCACallbacks[button].tca_callback_irq, mp_const_none);
+                        // scheduled = true;
                     // if button is now relesase and i2cTCACallbacks[button].on_release
                         // mp_sched_schedule(*i2cTCACallbacks[button].tca_callback_irq, mp_const_none);
+                        // scheduled = true;
                 }
             }
             // wake the mp?
-            // extern Semaphore_Handle machine_sleep_sem;
-            // Semaphore_post(machine_sleep_sem);
+            if (scheduled) {
+                extern Semaphore_Handle machine_sleep_sem;
+                Semaphore_post(machine_sleep_sem);
+            }
         }
 
         // else if bq event
@@ -174,7 +185,7 @@ void *i2cThread(void *arg)
             // grab TMP temp readings
             
             // grab lux readings
-            
+            // OPT3001_getLux(opt3001Handle, &i2cSharedStates.optLux);
             // grab battery updates?
             
             // kick off Humidity conversion
@@ -187,19 +198,19 @@ void *i2cThread(void *arg)
 
 bool getButtonState(TILDA_BUTTONS_Names button)
 {
-    if (button < 16) {
+    if (button < Buttons_JOY_Center) {
         // TCA button
         // shift and mask buttonState
         // 0 == button pressed, and shouold return true
         // 1 == button not pressed and should return false
         return !((buttonState >> button) & 0x1);
-    } else if (button < 21) {
+    } else if (button < Buttons_BTN_Menu) {
         // joystick 
         // 1 == button pressed, and shouold return true
-        return GPIO_read(button - 16);
+        return GPIO_read(button - Buttons_JOY_Center);
     } else if (button == Buttons_BTN_Menu) {
         // 0 == button pressed, and shouold return true
-        return !GPIO_read(button - 16);
+        return !GPIO_read(button - Buttons_JOY_Center);
     }
     return false;
 }

@@ -46,6 +46,10 @@ extern "C" {
 // Event handle for use intrenal and from mod tilda
 Event_Handle i2cEvtHandle;
 
+/*
+ * first 16 entries of this matchs the pin order of the TCA port expander
+ * next match the order form MSP_EXP432E401Y_GPIOName
+ */
 typedef enum TILDA_BUTTONS_Names 
 {
     Buttons_BTN_1 = 0,
