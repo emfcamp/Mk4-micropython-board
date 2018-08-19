@@ -24,7 +24,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
+#if MICRO_PY_TILDA
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -298,3 +298,4 @@ void unregisterButtonCallback(uint8_t button)
         GPIO_disableInt(gpioIndex);
     }
 }
+#endif
