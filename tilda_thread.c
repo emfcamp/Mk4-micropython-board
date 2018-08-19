@@ -24,7 +24,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#if MICRO_PY_TILDA
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -33,7 +33,6 @@
 /* Driver Header files */
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/I2C.h>
-#include <ti/sail/opt3001/opt3001.h>
 
 /* Example/Board Header files */
 #include "MSP_EXP432E401Y.h"
@@ -41,6 +40,8 @@
 #include "py/nlr.h"
 #include "py/runtime.h"
 
+#if MICROPY_PY_TILDA
+#include <ti/sail/opt3001/opt3001.h>
 #include "tilda_thread.h"
 
 Event_Struct evtStruct;
