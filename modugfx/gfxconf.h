@@ -117,23 +117,23 @@
         #define GDISP_NEED_IMAGE_BMP_24              TRUE
 //        #define GDISP_NEED_IMAGE_BMP_32              TRUE
     #define GDISP_NEED_IMAGE_JPG                     TRUE
-//    #define GDISP_NEED_IMAGE_PNG                     TRUE
-//        #define GDISP_NEED_IMAGE_PNG_INTERLACED      FALSE
-//        #define GDISP_NEED_IMAGE_PNG_TRANSPARENCY    TRUE
-//        #define GDISP_NEED_IMAGE_PNG_BACKGROUND      TRUE
-//        #define GDISP_NEED_IMAGE_PNG_ALPHACLIFF      32
-//        #define GDISP_NEED_IMAGE_PNG_PALETTE_124     TRUE
-//        #define GDISP_NEED_IMAGE_PNG_PALETTE_8       TRUE
-//        #define GDISP_NEED_IMAGE_PNG_GRAYSCALE_124   TRUE
-//        #define GDISP_NEED_IMAGE_PNG_GRAYSCALE_8     TRUE
-//        #define GDISP_NEED_IMAGE_PNG_GRAYSCALE_16    TRUE
-//        #define GDISP_NEED_IMAGE_PNG_GRAYALPHA_8     TRUE
-//        #define GDISP_NEED_IMAGE_PNG_GRAYALPHA_16    TRUE
-//        #define GDISP_NEED_IMAGE_PNG_RGB_8           TRUE
-//        #define GDISP_NEED_IMAGE_PNG_RGB_16          TRUE
-//        #define GDISP_NEED_IMAGE_PNG_RGBALPHA_8      TRUE
-//        #define GDISP_NEED_IMAGE_PNG_RGBALPHA_16     TRUE
-//    #define GDISP_NEED_IMAGE_ACCOUNTING              FALSE
+    #define GDISP_NEED_IMAGE_PNG                     TRUE
+        #define GDISP_NEED_IMAGE_PNG_INTERLACED      FALSE
+        #define GDISP_NEED_IMAGE_PNG_TRANSPARENCY    TRUE
+        #define GDISP_NEED_IMAGE_PNG_BACKGROUND      TRUE
+        #define GDISP_NEED_IMAGE_PNG_ALPHACLIFF      32
+        #define GDISP_NEED_IMAGE_PNG_PALETTE_124     TRUE
+        #define GDISP_NEED_IMAGE_PNG_PALETTE_8       TRUE
+        #define GDISP_NEED_IMAGE_PNG_GRAYSCALE_124   TRUE
+        #define GDISP_NEED_IMAGE_PNG_GRAYSCALE_8     TRUE
+        #define GDISP_NEED_IMAGE_PNG_GRAYSCALE_16    TRUE
+        #define GDISP_NEED_IMAGE_PNG_GRAYALPHA_8     TRUE
+        #define GDISP_NEED_IMAGE_PNG_GRAYALPHA_16    TRUE
+        #define GDISP_NEED_IMAGE_PNG_RGB_8           TRUE
+        #define GDISP_NEED_IMAGE_PNG_RGB_16          TRUE
+        #define GDISP_NEED_IMAGE_PNG_RGBALPHA_8      TRUE
+        #define GDISP_NEED_IMAGE_PNG_RGBALPHA_16     TRUE
+    #define GDISP_NEED_IMAGE_ACCOUNTING              FALSE
 
 //#define GDISP_NEED_PIXMAP                            FALSE
 //    #define GDISP_NEED_PIXMAP_IMAGE                  FALSE
