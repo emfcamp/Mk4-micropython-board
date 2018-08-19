@@ -21,6 +21,7 @@ SRC_C = \
 	modmachine.c \
 	modsocket.c \
 	modnetwork.c \
+	modtilda.c \
 	network_ndklan.c \
 	network_stalan.c \
 	moduos.c \
@@ -34,6 +35,9 @@ SRC_C = \
 	machine_nvsbdev.c \
 	machine_pwm.c \
 	machine_rtc.c \
+	tilda_buttons.c \
+	tilda_sensors.c \
+	tilda_thread.c \
 	$(BOARD_SRC_C) \
 	led.c \
 	storage.c \
