@@ -163,7 +163,7 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 	write_index(g, 0xb1);
 	// frame rate
 	write_data(g, 0x00);
-	write_data(g, 0x1F); //0x1B in BD example //70
+	write_data(g, 0x18); //0x1B in BD example //70
 
 
 
