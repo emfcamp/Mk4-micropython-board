@@ -113,12 +113,6 @@ SECTIONS {
         *(.ARM.extab* .gnu.linkonce.armextab.*)
     } > REGION_ARM_EXTAB AT> REGION_ARM_EXTAB
 
-    .nvs (0xAC000) (NOLOAD) : AT (0xAC000) {
-        __nvs_start__ = .;
-        *(.nvs)
-        __nvs_end__ = .;
-    } > REGION_TEXT
-
     .ExternalSRAM (NOLOAD):
     {
         __extram_start__ = .;
