@@ -38,10 +38,42 @@
 /* Example/Board Header files */
 #include "MSP_EXP432E401Y.h"
 
+#include "py/nlr.h"
+#include "py/runtime.h"
+
 #include "tilda_thread.h"
 
 Event_Struct evtStruct;
 I2C_Handle      i2cHandle;
+
+uint16_t buttonState;
+uint16_t lastButtonState;
+
+typedef struct tilda_tca_callback_modes_t {
+    bool on_press;
+    bool on_release;
+} tilda_tca_callback_modes_t;
+
+static tilda_tca_callback_modes_t tildaButtonCallbackModes[Buttons_MAX];
+
+void tilda_init0()
+{
+    for (int i = 0; i < Buttons_MAX; i++) {
+        MP_STATE_PORT(tilda_button_callback)[i] = mp_const_none;
+        tildaButtonCallbackModes[i].on_press = false;
+        tildaButtonCallbackModes[i].on_release = false;
+   }
+}
+
+static void tildaGpioCallback(uint8_t index) {
+    uint8_t button = index + Buttons_JOY_Center;
+    mp_obj_t *tilda_button_callback = &MP_STATE_PORT(tilda_button_callback)[button];
+    if (*tilda_button_callback != mp_const_none) {
+        mp_sched_schedule(*tilda_button_callback, MP_OBJ_NEW_SMALL_INT(button));
+    }
+    extern Semaphore_Handle machine_sleep_sem;
+    Semaphore_post(machine_sleep_sem);
+}
 
 void tcaInterruptHandler(uint8_t index)
 {
@@ -151,13 +183,16 @@ void *tildaThread(void *arg)
             //  comparing new and last buttons states
             for (int button = 0; button < 16; ++button)
             {
-                if (tildaButtonCallbacks[button].tca_callback_irq != NULL) {
-                    // if button is now pressed and tildaButtonCallbacks[button].on_press
-                        // mp_sched_schedule(*tildaButtonCallbacks[button].tca_callback_irq, mp_const_none);
-                        // scheduled = true;
-                    // if button is now relesase and tildaButtonCallbacks[button].on_release
-                        // mp_sched_schedule(*tildaButtonCallbacks[button].tca_callback_irq, mp_const_none);
-                        // scheduled = true;
+                mp_obj_t *tca_callback_irq = &MP_STATE_PORT(tilda_button_callback)[button];
+                if (*tca_callback_irq != mp_const_none) {
+                    if (tildaButtonCallbackModes[button].on_press && !((buttonState >> button) & 0x1) && ((lastButtonState >> button) & 0x1)) {
+                        mp_sched_schedule(*tca_callback_irq, MP_OBJ_NEW_SMALL_INT(button));
+                        scheduled = true;
+                    }
+                    if (tildaButtonCallbackModes[button].on_release && ((buttonState >> button) & 0x1) && !((lastButtonState >> button) & 0x1)) {
+                        mp_sched_schedule(*tca_callback_irq, MP_OBJ_NEW_SMALL_INT(button));
+                        scheduled = true;
+                    }
                 }
             }
             // wake the mp?
@@ -214,17 +249,52 @@ bool getButtonState(TILDA_BUTTONS_Names button)
     return false;
 }
 
-void registerButtonCallback(uint8_t button, void* tca_callback_irq,  bool on_press, bool on_release)
+void registerButtonCallback(uint8_t button, mp_obj_t tca_callback_irq,  bool on_press, bool on_release)
 {
-    tildaButtonCallbacks[button].tca_callback_irq = tca_callback_irq;
-    tildaButtonCallbacks[button].on_press = on_press;
-    tildaButtonCallbacks[button].on_release = on_release;
+    mp_obj_t *cb = &MP_STATE_PORT(tilda_button_callback)[button];
+    *cb = tca_callback_irq;
+    tildaButtonCallbackModes[button].on_press = on_press;
+    tildaButtonCallbackModes[button].on_release = on_release;
+    if (button >= Buttons_JOY_Center) {
+        uint8_t gpioIndex = button - Buttons_JOY_Center;
+        // This is a GPIO attached button need to do some extra setup
+        
+        // call GPIO_setConfig to setup the Interupt direction
+        GPIO_PinConfig cfg;
+        GPIO_getConfig(gpioIndex, &cfg);
+
+        cfg = (cfg & (~GPIO_CFG_INT_MASK)); // clear INT
+        if (button == Buttons_BTN_Menu) { 
+            if (on_press)
+                cfg |= GPIO_CFG_IN_INT_FALLING;
+            if (on_release)
+                cfg |= GPIO_CFG_IN_INT_RISING;
+        } else {
+            if (on_press)
+                cfg |= GPIO_CFG_IN_INT_RISING;
+            if (on_release)
+                cfg |= GPIO_CFG_IN_INT_FALLING;
+        }
+        GPIO_setConfig(gpioIndex, cfg);
+
+        // register our generic callback handler
+        GPIO_disableInt(gpioIndex);
+        GPIO_setCallback(gpioIndex, tildaGpioCallback);
+        GPIO_enableInt(gpioIndex);
+    }
 }
 
 
 void unregisterButtonCallback(uint8_t button)
 {
-    tildaButtonCallbacks[button].tca_callback_irq = NULL;
-    tildaButtonCallbacks[button].on_press = false;
-    tildaButtonCallbacks[button].on_release = false;
+    mp_obj_t *cb = &MP_STATE_PORT(tilda_button_callback)[button];
+    *cb = mp_const_none;
+    tildaButtonCallbackModes[button].on_press = false;
+    tildaButtonCallbackModes[button].on_release = false;
+
+    if (button >= Buttons_JOY_Center) {
+        uint8_t gpioIndex = button - Buttons_JOY_Center;
+        // This is a GPIO attached button need to do some extra cleanup
+        GPIO_disableInt(gpioIndex);
+    }
 }

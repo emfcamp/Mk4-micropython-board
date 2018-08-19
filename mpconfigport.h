@@ -189,5 +189,6 @@ extern const struct _mp_obj_module_t mp_module_tilda;
 #define MICROPY_PORT_ROOT_POINTERS \
     const char *readline_hist[8]; \
     mp_obj_t pinirq_callback[10]; \
+    mp_obj_t tilda_button_callback[22]; \
     mp_obj_t tilda_config_main; \
 
