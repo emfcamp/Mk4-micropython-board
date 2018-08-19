@@ -52,7 +52,7 @@
 
 // Micropython RTOS thread stack size
 #define STACKSIZE 8192U
-#define MPHEAPSIZE (8388608 - 30720) // 8 Meg SRAM - GFX_OS_HEAP_SIZE (30K)
+#define MPHEAPSIZE (8388608 - 630000) // 8 Meg SRAM - GFX_OS_HEAP_SIZE (630K)
 //#define   MPHEAPSIZE (65535 + 14384)
 
 // Simplelink network task
