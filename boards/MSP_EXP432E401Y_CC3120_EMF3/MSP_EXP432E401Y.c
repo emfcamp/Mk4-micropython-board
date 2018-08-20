@@ -166,7 +166,7 @@ const UDMAMSP432E4_HWAttrs udmaMSP432E4HWAttrs = {
     .controlBaseAddr = (void *)dmaControlTable,
     .dmaErrorFxn = (UDMAMSP432E4_ErrorFxn)dmaErrorFxn,
     .intNum = INT_UDMAERR,
-    .intPriority = (~0)
+    .intPriority = (1U << 5)
 };
 
 const UDMAMSP432E4_Config UDMAMSP432E4_config = {
@@ -491,64 +491,33 @@ const uint_least8_t I2C_count = MSP_EXP432E401Y_I2CCOUNT;
  *  =============================== NVS ===============================
  */
 #include <ti/drivers/NVS.h>
-#include <ti/drivers/nvs/NVSMSP432E4.h>
+#include <ti/drivers/nvs/NVSSPI25X.h>
 
-#define SECTORSIZE       (0x4000)
-#define NVS_REGIONS_BASE (0xAC000) // Not used in GCC, see linker script
-#define REGIONSIZE       (SECTORSIZE * 20)
+NVSSPI25X_Object nvsSPIObjects[MSP_EXP432E401Y_NVSCOUNT];
 
-/*
- * Reserve flash sectors for NVS driver use
- * by placing an uninitialized byte array
- * at the desired flash address.
- */
-#if defined(__TI_COMPILER_VERSION__)
-
-/*
- * Place uninitialized array at NVS_REGIONS_BASE
- */
-#pragma LOCATION(flashBuf, NVS_REGIONS_BASE);
-#pragma NOINIT(flashBuf);
-static char flashBuf[REGIONSIZE];
-
-#elif defined(__IAR_SYSTEMS_ICC__)
-
-/*
- * Place uninitialized array at NVS_REGIONS_BASE
- */
-__no_init static char flashBuf[REGIONSIZE] @ NVS_REGIONS_BASE;
-
-#elif defined(__GNUC__)
-
-/*
- * Place the flash buffers in the .nvs section created in the gcc linker file.
- * The .nvs section enforces alignment on a sector boundary but may
- * be placed anywhere in flash memory.  If desired the .nvs section can be set
- * to a fixed address by changing the following in the gcc linker file:
- *
- * .nvs (FIXED_FLASH_ADDR) (NOLOAD) : AT (FIXED_FLASH_ADDR) {
- *      *(.nvs)
- * } > REGION_TEXT
- */
-__attribute__ ((section (".nvs")))
-static char flashBuf[REGIONSIZE];
-
-#endif
-
-NVSMSP432E4_Object nvsMSP432E4Objects[MSP_EXP432E401Y_NVSCOUNT];
-
-const NVSMSP432E4_HWAttrs nvsMSP432E4HWAttrs[MSP_EXP432E401Y_NVSCOUNT] = {
+uint8_t verifyBuf[256];
+NVSSPI25X_HWAttrs nvsSPIHWAttrs[MSP_EXP432E401Y_NVSCOUNT] = {
+    //
+    // region 0 is all the flash.
+    //
     {
-        .regionBase = (void *) flashBuf,
-        .regionSize = REGIONSIZE,
+        .regionBaseOffset = 0,
+        .regionSize = 0x100000,
+        .sectorSize = 4096,
+        .verifyBuf = verifyBuf,
+        .verifyBufSize = 256,
+        .spiHandle = NULL,
+        .spiIndex = MSP_EXP432E401Y_SPI3,
+        .spiBitRate = 33000000,
+        .spiCsnGpioIndex = MSP_EXP432E401Y_FLASH_CS,
     }
 };
 
 const NVS_Config NVS_config[MSP_EXP432E401Y_NVSCOUNT] = {
     {
-        .fxnTablePtr = &NVSMSP432E4_fxnTable,
-        .object = &nvsMSP432E4Objects[MSP_EXP432E401Y_NVSMSP432E40],
-        .hwAttrs = &nvsMSP432E4HWAttrs[MSP_EXP432E401Y_NVSMSP432E40],
+        .fxnTablePtr = &NVSSPI25X_fxnTable,
+        .object = &nvsSPIObjects[MSP_EXP432E401Y_NVSSPI],
+        .hwAttrs = &nvsSPIHWAttrs[MSP_EXP432E401Y_NVSSPI],
     }
 };
 
@@ -652,14 +621,14 @@ const SPIMSP432E4DMA_HWAttrs spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPICOUNT] = {
     {
         .baseAddr = SSI3_BASE,
         .intNum = INT_SSI3,
-        .intPriority = (~0),
+        .intPriority = ((4U << 5)),
         .scratchBufPtr = &spiMSP432E4DMAscratchBuf[MSP_EXP432E401Y_SPI3],
         .defaultTxBufValue = 0xFF,
-        .minDmaTransferSize = 10,
+        .minDmaTransferSize = 4097, // Force NVS transfers to not use DMA
         .rxDmaChannel = UDMA_CH14_SSI3RX,
         .txDmaChannel = UDMA_CH15_SSI3TX,
         .clkPinMask = SPIMSP432E4_PQ0_SSI3CLK,
-        .fssPinMask = SPIMSP432E4_PQ1_SSI3FSS,
+        //.fssPinMask = SPIMSP432E4_PQ1_SSI3FSS,
         .xdat0PinMask = SPIMSP432E4_PQ2_SSI3XDAT0,
         .xdat1PinMask = SPIMSP432E4_PQ3_SSI3XDAT1
     },
@@ -673,7 +642,7 @@ const SPIMSP432E4DMA_HWAttrs spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPICOUNT] = {
         .rxDmaChannel = UDMA_CH10_SSI0RX,
         .txDmaChannel = UDMA_CH11_SSI0TX,
         .clkPinMask = SPIMSP432E4_PA2_SSI0CLK,
-        .fssPinMask = SPIMSP432E4_PA3_SSI0FSS,
+        // .fssPinMask = SPIMSP432E4_PA3_SSI0FSS,
         .xdat0PinMask = SPIMSP432E4_PA4_SSI0XDAT0,
         .xdat1PinMask = SPIMSP432E4_PA5_SSI0XDAT1
     }
@@ -922,4 +891,26 @@ const WiFi_Config WiFi_config[1] =
     {
         .hwAttrs = &wifiMSP432HWAttrs,
     }
+};
+
+/*
+ *  =============================== OPT3001 ===============================
+ */
+#include <ti/sail/opt3001/opt3001.h>
+
+OPT3001_Object OPT3001_object[MSP_EXP432E401Y_OPT3001COUNT];
+
+const OPT3001_HWAttrs OPT3001_hwAttrs[MSP_EXP432E401Y_OPT3001COUNT] = {
+        {
+            .slaveAddress = OPT3001_SA1,
+            //.gpioIndex = MSP_EXP432E401Y_OPT3001_INT,
+        },
+};
+
+const OPT3001_Config OPT3001_config[] = {
+    {
+        .hwAttrs = &OPT3001_hwAttrs[0],
+        .object  = &OPT3001_object[0],
+    },
+    {NULL, NULL}
 };

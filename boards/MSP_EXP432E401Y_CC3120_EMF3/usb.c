@@ -290,6 +290,7 @@ void USB_Comp_init()
     
     /* Install interrupt handler */
     hwi = HwiP_create(INT_USB0, USB_hwiHandler, NULL);
+    HwiP_setPriority(INT_USB0, (6U << 5));
     if (hwi == NULL) {
         // Display_printf(display, 0, 0, "Can't create USB Hwi.\n");
         while(1);

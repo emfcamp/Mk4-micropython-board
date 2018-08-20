@@ -17,7 +17,7 @@ mpex.out: main_tirtos.o mpex.o netwifi.o cc3120_fw.o ndkstub.o inetaddr.o epiram
 	@ $(SIZE) $@
 
 mpex.bin: mpex.out
-	@ echo creating downloadable binary	
+	@ echo creating downloadable binary
 	@ $(GCC_ARMCOMPILER)/arm-none-eabi/bin/objcopy -O binary $^ $@
 
 ../../build-$(BOARD)/libmicropython.a:

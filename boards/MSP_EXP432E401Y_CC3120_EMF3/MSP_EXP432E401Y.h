@@ -134,7 +134,7 @@ typedef enum MSP_EXP432E401Y_I2CName {
  *  @brief  Enum of NVS names on the MSP_EXP432E401Y dev board
  */
 typedef enum MSP_EXP432E401Y_NVSName {
-    MSP_EXP432E401Y_NVSMSP432E40 = 0,
+    MSP_EXP432E401Y_NVSSPI = 0,
 
     MSP_EXP432E401Y_NVSCOUNT
 } MSP_EXP432E401Y_NVSName;
@@ -205,6 +205,16 @@ typedef enum MSP_EXP432E401Y_WatchdogName {
 
     MSP_EXP432E401Y_WATCHDOGCOUNT
 } MSP_EXP432E401Y_WatchdogName;
+
+/*!
+ *  @def    MSP_EXP432E401Y_OPT3001
+ *  @brief  Enum of OPT3001 names on the MSP_EXP432E401Y dev board
+ */
+typedef enum MSP_EXP432E401Y_OPT3001Name {
+    MSP_EXP432E401Y_OPT3001_0 = 0,
+
+    MSP_EXP432E401Y_OPT3001COUNT
+} MSP_EXP432E401Y_OPT3001Name;
 
 /*!
  *  @brief  Initialize the general board specific settings

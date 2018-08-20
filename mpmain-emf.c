@@ -59,6 +59,13 @@
 #include "usbd_cdc.h"
 #endif
 
+#if MICROPY_PY_TILDA
+#include <pthread.h>
+#include "tilda_thread.h"
+#define TILDA_TASK_STACKSIZE       2048
+#define TILDA_TASK_PRIORITY        10
+#endif
+
 static char * stack_top;
 
 static UART_Handle console;
@@ -178,13 +185,13 @@ void MP_WEAK __assert_func(const char *file, int line, const char *func, const c
 }
 #endif
 
-STATIC mp_obj_t pyb_main(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+STATIC mp_obj_t tilda_main(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_opt, MP_ARG_INT, {.u_int = 0} }
     };
 
     if (MP_OBJ_IS_STR(pos_args[0])) {
-        MP_STATE_PORT(pyb_config_main) = pos_args[0];
+        MP_STATE_PORT(tilda_config_main) = pos_args[0];
 
         // parse args
         mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
@@ -193,7 +200,7 @@ STATIC mp_obj_t pyb_main(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_a
     }
     return mp_const_none;
 }
-//MP_DEFINE_CONST_FUN_OBJ_KW(pyb_main_obj, 1, pyb_main);
+MP_DEFINE_CONST_FUN_OBJ_KW(tilda_main_obj, 1, tilda_main);
 
 #if MICROPY_HW_ENABLE_STORAGE
 static const char fresh_boot_py[] =
@@ -413,6 +420,18 @@ int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize, UART_Handle uart
     storage_init();
     #endif
 
+    #if MICROPY_PY_TILDA
+    pthread_t tildaThreadHandle;
+    pthread_attr_t tildaAttrs;
+    struct sched_param tildaParam;
+
+    pthread_attr_init(&tildaAttrs);
+    tildaParam.sched_priority = TILDA_TASK_PRIORITY;
+    pthread_attr_setschedparam(&tildaAttrs, &tildaParam);
+    pthread_attr_setstacksize(&tildaAttrs, TILDA_TASK_STACKSIZE);
+    pthread_create(&tildaThreadHandle, &tildaAttrs, tildaThread, NULL);
+    pthread_attr_destroy(&tildaAttrs);
+    #endif    
 
 soft_reset:
 
@@ -459,6 +478,15 @@ soft_reset:
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); // current dir (or base dir of the script)
     mp_obj_list_init(MP_OBJ_TO_PTR(mp_sys_argv), 0);
 
+    // Initialise low-level sub-systems.  Here we need to very basic things like
+    // zeroing out memory and resetting any of the sub-systems.  Following this
+    // we can run Python scripts (eg boot.py), but anything that is configurable
+    // by boot.py must be set after boot.py is run.
+
+    #if MICROPY_PY_TILDA
+    tilda_init0();
+    #endif
+
     // Initialise the local flash filesystem.
     // Create it if needed, mount in on /flash, and set it as current dir.
     bool mounted_flash = false;
@@ -496,7 +524,7 @@ soft_reset:
     }
 
     // reset config variables; they should be set by boot.py
-    MP_STATE_PORT(pyb_config_main) = MP_OBJ_NULL;
+    MP_STATE_PORT(tilda_config_main) = MP_OBJ_NULL;
 
     // run boot.py, if it exists
     // TODO perhaps have pyb.reboot([bootpy]) function to soft-reboot and execute custom boot.py
@@ -532,10 +560,10 @@ soft_reset:
     // Run the main script from the current directory.
     if ((reset_mode == 1 || reset_mode == 3) && pyexec_mode_kind == PYEXEC_MODE_FRIENDLY_REPL) {
         const char *main_py;
-        if (MP_STATE_PORT(pyb_config_main) == MP_OBJ_NULL) {
+        if (MP_STATE_PORT(tilda_config_main) == MP_OBJ_NULL) {
             main_py = "main.py";
         } else {
-            main_py = mp_obj_str_get_str(MP_STATE_PORT(pyb_config_main));
+            main_py = mp_obj_str_get_str(MP_STATE_PORT(tilda_config_main));
         }
         mp_import_stat_t stat = mp_import_stat(main_py);
         if (stat == MP_IMPORT_STAT_FILE) {
