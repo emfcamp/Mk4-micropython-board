@@ -508,7 +508,7 @@ NVSSPI25X_HWAttrs nvsSPIHWAttrs[MSP_EXP432E401Y_NVSCOUNT] = {
         .verifyBufSize = 256,
         .spiHandle = NULL,
         .spiIndex = MSP_EXP432E401Y_SPI3,
-        .spiBitRate = 40000000,
+        .spiBitRate = 33000000,
         .spiCsnGpioIndex = MSP_EXP432E401Y_FLASH_CS,
     }
 };
@@ -624,11 +624,11 @@ const SPIMSP432E4DMA_HWAttrs spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPICOUNT] = {
         .intPriority = ((4U << 5)),
         .scratchBufPtr = &spiMSP432E4DMAscratchBuf[MSP_EXP432E401Y_SPI3],
         .defaultTxBufValue = 0xFF,
-        .minDmaTransferSize = 10,
+        .minDmaTransferSize = 4097, // Force NVS transfers to not use DMA
         .rxDmaChannel = UDMA_CH14_SSI3RX,
         .txDmaChannel = UDMA_CH15_SSI3TX,
         .clkPinMask = SPIMSP432E4_PQ0_SSI3CLK,
-        .fssPinMask = SPIMSP432E4_PQ1_SSI3FSS,
+        //.fssPinMask = SPIMSP432E4_PQ1_SSI3FSS,
         .xdat0PinMask = SPIMSP432E4_PQ2_SSI3XDAT0,
         .xdat1PinMask = SPIMSP432E4_PQ3_SSI3XDAT1
     },
