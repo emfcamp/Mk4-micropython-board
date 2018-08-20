@@ -163,7 +163,7 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 	write_index(g, 0xb1);
 	// frame rate
 	write_data(g, 0x00);
-	write_data(g, 0x1F); //0x1B in BD example //70
+	write_data(g, 0x18); //0x1B in BD example //70
 
 
 
@@ -502,6 +502,14 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
             g->g.Backlight = (unsigned)g->p.ptr;
             return;
 
+        case GDISP_CONTROL_SPICLK:
+            if ((uint32_t)g->p.ptr > 60000000)
+            	g->p.ptr = (void *)60000000;
+            if ((uint32_t)g->p.ptr < 100000)
+            	g->p.ptr = (void *)100000;
+            change_spi_speed((uint32_t)g->p.ptr);            
+            return;
+            
 		//case GDISP_CONTROL_CONTRAST:
         default:
             return;

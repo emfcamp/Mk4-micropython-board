@@ -25,7 +25,7 @@
 STATIC mp_obj_t tilda_buttons_is_pressed(mp_obj_t button_in) //(button)
 {
     TILDA_BUTTONS_Names button = mp_obj_get_int(button_in);
-    if (button > Buttons_BTN_Menu) {
+    if (button >= Buttons_MAX) {
         mp_raise_OSError(MP_ENODEV);
     }
     return getButtonState(button) ? mp_const_true : mp_const_false;
@@ -44,12 +44,26 @@ STATIC mp_obj_t tilda_buttons_has_interrupt() //(button)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_buttons_has_interrupt_obj, tilda_buttons_has_interrupt);
 
-
-STATIC mp_obj_t tilda_buttons_enable_interrupt() //(button, interrupt, on_press = True, on_release = False)
+//(button, interrupt, on_press = True, on_release = False)
+STATIC mp_obj_t tilda_buttons_enable_interrupt(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args)
 {
+    TILDA_BUTTONS_Names button = mp_obj_get_int(pos_args[0]);
+
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_interrupt, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_on_press, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 1} },
+        { MP_QSTR_on_release, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+    };
+    enum { ARG_interrupt, ARG_on_press, ARG_on_release};
+    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args,
+        MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+
+    registerButtonCallback(button, args[ARG_interrupt].u_obj, args[ARG_on_press].u_int, args[ARG_on_release].u_int);
+
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_buttons_enable_interrupt_obj, tilda_buttons_enable_interrupt);
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(tilda_buttons_enable_interrupt_obj, 2, tilda_buttons_enable_interrupt);
 
 
 STATIC mp_obj_t tilda_buttons_disable_interrupt() //(button)

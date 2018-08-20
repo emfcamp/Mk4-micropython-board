@@ -49,7 +49,7 @@
 	#define CORTEX_USE_FPU                           TRUE
 //    #define GFX_CPU_NO_ALIGNMENT_FAULTS              FALSE
 //    #define GFX_CPU_ENDIAN                           GFX_CPU_ENDIAN_UNKNOWN
-    #define GFX_OS_HEAP_SIZE                         30720
+    #define GFX_OS_HEAP_SIZE                         630000
 //    #define GFX_OS_NO_INIT                           FALSE
     #define GFX_OS_INIT_NO_WARNING                   TRUE
 //    #define GFX_OS_PRE_INIT_FUNCTION                 myHardwareInitRoutine
@@ -116,24 +116,24 @@
 //        #define GDISP_NEED_IMAGE_BMP_16              TRUE
         #define GDISP_NEED_IMAGE_BMP_24              TRUE
 //        #define GDISP_NEED_IMAGE_BMP_32              TRUE
-//    #define GDISP_NEED_IMAGE_JPG                     FALSE
-//    #define GDISP_NEED_IMAGE_PNG                     TRUE
-//        #define GDISP_NEED_IMAGE_PNG_INTERLACED      FALSE
-//        #define GDISP_NEED_IMAGE_PNG_TRANSPARENCY    TRUE
-//        #define GDISP_NEED_IMAGE_PNG_BACKGROUND      TRUE
-//        #define GDISP_NEED_IMAGE_PNG_ALPHACLIFF      32
-//        #define GDISP_NEED_IMAGE_PNG_PALETTE_124     TRUE
-//        #define GDISP_NEED_IMAGE_PNG_PALETTE_8       TRUE
-//        #define GDISP_NEED_IMAGE_PNG_GRAYSCALE_124   TRUE
-//        #define GDISP_NEED_IMAGE_PNG_GRAYSCALE_8     TRUE
-//        #define GDISP_NEED_IMAGE_PNG_GRAYSCALE_16    TRUE
-//        #define GDISP_NEED_IMAGE_PNG_GRAYALPHA_8     TRUE
-//        #define GDISP_NEED_IMAGE_PNG_GRAYALPHA_16    TRUE
-//        #define GDISP_NEED_IMAGE_PNG_RGB_8           TRUE
-//        #define GDISP_NEED_IMAGE_PNG_RGB_16          TRUE
-//        #define GDISP_NEED_IMAGE_PNG_RGBALPHA_8      TRUE
-//        #define GDISP_NEED_IMAGE_PNG_RGBALPHA_16     TRUE
-//    #define GDISP_NEED_IMAGE_ACCOUNTING              FALSE
+    #define GDISP_NEED_IMAGE_JPG                     TRUE
+    #define GDISP_NEED_IMAGE_PNG                     TRUE
+        #define GDISP_NEED_IMAGE_PNG_INTERLACED      FALSE
+        #define GDISP_NEED_IMAGE_PNG_TRANSPARENCY    TRUE
+        #define GDISP_NEED_IMAGE_PNG_BACKGROUND      TRUE
+        #define GDISP_NEED_IMAGE_PNG_ALPHACLIFF      32
+        #define GDISP_NEED_IMAGE_PNG_PALETTE_124     TRUE
+        #define GDISP_NEED_IMAGE_PNG_PALETTE_8       TRUE
+        #define GDISP_NEED_IMAGE_PNG_GRAYSCALE_124   TRUE
+        #define GDISP_NEED_IMAGE_PNG_GRAYSCALE_8     TRUE
+        #define GDISP_NEED_IMAGE_PNG_GRAYSCALE_16    TRUE
+        #define GDISP_NEED_IMAGE_PNG_GRAYALPHA_8     TRUE
+        #define GDISP_NEED_IMAGE_PNG_GRAYALPHA_16    TRUE
+        #define GDISP_NEED_IMAGE_PNG_RGB_8           TRUE
+        #define GDISP_NEED_IMAGE_PNG_RGB_16          TRUE
+        #define GDISP_NEED_IMAGE_PNG_RGBALPHA_8      TRUE
+        #define GDISP_NEED_IMAGE_PNG_RGBALPHA_16     TRUE
+    #define GDISP_NEED_IMAGE_ACCOUNTING              FALSE
 
 //#define GDISP_NEED_PIXMAP                            FALSE
 //    #define GDISP_NEED_PIXMAP_IMAGE                  FALSE

@@ -74,6 +74,8 @@ typedef enum TILDA_BUTTONS_Names
     Buttons_JOY_Left,
     Buttons_JOY_Right,
     Buttons_BTN_Menu,
+
+    Buttons_MAX
 } TILDA_BUTTONS_Names;
 
 // shared states
@@ -90,21 +92,12 @@ typedef struct tilda_shared_states_t {
 
 tilda_shared_states_t tildaSharedStates;
 
-uint16_t buttonState;
-uint16_t lastButtonState;
 
-typedef struct tilda_tca_callbacks_t {
-    void* tca_callback_irq;
-    bool on_press;
-    bool on_release;
-} tilda_tca_callbacks_t;
-
-tilda_tca_callbacks_t tildaButtonCallbacks[22];
-
+void tilda_init0();
 void * tildaThread(void *arg);
 
 bool getButtonState(TILDA_BUTTONS_Names button);
-void registerButtonCallback(uint8_t button, void* tca_callback_irq,  bool on_press, bool on_release);
+void registerButtonCallback(uint8_t button, mp_obj_t tca_callback_irq,  bool on_press, bool on_release);
 void unregisterButtonCallback(uint8_t button);
 
 

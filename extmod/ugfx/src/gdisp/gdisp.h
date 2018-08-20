@@ -147,6 +147,7 @@ extern GDisplay	*GDISP;
 #define GDISP_CONTROL_BACKLIGHT		2
 #define GDISP_CONTROL_CONTRAST		3
 #define GDISP_CONTROL_LLD			1000
+#define GDISP_CONTROL_SPICLK			1001
 
 /*===========================================================================*/
 /* Defines relating to the display hardware									 */
@@ -1143,6 +1144,18 @@ void gdispGDrawBox(GDisplay *g, coord_t x, coord_t y, coord_t cx, coord_t cy, co
  */
 #define gdispGSetBacklight(g, percent)				gdispGControl((g), GDISP_CONTROL_BACKLIGHT, (void *)(unsigned)(percent))
 #define gdispSetBacklight(percent)					gdispGControl(GDISP, GDISP_CONTROL_BACKLIGHT, (void *)(unsigned)(percent))
+
+/**
+ * @brief   Set the SPI clock frequency
+ * @note    Ignored if not supported by the display.
+ *
+ * @param[in] g 				The display to use
+ * @param[in] clkfreq		The clock frequency (in Hz)
+ *
+ * @api
+ */
+#define gdispGSetSPIClock(g, clkfreq)				gdispGControl((g), GDISP_CONTROL_SPICLK, (void *)(uint32_t)(clkfreq))
+#define gdispSetSPIClock(clkfreq)					gdispGControl(GDISP, GDISP_CONTROL_SPICLK, (void *)(uint32_t)(clkfreq))
 
 /**
  * @brief   Set the display contrast.
