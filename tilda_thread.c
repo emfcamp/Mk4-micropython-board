@@ -188,13 +188,13 @@ static bool TMP102_getTemperature(float *temperature)
     
     uint16_t t = ((b1<<8) | b2) >> 3;
     
-//    if (t&(1<<12)){ // if negative
+    if (t&(1<<12)){ // if negative
         // convert t to positive first, then set the float to negative
-//        t = (~t);
-//        t = t & 0xFFF;        
-//        *temperature = 0 - ((float)t/(float)16);
-//    }
-//    else
+        t = (~t);
+        t = t & 0xFFF;        
+        *temperature = 0 - ((float)t/(float)16);
+    }
+    else
         *temperature = (float)t/(float)16;
 
     return true;    
@@ -307,7 +307,7 @@ void *tildaThread(void *arg)
         if (posted == 0) {
             // grab TMP temp readings
             TMP102_getTemperature(&tildaSharedStates.tmpTemperature);
-            
+
             // grab lux readings
             OPT3001_getLux(opt3001Handle, &tildaSharedStates.optLux);
             // grab battery updates?
