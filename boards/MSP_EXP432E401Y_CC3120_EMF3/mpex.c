@@ -45,6 +45,7 @@
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/SD.h>
 #include <ti/drivers/NVS.h>
+#include <ti/drivers/ADC.h>
 
 #include <ti/drivers/net/wifi/slnetifwifi.h>
 
