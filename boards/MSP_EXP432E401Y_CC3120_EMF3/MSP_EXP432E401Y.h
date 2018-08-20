@@ -134,7 +134,7 @@ typedef enum MSP_EXP432E401Y_I2CName {
  *  @brief  Enum of NVS names on the MSP_EXP432E401Y dev board
  */
 typedef enum MSP_EXP432E401Y_NVSName {
-    MSP_EXP432E401Y_NVSMSP432E40 = 0,
+    MSP_EXP432E401Y_NVSSPI = 0,
 
     MSP_EXP432E401Y_NVSCOUNT
 } MSP_EXP432E401Y_NVSName;

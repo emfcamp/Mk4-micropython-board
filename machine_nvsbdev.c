@@ -46,13 +46,13 @@ typedef struct {
 } flash_layout_t;
 
 static const flash_layout_t flash_layout[] = {
-    { (uint32_t)0, (uint32_t)0x4000, 20 },
+    { (uint32_t)0, (uint32_t)0x1000, 256 },
 };
 
-STATIC byte flash_cache_mem[0x4000] __attribute__((aligned(4))); // 16k
+STATIC byte flash_cache_mem[0x1000] __attribute__((aligned(4))); // 4k
 #define CACHE_MEM_START_ADDR (&flash_cache_mem[0])
-#define FLASH_SECTOR_SIZE_MAX (0x4000) // 16k max due to size of cache buffer
-#define FLASH_MEM_SEG1_NUM_BLOCKS (640) 
+#define FLASH_SECTOR_SIZE_MAX (0x1000) // 4k max due to size of cache buffer
+#define FLASH_MEM_SEG1_NUM_BLOCKS (2048) 
 #define FLASH_PART1_START_BLOCK (0x100) // FAT data starts at block 256
 
 // TODO: Use self->attrs.regionSize & self->attrs.sectorSize
@@ -97,7 +97,7 @@ void flash_bdev_init(void) {
     }
 
     HwiP_create(INT_FLASH, FLASH_hwiHandler, NULL);
-    HwiP_setPriority(INT_FLASH, 0); // LWK TODO: find out what level USB actually runs at and make us just one higher
+    HwiP_setPriority(INT_FLASH, (5U << 5)); // LWK TODO: find out what level USB actually runs at and make us just one higher
 
     pthread_t thread;
     pthread_attr_t attrs;
@@ -203,7 +203,7 @@ void flash_bdev_flush(void) {
     // sync the cache RAM buffer by writing it to the flash page
     //NVS_lock(nvs_handle, NVS_LOCK_WAIT_FOREVER);
     int_fast16_t status = NVS_write(nvs_handle, flash_cache_sector_start,
-                       CACHE_MEM_START_ADDR, 0x4000, NVS_WRITE_ERASE | NVS_WRITE_POST_VERIFY);
+                       CACHE_MEM_START_ADDR, 0x1000, NVS_WRITE_ERASE | NVS_WRITE_POST_VERIFY);
     //NVS_unlock(nvs_handle);
     if (status != NVS_STATUS_SUCCESS) {
         mp_raise_OSError(MP_EIO);
