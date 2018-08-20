@@ -47,7 +47,7 @@
 Event_Struct evtStruct;
 I2C_Handle      i2cHandle;
 
-uint16_t buttonState;
+volatile uint16_t buttonState;
 uint16_t lastButtonState;
 
 typedef struct tilda_tca_callback_modes_t {
@@ -118,7 +118,6 @@ void readTCAButtons()
 }
 
 #define TMP_TEMPERATURE_REG 0
-#define TMP_CONFIG_REG 1
 #define TMP_CONFIG_REG 1
 
 #define TMP_CFG_SD      (1<<0)
