@@ -90,7 +90,7 @@ typedef struct tilda_shared_states_t {
     float optLux;
 } tilda_shared_states_t;
 
-tilda_shared_states_t tildaSharedStates;
+volatile tilda_shared_states_t tildaSharedStates;
 
 
 void tilda_init0();
