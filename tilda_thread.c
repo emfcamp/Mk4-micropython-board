@@ -117,6 +117,89 @@ void readTCAButtons()
     buttonState = (buttonState << 8) | readBuffer[0];
 }
 
+#define TMP_TEMPERATURE_REG 0
+#define TMP_CONFIG_REG 1
+#define TMP_CONFIG_REG 1
+
+#define TMP_CFG_SD      (1<<0)
+#define TMP_CFG_TM      (1<<1)
+#define TMP_CFG_POL     (1<<2)
+#define TMP_CFG_F0      (1<<3)
+#define TMP_CFG_F1      (1<<4)
+#define TMP_CFG_R0      (1<<5)
+#define TMP_CFG_R1      (1<<6)
+#define TMP_CFG_OS      (1<<7)
+
+#define TMP_CFG_EM      (1<<4)  //set high for 13bit range
+#define TMP_CFG_AL      (1<<5)
+#define TMP_CFG_CR0     (1<<6)
+#define TMP_CFG_CR1     (1<<7)
+#define TMP_CFG_CR_025Hz    (0)
+#define TMP_CFG_CR_1Hz      (TMP_CFG_CR0)
+#define TMP_CFG_CR_4Hz      (TMP_CFG_CR1)
+#define TMP_CFG_CR_8Hz      (TMP_CFG_CR0 | TMP_CFG_CR1)
+
+static void writeTMPReg(uint8_t addr, uint8_t byte1, uint8_t byte2)
+{
+    uint8_t writeBuffer[3];
+    writeBuffer[0] = addr;
+    writeBuffer[1] = byte1;
+    writeBuffer[2] = byte2;
+
+    I2C_Transaction i2cTransaction;
+    i2cTransaction.slaveAddress = 0x48;
+    i2cTransaction.writeBuf = writeBuffer;
+    i2cTransaction.writeCount = 3;
+    i2cTransaction.readBuf = NULL;
+    i2cTransaction.readCount = 0;
+    I2C_transfer(i2cHandle, &i2cTransaction);    
+}
+
+static bool readTMPReg(uint8_t addr, uint8_t *byte1, uint8_t *byte2)
+{
+    uint8_t writeBuffer[1];
+    writeBuffer[0] = addr;
+    uint8_t readBuffer[2];
+
+    I2C_Transaction i2cTransaction;
+    i2cTransaction.slaveAddress = 0x48;
+    i2cTransaction.writeBuf = writeBuffer;
+    i2cTransaction.writeCount = 1;
+    i2cTransaction.readBuf = readBuffer;
+    i2cTransaction.readCount = 2;
+    bool res = I2C_transfer(i2cHandle, &i2cTransaction);
+    if (res == false) {
+        return false;
+    }
+    
+    *byte1 = readBuffer[0];
+    *byte2 = readBuffer[1];
+    return true;
+}
+
+static bool TMP102_getTemperature(float *temperature)
+{
+    uint8_t b1,b2;
+    bool res = readTMPReg(TMP_TEMPERATURE_REG, &b1, &b2);
+    if (res == false){
+        *temperature = -999;
+        return false;
+    }
+    
+    uint16_t t = ((b1<<8) | b2) >> 3;
+    
+//    if (t&(1<<12)){ // if negative
+        // convert t to positive first, then set the float to negative
+//        t = (~t);
+//        t = t & 0xFFF;        
+//        *temperature = 0 - ((float)t/(float)16);
+//    }
+//    else
+        *temperature = (float)t/(float)16;
+
+    return true;    
+}
+
 void *tildaThread(void *arg)
 {
     I2C_Params      i2cParams;
@@ -154,6 +237,11 @@ void *tildaThread(void *arg)
     // setup charger?
     
     // setup sensors
+    
+    // set the TMP102 to 1Hz continuous mode, max range
+    //   turn off shutdown (and enable continuous conversion)
+    writeTMPReg(TMP_CONFIG_REG, 0, TMP_CFG_CR_1Hz | TMP_CFG_EM);
+    
     
     // do an inital button read
     readTCAButtons();
@@ -218,6 +306,7 @@ void *tildaThread(void *arg)
         // else if time out 
         if (posted == 0) {
             // grab TMP temp readings
+            TMP102_getTemperature(&tildaSharedStates.tmpTemperature);
             
             // grab lux readings
             OPT3001_getLux(opt3001Handle, &tildaSharedStates.optLux);
