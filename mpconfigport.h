@@ -138,8 +138,12 @@ extern const struct _mp_obj_module_t mp_module_ugfx;
 extern const struct _mp_obj_module_t mp_module_tilda;
 
 #if MICROPY_PY_SOCKET
-#define SOCKET_BUILTIN_MODULE    { MP_ROM_QSTR(MP_QSTR_usocket), MP_ROM_PTR(&mp_module_socket) },
-#define SOCKET_BUILTIN_MODULE_WEAK_LINKS    { MP_ROM_QSTR(MP_QSTR_socket), MP_ROM_PTR(&mp_module_socket) },
+#define SOCKET_BUILTIN_MODULE \
+    { MP_ROM_QSTR(MP_QSTR_usocket), MP_ROM_PTR(&mp_module_socket) }, \
+    { MP_ROM_QSTR(MP_QSTR_ussl), MP_ROM_PTR(&mp_module_ussl) },
+#define SOCKET_BUILTIN_MODULE_WEAK_LINKS \
+    { MP_ROM_QSTR(MP_QSTR_socket), MP_ROM_PTR(&mp_module_socket) }, \
+    { MP_ROM_QSTR(MP_QSTR_ussl), MP_ROM_PTR(&mp_module_ussl) },
 #else
 #define SOCKET_BUILTIN_MODULE
 #define SOCKET_BUILTIN_MODULE_WEAK_LINKS

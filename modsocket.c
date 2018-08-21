@@ -602,4 +602,138 @@ const mp_obj_module_t mp_module_socket = {
     .globals = (mp_obj_dict_t*)&mp_module_socket_globals,
 };
 
+
+#include <ti/net/slnetsock.h>
+
+#define USSL_CERT_NONE                          (0)
+#define USSL_CERT_OPTIONAL                      (1)
+#define USSL_CERT_REQUIRED                      (2)
+
+STATIC mp_obj_t mod_ssl_wrap_socket(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    STATIC const mp_arg_t allowed_args[] = {
+        { MP_QSTR_sock,             MP_ARG_REQUIRED | MP_ARG_OBJ,  },
+        { MP_QSTR_keyfile,          MP_ARG_KW_ONLY  | MP_ARG_OBJ,  {.u_obj = mp_const_none} },
+        { MP_QSTR_certfile,         MP_ARG_KW_ONLY  | MP_ARG_OBJ,  {.u_obj = mp_const_none} },
+        { MP_QSTR_servercertfile,   MP_ARG_KW_ONLY  | MP_ARG_OBJ,  {.u_obj = mp_const_none} },
+        { MP_QSTR_server_side,      MP_ARG_KW_ONLY  | MP_ARG_BOOL, {.u_bool = false} },
+        { MP_QSTR_cert_reqs,        MP_ARG_KW_ONLY  | MP_ARG_INT,  {.u_int = USSL_CERT_NONE} },
+        { MP_QSTR_ssl_version,      MP_ARG_KW_ONLY  | MP_ARG_INT,  {.u_int = SLNETSOCK_SEC_METHOD_SSLv3_TLSV1_2} },
+        { MP_QSTR_ca_certs,         MP_ARG_KW_ONLY  | MP_ARG_OBJ,  {.u_obj = mp_const_none} },
+    };
+    enum { ARG_sock, ARG_keyfile, ARG_certfile, ARG_servercertfile,
+           ARG_server_side, ARG_cert_reqs, ARG_ssl_version, ARG_ca_certs };
+
+    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all(n_args, pos_args, kw_args, MP_ARRAY_SIZE(allowed_args),
+                     allowed_args, args);
+
+    // check if ca validation is required
+    if (args[ARG_cert_reqs].u_int != USSL_CERT_NONE &&
+        args[ARG_ssl_version].u_obj == mp_const_none) {
+        goto arg_error;
+    }
+
+    const char *keyfile  = (args[ARG_keyfile].u_obj == mp_const_none) ?
+                           NULL : mp_obj_str_get_str(args[ARG_keyfile].u_obj);
+    const char *certfile = (args[ARG_certfile].u_obj == mp_const_none) ?
+                           NULL : mp_obj_str_get_str(args[2].u_obj);
+    const char *cafile   = (args[ARG_ca_certs].u_obj == mp_const_none ||
+                            args[ARG_cert_reqs].u_int != USSL_CERT_REQUIRED) ?
+                           NULL : mp_obj_str_get_str(args[ARG_ca_certs].u_obj);
+    const char *servercertfile  = (args[ARG_servercertfile].u_obj == mp_const_none ||
+                            args[ARG_cert_reqs].u_int != USSL_CERT_REQUIRED) ?
+                           NULL : mp_obj_str_get_str(args[ARG_servercertfile].u_obj);
+
+
+    // server side requires both certfile and keyfile
+    if (args[ARG_server_side].u_bool && (!keyfile || !certfile)) {
+        goto arg_error;
+    }
+
+    int16_t fd = ((mp_obj_socket_t *)args[ARG_sock].u_obj)->fd;
+    uint16_t sd;
+    socklen_t sdLen = sizeof(sd);
+    int32_t status;
+
+    if (getsockopt(fd, SLNETSOCK_LVL_SOCKET, SLNETSOCK_OPSOCK_SLNETSOCKSD,
+            &sd, &sdLen) < 0) {
+        goto socket_error;
+    }
+
+    SlNetSockSecAttrib_t *secAttrib = SlNetSock_secAttribCreate();
+    uint8_t method = args[ARG_ssl_version].u_int;
+    status = SlNetSock_secAttribSet(secAttrib, SLNETSOCK_SEC_ATTRIB_METHOD,
+                                    (void *)&method, sizeof(method));
+    if (status < 0) {
+        goto socket_error;
+    }
+
+    if (cafile) {
+        status |= SlNetSock_secAttribSet(secAttrib,
+                                         SLNETSOCK_SEC_ATTRIB_PEER_ROOT_CA,
+                                         (void *)cafile, strlen(cafile));
+    }
+
+    if (servercertfile) {
+        status |= SlNetSock_secAttribSet(secAttrib,
+                                         SLNETSOCK_SEC_ATTRIB_DH_KEY,
+                                         (void *)servercertfile, strlen(servercertfile));
+    }
+
+    if (certfile) {
+        status |= SlNetSock_secAttribSet(secAttrib,
+                                         SLNETSOCK_SEC_ATTRIB_LOCAL_CERT,
+                                         (void *)certfile, strlen(certfile));
+    }
+
+    if (keyfile) {
+        status |= SlNetSock_secAttribSet(secAttrib,
+                                         SLNETSOCK_SEC_ATTRIB_PRIVATE_KEY,
+                                         (void *)keyfile, strlen(keyfile));
+    }
+
+    // TODO: add server side using SLNETSOCK_SEC_IS_SERVER
+    status |= SlNetSock_startSec(sd, secAttrib,
+                                 SLNETSOCK_SEC_BIND_CONTEXT_ONLY |
+                                 SLNETSOCK_SEC_START_SECURITY_SESSION_ONLY);
+    if(status < 0) {
+	mp_printf(MP_PYTHON_PRINTER, "SlNetSock_startSec error: %d\n", status);
+
+        switch(status) {
+            // TODO: fix magic.. don't want to pull in SL_ headers - think should
+            // be netsock defines
+            case (-469):
+                mp_printf(MP_PYTHON_PRINTER, "Wrong Peer Cert Received\n");
+                break;
+        }
+
+        goto socket_error;
+    }
+
+    return args[ARG_sock].u_obj;
+
+socket_error:
+    mp_raise_msg(&mp_type_OSError, "Socket Error");
+
+arg_error:
+    mp_raise_msg(&mp_type_OSError, "Invalid Args");
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_ssl_wrap_socket_obj, 0, mod_ssl_wrap_socket);
+
+STATIC const mp_rom_map_elem_t mp_module_ussl_globals_table[] = {
+    { MP_ROM_QSTR(MP_QSTR___name__),      MP_ROM_QSTR(MP_QSTR_ussl) },
+    { MP_ROM_QSTR(MP_QSTR_wrap_socket),   MP_ROM_PTR(&mod_ssl_wrap_socket_obj) },
+    { MP_ROM_QSTR(MP_QSTR_CERT_NONE),     MP_ROM_INT(USSL_CERT_NONE) },
+    { MP_ROM_QSTR(MP_QSTR_CERT_OPTIONAL), MP_ROM_INT(USSL_CERT_OPTIONAL) },
+    { MP_ROM_QSTR(MP_QSTR_CERT_REQUIRED), MP_ROM_INT(USSL_CERT_REQUIRED) },
+};
+
+STATIC MP_DEFINE_CONST_DICT(mp_module_ussl_globals, mp_module_ussl_globals_table);
+
+const mp_obj_module_t mp_module_ussl = {
+    .base = { &mp_type_module },
+    .globals = (mp_obj_dict_t*)&mp_module_ussl_globals,
+};
+
 #endif
