@@ -675,7 +675,7 @@ const uint_least8_t SPI_count = MSP_EXP432E401Y_SPICOUNT;
 #include <ti/drivers/uart/UARTMSP432E4.h>
 
 UARTMSP432E4_Object uartMSP432E4Objects[MSP_EXP432E401Y_UARTCOUNT];
-unsigned char uartMSP432E4RingBuffer[MSP_EXP432E401Y_UARTCOUNT][2048];
+unsigned char uartMSP432E4RingBuffer[MSP_EXP432E401Y_UARTCOUNT][8192];
 
 /* UART configuration structure */
 const UARTMSP432E4_HWAttrs uartMSP432E4HWAttrs[MSP_EXP432E401Y_UARTCOUNT] = {
