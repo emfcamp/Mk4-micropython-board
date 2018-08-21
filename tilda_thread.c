@@ -47,6 +47,8 @@
 Event_Struct evtStruct;
 I2C_Handle      i2cHandle;
 
+// holders for the TCA button states
+// 0 is pressed
 volatile uint16_t buttonState;
 uint16_t lastButtonState;
 
@@ -319,6 +321,22 @@ void *tildaThread(void *arg)
     return NULL;
 }
 
+// bit array of all buttons matching the order of TILDA_BUTTONS_Names
+// 1 is pressed
+uint32_t getAllButtonStates()
+{
+    uint32_t allButtonStates = buttonState;
+    for (int gpioIndex = 0; gpioIndex < 6; ++gpioIndex)
+    {
+        // joystick
+        allButtonStates |= ((uint32_t)GPIO_read(gpioIndex)) << (Buttons_JOY_Center + gpioIndex);
+    }
+    allButtonStates |= !((uint32_t)GPIO_read(Buttons_BTN_Menu - Buttons_BTN_B)) << (Buttons_BTN_Menu);
+
+    return !allButtonStates;
+}
+
+// ture a button is pressed
 bool getButtonState(TILDA_BUTTONS_Names button)
 {
     if (button < Buttons_JOY_Center) {
