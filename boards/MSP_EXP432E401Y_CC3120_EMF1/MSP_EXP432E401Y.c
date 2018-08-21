@@ -50,6 +50,7 @@
 #include <ti/devices/msp432e4/driverlib/udma.h>
 
 #include <ti/drivers/Power.h>
+#include <ti/drivers/power/PowerMSP432E4.h>
 
 #include "MSP_EXP432E401Y.h"
 
@@ -92,6 +93,43 @@ const ADC_Config ADC_config[MSP_EXP432E401Y_ADCCOUNT] = {
 };
 
 const uint_least8_t ADC_count = MSP_EXP432E401Y_ADCCOUNT;
+
+/*
+ *  ============================= Display =============================
+ */
+#include <ti/display/Display.h>
+#include <ti/display/DisplayUart.h>
+#define MAXPRINTLEN 1024
+
+DisplayUart_Object displayUartObject;
+
+static char displayBuf[MAXPRINTLEN];
+
+const DisplayUart_HWAttrs displayUartHWAttrs = {
+    .uartIdx = MSP_EXP432E401Y_UART3,
+    .baudRate = 115200,
+    .mutexTimeout = (unsigned int)(-1),
+    .strBuf = displayBuf,
+    .strBufLen = MAXPRINTLEN
+};
+
+#ifndef BOARD_DISPLAY_USE_UART_ANSI
+#define BOARD_DISPLAY_USE_UART_ANSI 0
+#endif
+
+const Display_Config Display_config[] = {
+    {
+#  if (BOARD_DISPLAY_USE_UART_ANSI)
+        .fxnTablePtr = &DisplayUartAnsi_fxnTable,
+#  else /* Default to minimal UART with no cursor placement */
+        .fxnTablePtr = &DisplayUartMin_fxnTable,
+#  endif
+        .object = &displayUartObject,
+        .hwAttrs = &displayUartHWAttrs
+    }
+};
+
+const uint_least8_t Display_count = sizeof(Display_config) / sizeof(Display_Config);
 
 /*
  *  =============================== DMA ===============================
@@ -174,6 +212,8 @@ static void MSP_EXP432E401Y_usbBusFaultHwi(uintptr_t arg)
 void MSP_EXP432E401Y_initGeneral(void)
 {
     Power_init();
+
+    Power_setDependency(PowerMSP432E4_PERIPH_EPI0);
 
     /* Grant the DMA access to all FLASH memory */
     FLASH_CTRL->PP |= FLASH_PP_DFA;
@@ -263,8 +303,8 @@ GPIO_PinConfig gpioPinConfigs[] = {
     //MSP_EXP432E401Y_GPIO_JOYR,
     GPIOMSP432E4_PB2 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
     
-    //MSP_EXP432E401Y_GPIO_BNT_MENU,
-    // GPIOMSP432E4_PK7 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
+    //MSP_EXP432E401Y_GPIO_BTN_MENU,
+    //GPIOMSP432E4_PK7 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
 
     //MSP_EXP432E401Y_GPIO_SIM_STATUS,
     GPIOMSP432E4_PQ4 | GPIO_CFG_IN_NOPULL | GPIO_CFG_IN_INT_RISING,
@@ -314,7 +354,7 @@ GPIO_PinConfig gpioPinConfigs[] = {
     //MSP_EXP432E401Y_GPIO_LED1,
     GPIOMSP432E4_PB0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
     
-    //MSP_EXP432E401Y_GPIO_LED1,
+    //MSP_EXP432E401Y_GPIO_LED2,
     GPIOMSP432E4_PB1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
 
     // MSP_EXP432E401Y_TIM_WS2812,
@@ -378,10 +418,13 @@ GPIO_PinConfig gpioPinConfigs[] = {
  * NOTE: Pins not used for interrupts can be omitted from callbacks array to
  *       reduce memory usage (if placed at end of gpioPinConfigs array).
  */
-GPIO_CallbackFxn gpioCallbackFunctions[] = {
-//    NULL,  /* MSP_EXP432E401Y_USR_SW1 */
-//    NULL   /* MSP_EXP432E401Y_USR_SW2 */
+GPIO_CallbackFxn gpioCallbackFunctions[MSP_EXP432E401Y_GPIOCOUNT] = { 
+    NULL
 };
+// As above, this only needs to be big enough for highest numbered GPIO that needs an
+// input callback registered.  let's be safe here and make this big enought or
+//  in case someone reconfigures an input pin as an output and registers a callback...
+// Note, could also declare as 	gpioCallbackFunctions[MSP_EXP432E401Y_GPIOCOUNT] = {0};
 
 /* The device-specific GPIO_config structure */
 const GPIOMSP432E4_Config GPIOMSP432E4_config = {
@@ -448,8 +491,8 @@ const uint_least8_t I2C_count = MSP_EXP432E401Y_I2CCOUNT;
 #include <ti/drivers/nvs/NVSMSP432E4.h>
 
 #define SECTORSIZE       (0x4000)
-#define NVS_REGIONS_BASE (0xF8000)
-#define REGIONSIZE       (SECTORSIZE * 2)
+#define NVS_REGIONS_BASE (0xAC000) // Not used in GCC, see linker script
+#define REGIONSIZE       (SECTORSIZE * 20)
 
 /*
  * Reserve flash sectors for NVS driver use
@@ -605,7 +648,7 @@ const SPIMSP432E4DMA_HWAttrs spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPICOUNT] = {
         .rxDmaChannel = UDMA_CH10_SSI0RX,
         .txDmaChannel = UDMA_CH11_SSI0TX,
         .clkPinMask = SPIMSP432E4_PA2_SSI0CLK,
-        .fssPinMask = SPIMSP432E4_PA3_SSI0FSS,
+        //.fssPinMask = SPIMSP432E4_PA3_SSI0FSS,
         .xdat0PinMask = SPIMSP432E4_PA4_SSI0XDAT0,
         .xdat1PinMask = SPIMSP432E4_PA5_SSI0XDAT1
     }
@@ -638,7 +681,7 @@ const uint_least8_t SPI_count = MSP_EXP432E401Y_SPICOUNT;
 #include <ti/drivers/uart/UARTMSP432E4.h>
 
 UARTMSP432E4_Object uartMSP432E4Objects[MSP_EXP432E401Y_UARTCOUNT];
-unsigned char uartMSP432E4RingBuffer[MSP_EXP432E401Y_UARTCOUNT][32];
+unsigned char uartMSP432E4RingBuffer[MSP_EXP432E401Y_UARTCOUNT][2048];
 
 /* UART configuration structure */
 const UARTMSP432E4_HWAttrs uartMSP432E4HWAttrs[MSP_EXP432E401Y_UARTCOUNT] = {

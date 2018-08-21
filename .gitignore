@@ -5,4 +5,5 @@ tools/
 *.out
 *.map
 *.bin
-
+*.dfu
+boards/sdk/defs.mk

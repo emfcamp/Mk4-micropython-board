@@ -16,6 +16,13 @@
 #include "gfile_fs.h"
 #include "gfile_fatfs_wrapper.h"
 
+#include "py/mpconfig.h"
+#include "py/obj.h"
+#include "py/compile.h"
+#include "py/runtime.h"
+#include "extmod/vfs.h"
+#include "extmod/vfs_fat.h"
+
 /********************************************************
  * The FAT file-system VMT
  ********************************************************/
@@ -67,7 +74,7 @@ const GFILEVMT FsFatFSVMT = {
 // Our directory list structure
 typedef struct fatfsList {
 	gfileList	fl;					// This must be the first element.
-	DIR			dir;
+	FF_DIR		dir;
 	FILINFO		fno;
 	#if _USE_LFN
 		char	lfn[_MAX_LFN + 1];   /* Buffer to store the LFN */
@@ -76,7 +83,8 @@ typedef struct fatfsList {
 
 // optimize these later on. Use an array to have multiple FatFS
 static bool_t fatfs_mounted = FALSE;
-static FATFS fatfs_fs;
+//static FATFS fatfs_fs;
+
 
 static BYTE fatfs_flags2mode(GFILE* f)
 {
@@ -98,8 +106,15 @@ static BYTE fatfs_flags2mode(GFILE* f)
 static bool_t fatfsDel(const char* fname)
 {
 	FRESULT ferr;
+   const char* fname_new;
 
-	ferr = f_unlink( (const TCHAR*)fname );
+   mp_vfs_mount_t *vfs;
+   vfs = mp_vfs_lookup_path(fname, &fname_new);
+   if (vfs == MP_VFS_NONE)
+      return FALSE;
+   fs_user_mount_t *vfs_fat = (vfs->obj);
+   
+	ferr = f_unlink(&vfs_fat->fatfs, (const TCHAR*)fname_new );
 	if (ferr != FR_OK)
 		return FALSE;
 
@@ -110,8 +125,15 @@ static bool_t fatfsExists(const char* fname)
 {
 	FRESULT ferr;
 	FILINFO fno;
+   const char* fname_new;
 
-	ferr = f_stat( (const TCHAR*)fname, &fno);
+   mp_vfs_mount_t *vfs;
+   vfs = mp_vfs_lookup_path(fname, &fname_new);
+   if (vfs == MP_VFS_NONE)
+      return FALSE;
+   fs_user_mount_t *vfs_fat = (vfs->obj);
+
+	ferr = f_stat(&vfs_fat->fatfs, (const TCHAR*)fname_new, &fno);
 	if (ferr != FR_OK)
 		return FALSE;
 
@@ -122,8 +144,15 @@ static long int fatfsFileSize(const char* fname)
 {
 	FRESULT ferr;
 	FILINFO fno;
+   const char* fname_new;
 
-	ferr = f_stat( (const TCHAR*)fname, &fno );
+   mp_vfs_mount_t *vfs;
+   vfs = mp_vfs_lookup_path(fname, &fname_new);
+   if (vfs == MP_VFS_NONE)
+      return 0;
+   fs_user_mount_t *vfs_fat = (vfs->obj);
+
+	ferr = f_stat(&vfs_fat->fatfs, (const TCHAR*)fname_new, &fno );
 	if (ferr != FR_OK)
 		return 0;
 
@@ -133,8 +162,17 @@ static long int fatfsFileSize(const char* fname)
 static bool_t fatfsRename(const char* oldname, const char* newname)
 {
 	FRESULT ferr;
+   const char* oldname_new;
+   const char* newname_new;
 
-	ferr = f_rename( (const TCHAR*)oldname, (const TCHAR*)newname );
+   mp_vfs_mount_t *vfs;
+   vfs = mp_vfs_lookup_path(oldname, &oldname_new);
+   if (vfs == MP_VFS_NONE)
+      return FALSE;
+   mp_vfs_lookup_path(newname, &newname_new);
+   fs_user_mount_t *vfs_fat = (vfs->obj);
+
+	ferr = f_rename(&vfs_fat->fatfs, (const TCHAR*)oldname_new, (const TCHAR*)newname_new );
 	if (ferr != FR_OK)
 		return FALSE;
 
@@ -144,6 +182,13 @@ static bool_t fatfsRename(const char* oldname, const char* newname)
 static bool_t fatfsOpen(GFILE* f, const char* fname)
 {
 	FIL* fd;
+   const char* fname_new;
+
+   mp_vfs_mount_t *vfs;
+   vfs = mp_vfs_lookup_path(fname, &fname_new);
+   if (vfs == MP_VFS_NONE)
+      return FALSE;
+   fs_user_mount_t *vfs_fat = (vfs->obj);
 
 	#if !GFILE_NEED_NOAUTOMOUNT
 		if (!fatfs_mounted && !fatfsMount(""))
@@ -153,7 +198,9 @@ static bool_t fatfsOpen(GFILE* f, const char* fname)
 	if (!(fd = gfxAlloc(sizeof(FIL))))
 		return FALSE;
 
-	if (f_open(fd, fname, fatfs_flags2mode(f)) != FR_OK) {
+   
+   
+	if (f_open(&vfs_fat->fatfs, fd, fname_new, fatfs_flags2mode(f)) != FR_OK) {
 		gfxFree(fd);
 		f->obj = 0;
 
@@ -226,7 +273,7 @@ static bool_t fatfsEOF(GFILE* f)
 }
 
 static bool_t fatfsMount(const char* drive)
-{
+{/*
 	FRESULT ferr;
 
 	if (!fatfs_mounted) {
@@ -235,7 +282,7 @@ static bool_t fatfsMount(const char* drive)
 			return FALSE;
 		fatfs_mounted = TRUE;
 		return TRUE;
-	}
+	}*/
 
 	return FALSE;
 }

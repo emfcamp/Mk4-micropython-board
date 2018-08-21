@@ -56,6 +56,13 @@ main()
 	exit 1
     fi
 
+    if test -d sail_1*
+    then
+        echo SAIL_INSTALL_DIR = $(canonicalize_path ./sail_*)
+    else
+	echo "warning: sail plugin missing" 1>&2
+    fi
+
     for sdk in simplelink*
     do
         if test -d $sdk

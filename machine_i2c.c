@@ -314,6 +314,9 @@ STATIC const mp_rom_map_elem_t machine_i2c_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_readfrom_mem), MP_ROM_PTR(&machine_i2c_readfrom_mem_obj) },
     { MP_ROM_QSTR(MP_QSTR_readfrom_mem_into), MP_ROM_PTR(&machine_i2c_readfrom_mem_into_obj) },
     { MP_ROM_QSTR(MP_QSTR_writeto_mem), MP_ROM_PTR(&machine_i2c_writeto_mem_obj) },
+#ifdef MACHINE_I2C_IDS
+    MACHINE_I2C_IDS
+#endif
 };
 
 STATIC MP_DEFINE_CONST_DICT(machine_i2c_locals_dict, machine_i2c_locals_dict_table);

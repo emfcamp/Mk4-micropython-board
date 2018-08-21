@@ -1,3 +1,5 @@
+BOARD_SRC_C = mpmain-emf.c
+
 CC = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 LD = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 AR = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-ar"
@@ -9,6 +11,13 @@ MICROPY_PY_UGFX ?= 1
 USBLIB_LIBS = \
     "-L$(SIMPLELINK_MSP432E4_SDK_INSTALL_DIR)/source/ti/usblib/msp432e4/lib/gcc/m4f" \
     -l:ti/usblib/msp432e4/lib/gcc/m4f/msp432e4_usblib.a
+
+SAIL_INCLUDES = \
+    "-I$(SAIL_INSTALL_DIR)/source"
+
+SAIL_LIBS = \
+    "-L$(SAIL_INSTALL_DIR)/source" \
+    -l:ti/sail/lib/gcc/msp432e4/sail.lib
 
 NETNDK_INCLUDES =
 
@@ -52,6 +61,7 @@ CFLAGS += \
     -D__MSP432E401Y__ \
     $(INCLUDES) \
     $(NETSL_INCLUDES) \
+    $(SAIL_INCLUDES) \
     -mcpu=cortex-m4 \
     -march=armv7e-m \
     -mthumb \
@@ -70,6 +80,7 @@ LFLAGS = \
     -l:ti/net/sntp/lib/gcc/m4f/sntp_release.a \
     $(USBLIB_LIBS) \
     $(NETSL_LIBS) \
+    $(SAIL_LIBS) \
     -l:ti/display/lib/display.am4fg \
     -l:ti/drivers/lib/drivers_msp432e4.am4fg \
     -l:ti/devices/msp432e4/driverlib/lib/gcc/m4f/msp432e4_driverlib.a \

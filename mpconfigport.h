@@ -19,10 +19,10 @@
 #define MICROPY_EMIT_X64            (0)
 #define MICROPY_EMIT_THUMB          (0)
 #define MICROPY_EMIT_INLINE_THUMB   (0)
-#define MICROPY_COMP_MODULE_CONST   (0)
-#define MICROPY_COMP_CONST          (0)
-#define MICROPY_COMP_DOUBLE_TUPLE_ASSIGN (0)
-#define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN (0)
+#define MICROPY_COMP_MODULE_CONST   (1)
+#define MICROPY_COMP_CONST          (1)
+#define MICROPY_COMP_DOUBLE_TUPLE_ASSIGN (1)
+#define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN (1)
 #define MICROPY_MEM_STATS           (0)
 #define MICROPY_DEBUG_PRINTERS      (0)
 #define MICROPY_ENABLE_GC           (1)
@@ -36,16 +36,16 @@
 #define MICROPY_ENABLE_DOC_STRING   (0)
 #define MICROPY_ERROR_REPORTING     (MICROPY_ERROR_REPORTING_NORMAL)
 #define MICROPY_BUILTIN_METHOD_CHECK_SELF_ARG (0)
-#define MICROPY_PY_ASYNC_AWAIT      (0)
+#define MICROPY_PY_ASYNC_AWAIT      (1)
 #define MICROPY_PY_BUILTINS_BYTEARRAY (1)
 #define MICROPY_PY_BUILTINS_MEMORYVIEW (1)
 #define MICROPY_PY_BUILTINS_ENUMERATE (1)
-#define MICROPY_PY_BUILTINS_FILTER  (0)
-#define MICROPY_PY_BUILTINS_FROZENSET (0)
-#define MICROPY_PY_BUILTINS_REVERSED (0)
-#define MICROPY_PY_BUILTINS_SET     (0)
+#define MICROPY_PY_BUILTINS_FILTER  (1)
+#define MICROPY_PY_BUILTINS_FROZENSET (1)
+#define MICROPY_PY_BUILTINS_REVERSED (1)
+#define MICROPY_PY_BUILTINS_SET     (1)
 #define MICROPY_PY_BUILTINS_SLICE   (1)
-#define MICROPY_PY_BUILTINS_PROPERTY (0)
+#define MICROPY_PY_BUILTINS_PROPERTY (1)
 #define MICROPY_PY_BUILTINS_MIN_MAX (1)
 #define MICROPY_PY_SYS_STDFILES     (1)
 #define MICROPY_PY___FILE__         (0)
@@ -54,7 +54,7 @@
 #define MICROPY_PY_ARRAY_SLICE_ASSIGN (1)
 #define MICROPY_PY_ATTRTUPLE        (1)
 #define MICROPY_PY_COLLECTIONS      (1)
-#define MICROPY_PY_MATH             (0)
+#define MICROPY_PY_MATH             (1)
 #define MICROPY_PY_CMATH            (0)
 #define MICROPY_PY_IO               (1)
 #define MICROPY_PY_STRUCT           (1)
@@ -62,14 +62,14 @@
 #define MICROPY_PY_MICROPYTHON_MEM_INFO (1)
 #define MICROPY_STACK_CHECK         (1)
 #define MICROPY_MODULE_FROZEN_MPY   (1)
-#define MICROPY_CPYTHON_COMPAT      (0)
+#define MICROPY_CPYTHON_COMPAT      (1)
 #define MICROPY_LONGINT_IMPL        (MICROPY_LONGINT_IMPL_MPZ)
 #define MICROPY_FLOAT_IMPL          (MICROPY_FLOAT_IMPL_FLOAT)
 #define MICROPY_PY_UTIME            (1)
 #define MICROPY_PY_UTIME_MP_HAL     (1)
 #define MICROPY_PY_URANDOM          (1)
 #define MICROPY_PY_URANDOM_EXTRA_FUNCS (1)
-#define MICROPY_PY_BUILTINS_STR_UNICODE (0)
+#define MICROPY_PY_BUILTINS_STR_UNICODE (1)
 #define MICROPY_ENABLE_SCHEDULER    (1)
 #define MICROPY_SCHEDULER_DEPTH     (8)
 
@@ -79,6 +79,11 @@
 #define MICROPY_PY_FRAMEBUF         (1)
 #define MICROPY_PY_UJSON            (1)
 #define MICROPY_PY_UBINASCII        (1)
+#define MICROPY_PY_UHASHLIB         (1)
+#define MICROPY_PY_URANDOM          (1)
+#define MICROPY_PY_URANDOM_EXTRA_FUNCS (1)
+#define MICROPY_PY_URE              (1)
+#define MICROPY_PY_URE_SUB          (1)
 
 #define MICROPY_VFS                    (1)
 #define MICROPY_FATFS_ENABLE_LFN       (1)
@@ -87,6 +92,8 @@
 #define MICROPY_FATFS_LFN_CODE_PAGE    (437) /* 1=SFN/ANSI 437=LFN/U.S.(OEM) */
 #define MICROPY_VFS_FAT                (1)
 #define MICROPY_READER_VFS             (1)
+#define MICROPY_FATFS_MULTI_PARTITION  (1)
+#define MICROPY_FATFS_USE_LABEL        (1)
 
 // use vfs's functions for import stat and builtin open
 #define mp_import_stat mp_vfs_import_stat
@@ -122,11 +129,13 @@ typedef long mp_off_t;
 
 // extra built in modules to add to the list of known ones
 extern const struct _mp_obj_module_t machine_module;
+extern const struct _mp_obj_module_t mp_module_uhashlib;
 extern const struct _mp_obj_module_t mp_module_uos;
 extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_socket;
 extern const struct _mp_obj_module_t mp_module_network;
 extern const struct _mp_obj_module_t mp_module_ugfx;
+extern const struct _mp_obj_module_t mp_module_tilda;
 
 #if MICROPY_PY_SOCKET
 #define SOCKET_BUILTIN_MODULE    { MP_ROM_QSTR(MP_QSTR_usocket), MP_ROM_PTR(&mp_module_socket) },
@@ -145,25 +154,30 @@ extern const struct _mp_obj_module_t mp_module_ugfx;
 #if MICROPY_HW_HAS_UGFX
 #define UGFX_BUILTIN_MODULE    { MP_ROM_QSTR(MP_QSTR_ugfx), MP_ROM_PTR(&mp_module_ugfx) },
 #else
-#define UGFX_BUILTIN_MODULE 
+#define UGFX_BUILTIN_MODULE
+#endif
+
+#if MICROPY_PY_TILDA
+#define TILDA_BUILTIN_MODULE    { MP_ROM_QSTR(MP_QSTR_tilda), MP_ROM_PTR(&mp_module_tilda) },
+#else
+#define TILDA_BUILTIN_MODULE
 #endif
 
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_ROM_QSTR(MP_QSTR_umachine), MP_ROM_PTR(&machine_module) }, \
     { MP_ROM_QSTR(MP_QSTR_machine), MP_ROM_PTR(&machine_module) },  \
+    { MP_ROM_QSTR(MP_QSTR_json), MP_ROM_PTR(&mp_module_ujson) }, \
+    { MP_ROM_QSTR(MP_QSTR_binascii), MP_ROM_PTR(&mp_module_ubinascii) }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos), (mp_obj_t)&mp_module_uos },     \
     { MP_OBJ_NEW_QSTR(MP_QSTR_utime), (mp_obj_t)&mp_module_utime }, \
     SOCKET_BUILTIN_MODULE \
     NETWORK_BUILTIN_MODULE \
     UGFX_BUILTIN_MODULE \
-
-/*
-    { MP_ROM_QSTR(MP_QSTR_json),        MP_ROM_PTR(&mp_module_ujson) }, \
-    { MP_ROM_QSTR(MP_QSTR_binascii),    MP_ROM_PTR(&mp_module_ubinascii) }, \
- */
+    TILDA_BUILTIN_MODULE \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_ROM_QSTR(MP_QSTR_struct),      MP_ROM_PTR(&mp_module_ustruct) },   \
+    { MP_ROM_QSTR(MP_QSTR_hashlib), MP_ROM_PTR(&mp_module_uhashlib) }, \
     { MP_ROM_QSTR(MP_QSTR_os),          MP_ROM_PTR(&mp_module_uos) },       \
     { MP_ROM_QSTR(MP_QSTR_time),        MP_ROM_PTR(&mp_module_utime) },     \
     { MP_ROM_QSTR(MP_QSTR_random),      MP_ROM_PTR(&mp_module_urandom) },   \
@@ -181,4 +195,7 @@ extern const struct _mp_obj_module_t mp_module_ugfx;
 
 #define MICROPY_PORT_ROOT_POINTERS \
     const char *readline_hist[8]; \
-    mp_obj_t pinirq_callback[10];
+    mp_obj_t pinirq_callback[10]; \
+    mp_obj_t tilda_button_callback[22]; \
+    mp_obj_t tilda_config_main; \
+

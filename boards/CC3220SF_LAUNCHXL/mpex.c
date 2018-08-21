@@ -44,6 +44,7 @@
 #include <ti/drivers/I2C.h>
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/SD.h>
+#include <ti/drivers/ADC.h>
 
 #include <ti/drivers/net/wifi/slnetifwifi.h>
 
@@ -107,6 +108,7 @@ void *mainThread(void *arg0)
     SPI_init();
     UART_init();
     PWM_init();
+    ADC_init();
 
     pthread_t thread;
     pthread_attr_t attrs;

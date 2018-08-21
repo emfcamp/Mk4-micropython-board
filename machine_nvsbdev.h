@@ -1,15 +1,7 @@
-#ifndef MACHINE_NVSBDEV_H_INC
-#define MACHINE_NVSBDEV_H_INC
-
-#if MICROPY_MACHINE_NVSBDEV
-extern const mp_obj_type_t machine_nvsbdev_type;
-extern void machine_nvsbdev_teardown();
-
-#define MACHINE_NVSBDEV_CLASS { MP_ROM_QSTR(MP_QSTR_NVSBdev), MP_ROM_PTR(&machine_nvsbdev_type) },
-#define MACHINE_NVSBDEV_TEARDOWN() machine_nvsbdev_teardown()
-#else
-#define MACHINE_NVSBDEV_CLASS
-#define MACHINE_NVSBDEV_TEARDOWN()
-#endif
-
+#ifndef MICROPY_INCLUDED_TI_MACHINE_NVSBDEV_H
+#define MICROPY_INCLUDED_TI_MACHINE_NVSBDEV_H
+void * flash_bdev_flush_thread(void * arg);
+uint32_t flash_get_sector_info(uint32_t addr, uint32_t *start_addr, uint32_t *size);
+void flash_bdev_init(void);
+void flash_bdev_flush(void);
 #endif

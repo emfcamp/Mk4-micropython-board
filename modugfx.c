@@ -101,6 +101,19 @@ STATIC mp_obj_t ugfx_init(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(ugfx_init_obj, ugfx_init);
 
+/// \method spi_clk(a)
+///
+/// Set the lcd clock frequency (in Hz)
+///
+STATIC mp_obj_t ugfx_spi_clk(mp_obj_t clk_obj) {
+
+    uint32_t a = mp_obj_get_int(clk_obj);
+    gdispSetSPIClock(a);
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(ugfx_spi_clk_obj, ugfx_spi_clk);
+
 /// \method deinit()
 ///
 STATIC mp_obj_t ugfx_deinit(void) {
@@ -154,7 +167,6 @@ STATIC mp_obj_t ugfx_ball_demo(void) {
 
 
 	minx = miny = 0; maxx = width; maxy = height;		// The clipping window for this frame.
-
 	while(1) {
 		// Draw one frame
 		gdispStreamStart(minx, miny, maxx-minx, maxy-miny);
@@ -985,6 +997,7 @@ STATIC const mp_map_elem_t ugfx_module_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_fill_polygon), (mp_obj_t)&ugfx_fill_polygon_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_display_image), (mp_obj_t)&ugfx_display_image_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_orientation), (mp_obj_t)&ugfx_set_orientation_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_spi_clk), (mp_obj_t)&ugfx_spi_clk_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_write_command), (mp_obj_t)&ugfx_write_command_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_width), (mp_obj_t)&ugfx_width_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_height), (mp_obj_t)&ugfx_height_obj },

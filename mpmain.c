@@ -18,11 +18,17 @@
 #include "py/nlr.h"
 #include "py/mperrno.h"
 
+#include "extmod/vfs.h"
+#include "extmod/vfs_fat.h"
+
+#include "storage.h"
+
+
 #include "lib/utils/pyexec.h"
 #include "lib/mp-readline/readline.h"
 
 #if MICROPY_HW_USB_REPL
-#include "USBCDCD.h"
+#include "usbd_cdc.h"
 #endif
 
 static char * stack_top;
@@ -100,6 +106,8 @@ soft_reset:
 
 #else
 
+fs_user_mount_t fs_user_mount_flash;
+
 int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize,
             UART_Handle uart)
 {
@@ -124,7 +132,29 @@ soft_reset:
     extern void machine_setup(void);
     machine_setup();
 
-    pyexec_frozen_module("_boot.py");
+    storage_init();
+    // init the vfs object
+    fs_user_mount_t *vfs_fat = &fs_user_mount_flash;
+    vfs_fat->flags = 0;
+    pyb_flash_init_vfs(vfs_fat);
+
+    // try to mount the flash
+    FRESULT res = f_mount(&vfs_fat->fatfs);
+
+    if (res == FR_NO_FILESYSTEM) {
+        uint8_t working_buf[512];
+        f_mkfs(&vfs_fat->fatfs, FM_FAT, 0, working_buf, sizeof(working_buf));
+    }
+
+    mp_vfs_mount_t *vfs = m_new_obj_maybe(mp_vfs_mount_t);
+    if (!vfs == NULL) {
+        vfs->str = "/flash";
+        vfs->len = 6;
+        vfs->obj = MP_OBJ_FROM_PTR(vfs_fat);
+        vfs->next = NULL;
+        MP_STATE_VM(vfs_mount_table) = vfs;
+    }
+    //pyexec_frozen_module("_boot.py");
 
     const char *boot_py = "/boot.py";
     mp_import_stat_t statf = mp_import_stat(boot_py);

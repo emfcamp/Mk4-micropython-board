@@ -50,7 +50,7 @@
 
 /* USBS Composit CDC device rom TI RTOS usb_serial_device example */
 #if MICROPY_HW_USB_REPL
-#include "USBCDCD.h"
+#include "usb.h"
 #endif
 
 //extern void ti_ndk_config_Global_startupFxn();
@@ -58,6 +58,19 @@ extern void *mainThread(void *arg0);
 
 /* Stack size in bytes */
 #define THREADSTACKSIZE    4096
+
+/* 
+ * Enable bootloader selection via Pin PF4 HIGH  (D2 on SSI header)
+ */
+#include "ti/devices/msp432e4/driverlib/driverlib.h"
+ void checkBOOTCFG()
+{
+    if (FLASH_CTRL->BOOTCFG & FLASH_BOOTCFG_NW) {
+        FLASH_CTRL->FMA = 0x75100000; // BOOTCFG write address
+        FLASH_CTRL->FMD = 0x7FFFB2FE; // new BOOTCFG value with PF4 boot pin
+        FLASH_CTRL->FMC = FLASH_FMC_WRKEY | FLASH_FMC_COMT;
+    }
+}
 
 /*
  * Custom reset function called by TI-RTOS before main so we can setup the EPI SRAM
@@ -74,6 +87,7 @@ void tildaResetFxn()
 void tildaStartFxn()
 {
     ExternalRAM_init();
+    //checkBOOTCFG();
     return;
 }
 
@@ -94,7 +108,7 @@ int main(void)
 
     #if MICROPY_HW_USB_REPL
     MSP_EXP432E401Y_initUSB(MSP_EXP432E401Y_USBDEVICE);
-    USBCDCD_init(MSP_EXP432E401Y_USBDEVICE);
+    USB_Comp_init();
     #endif
 
 //    ti_ndk_config_Global_startupFxn();
