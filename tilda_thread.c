@@ -43,6 +43,7 @@
 #if MICROPY_PY_TILDA
 #include <ti/sail/opt3001/opt3001.h>
 #include "tilda_thread.h"
+#include "tilda_sensors.h"
 
 Event_Struct evtStruct;
 I2C_Handle      i2cHandle;
@@ -84,7 +85,7 @@ void tcaInterruptHandler(uint8_t index)
 
 void hdcInterruptHandler(uint8_t index)
 {
-    // set hcd data ready event flag
+    // set hdc data ready event flag
     Event_post(tildaEvtHandle, Event_HDC_INT);
 }
 
@@ -117,26 +118,6 @@ void readTCAButtons()
     buttonState = (buttonState << 8) | readBuffer[0];
 }
 
-#define TMP_TEMPERATURE_REG 0
-#define TMP_CONFIG_REG 1
-
-#define TMP_CFG_SD      (1<<0)
-#define TMP_CFG_TM      (1<<1)
-#define TMP_CFG_POL     (1<<2)
-#define TMP_CFG_F0      (1<<3)
-#define TMP_CFG_F1      (1<<4)
-#define TMP_CFG_R0      (1<<5)
-#define TMP_CFG_R1      (1<<6)
-#define TMP_CFG_OS      (1<<7)
-
-#define TMP_CFG_EM      (1<<4)  //set high for 13bit range
-#define TMP_CFG_AL      (1<<5)
-#define TMP_CFG_CR0     (1<<6)
-#define TMP_CFG_CR1     (1<<7)
-#define TMP_CFG_CR_025Hz    (0)
-#define TMP_CFG_CR_1Hz      (TMP_CFG_CR0)
-#define TMP_CFG_CR_4Hz      (TMP_CFG_CR1)
-#define TMP_CFG_CR_8Hz      (TMP_CFG_CR0 | TMP_CFG_CR1)
 
 static void writeTMPReg(uint8_t addr, uint8_t byte1, uint8_t byte2)
 {
@@ -199,6 +180,69 @@ static bool TMP102_getTemperature(float *temperature)
     return true;    
 }
 
+
+
+
+static void writeHDCReg(uint8_t addr, uint8_t data)
+{
+    uint8_t writeBuffer[2];
+    writeBuffer[0] = addr;
+    writeBuffer[1] = data;
+
+    I2C_Transaction i2cTransaction;
+    i2cTransaction.slaveAddress = 0x40;
+    i2cTransaction.writeBuf = writeBuffer;
+    i2cTransaction.writeCount = 2;
+    i2cTransaction.readBuf = NULL;
+    i2cTransaction.readCount = 0;
+    I2C_transfer(i2cHandle, &i2cTransaction);    
+}
+
+static bool readHDCRegMulti(uint8_t addr, uint8_t *data, uint8_t cnt)
+{
+    uint8_t writeBuffer[1];
+    writeBuffer[0] = addr;
+
+    I2C_Transaction i2cTransaction;
+    i2cTransaction.slaveAddress = 0x40;
+    i2cTransaction.writeBuf = writeBuffer;
+    i2cTransaction.writeCount = 1;
+    i2cTransaction.readBuf = data;
+    i2cTransaction.readCount = cnt;
+    bool res = I2C_transfer(i2cHandle, &i2cTransaction);
+    if (res == false) {
+        return false;
+    }    
+    return true;
+}
+
+static bool HDC2080_getReadings(float *temperature, float *humidity)
+{
+    uint8_t data_t[2];
+    bool res = readHDCRegMulti(HDC2080_TEMPERATURE_LSB_REG, data_t, 2);
+    if (res == false){
+        *temperature = -999;
+        *humidity = -999;
+        return false;
+    }
+    
+    uint8_t data_h[2];
+    res = readHDCRegMulti(HDC2080_HUMIDITY_LSB_REG, data_h, 2);
+    if (res == false){
+        *temperature = -999;
+        *humidity = -999;
+        return false;
+    }
+    
+    uint16_t t = ((data_t[1]<<8) | data_t[0]);
+    uint16_t h = ((data_h[1]<<8) | data_h[0]);
+    
+    *temperature = ((float) (t * CELSIUS_PER_LSB) - 40U);
+    *humidity = ( (float) ( h * RH_PER_LSB));
+
+    return true;    
+}
+
 void *tildaThread(void *arg)
 {
     I2C_Params      i2cParams;
@@ -236,6 +280,20 @@ void *tildaThread(void *arg)
     // setup charger?
     
     // setup sensors
+    
+    // reset the HDC
+    writeHDCReg(HDC2080_RST_DRDY_INT_CONF_REG, HDC2080_RST_DRDY_INT_CONF_SOFT_RES);
+    usleep(3000U);
+    // set interrupt on data ready
+    writeHDCReg(HDC2080_INT_MASK_REG, (1<<7)); 
+    // set temp and humid to max resolution
+    writeHDCReg(HDC2080_MEAS_CONFIG_REG, 0);
+    // set the HDC to 1Hz continuous mode, enable interrupt output
+    writeHDCReg(HDC2080_RST_DRDY_INT_CONF_REG, HDC2080_RST_DRDY_INT_CONF_AMM_1
+                                               | HDC2080_RST_DRDY_INT_CONF_DRDY_EN
+                                               | HDC2080_RST_DRDY_INT_CONF_INT_POL);
+    //start conversion
+    writeHDCReg(HDC2080_MEAS_CONFIG_REG, HDC2080_MEAS_CONFIG_START_MEAS);    
     
     // set the TMP102 to 1Hz continuous mode, max range
     //   turn off shutdown (and enable continuous conversion)
@@ -293,10 +351,11 @@ void *tildaThread(void *arg)
         // else if bq event
         if (posted & Event_BQ_INT) {
             // check what changed
+            HDC2080_getReadings(&tildaSharedStates.hdcTemperature, &tildaSharedStates.hdcHumidity);
         
         }
 
-        // else if hcd data ready
+        // else if hdc data ready
         if (posted & Event_HDC_INT){
             // grab temp and hum readings 
         
@@ -306,7 +365,7 @@ void *tildaThread(void *arg)
         if (posted == 0) {
             // grab TMP temp readings
             TMP102_getTemperature(&tildaSharedStates.tmpTemperature);
-
+            
             // grab lux readings
             OPT3001_getLux(opt3001Handle, &tildaSharedStates.optLux);
             // grab battery updates?
