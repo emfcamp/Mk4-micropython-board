@@ -56,7 +56,7 @@
 #include "lib/mp-readline/readline.h"
 
 #if MICROPY_HW_USB_REPL
-#include "usbd_cdc.h"
+#include "CDCD.h"
 #endif
 
 #if MICROPY_PY_TILDA
@@ -69,6 +69,10 @@
 static char * stack_top;
 
 static UART_Handle console;
+#if MICROPY_HW_USB_REPL
+static CDCD_Handle repl_cdc;
+#endif
+
 void mp_hal_stdout_tx_str(const char * str);
 
 void SystemClock_Config(void);
@@ -91,7 +95,7 @@ int mp_hal_stdin_rx_chr(void)
         #if MICROPY_HW_USB_REPL
         unsigned char data[1];
         /* Block while the device is NOT connected to the USB */
-        c = USBCDCD_receiveData(data, 1, 1);
+        c = CDCD_receiveData(repl_cdc, data, 1, 1);
         if (c != 0) {
             return (int)data[0];
         }
@@ -107,7 +111,7 @@ int mp_hal_stdin_rx_chr(void)
 void mp_hal_stdout_tx_strn(const char * str, size_t len)
 {
     #if MICROPY_HW_USB_REPL
-    USBCDCD_sendData((const unsigned char *)str, len, 1);
+    CDCD_sendData(repl_cdc, (const unsigned char *)str, len, 1);
     #endif
     UART_write(console, str, len);
 }
@@ -416,6 +420,11 @@ int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize, UART_Handle uart
     console = uart;
     led_init();
 
+#if MICROPY_HW_USB_REPL
+    CDCMSC_setup();
+    repl_cdc = CDCD_open(0);
+#endif
+
     #if MICROPY_HW_ENABLE_STORAGE
     storage_init();
     #endif
@@ -431,7 +440,7 @@ int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize, UART_Handle uart
     pthread_attr_setstacksize(&tildaAttrs, TILDA_TASK_STACKSIZE);
     pthread_create(&tildaThreadHandle, &tildaAttrs, tildaThread, NULL);
     pthread_attr_destroy(&tildaAttrs);
-    #endif    
+    #endif
 
 soft_reset:
 
