@@ -404,8 +404,8 @@ STATIC const mp_arg_t ugfx_list_make_new_args[] = {
     { MP_QSTR_a, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
     { MP_QSTR_b, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
     { MP_QSTR_parent, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-    { MP_QSTR_up, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = GINPUT_TOGGLE_UP} },
-    { MP_QSTR_down, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = GINPUT_TOGGLE_DOWN} },
+    { MP_QSTR_up, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = Buttons_JOY_Up} },
+    { MP_QSTR_down, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = Buttons_JOY_Down} },
 };
 #define UGFX_LIST_MAKE_NEW_NUM_ARGS MP_ARRAY_SIZE(ugfx_list_make_new_args)
 
