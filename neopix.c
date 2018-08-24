@@ -149,7 +149,10 @@ static void setup_ws_timer_dma(void)
 
     MAP_TimerLoadSet(TIMER3_BASE, TIMER_BOTH, WS2812_TIMER_INTVAL);
 
-    MAP_TimerMatchSet(TIMER3_BASE, TIMER_A, WS2812_TIMER_INTVAL-1);
+    MAP_TimerMatchSet(TIMER3_BASE, TIMER_A, WS2812_TIMER_INTVAL-1);    
+
+    HwiP_create(INT_TIMER3B, TIMER3B_IRQHandler, NULL);
+    
 
     MAP_TimerIntEnable(TIMER3_BASE, TIMER_TIMB_DMA);
     MAP_TimerDMAEventSet(TIMER3_BASE, TIMER_DMA_TIMEOUT_B);
