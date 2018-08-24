@@ -50,7 +50,7 @@ Event_Handle tildaEvtHandle;
  * first 16 entries of this matchs the pin order of the TCA port expander
  * next match the order form MSP_EXP432E401Y_GPIOName
  */
-typedef enum TILDA_BUTTONS_Names 
+typedef enum TILDA_BUTTONS_Names
 {
     Buttons_BTN_1 = 0,
     Buttons_BTN_End,
@@ -83,11 +83,12 @@ typedef struct tilda_shared_states_t {
     uint32_t sampleRate;
     // uint32_t batteryVoltage;
     bool vbusAttached;
-    uint8_t chargeState; 
+    uint8_t chargeState;
     float tmpTemperature;
     float hcdTemperatue;
     float hcdHumidity;
     float optLux;
+    uint8_t bqRegs[0xc];
 } tilda_shared_states_t;
 
 volatile tilda_shared_states_t tildaSharedStates;
