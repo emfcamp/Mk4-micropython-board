@@ -325,15 +325,12 @@ void *tildaThread(void *arg)
 // 1 is pressed
 uint32_t getAllButtonStates()
 {
-    uint32_t allButtonStates = buttonState;
-    for (int gpioIndex = 0; gpioIndex < 6; ++gpioIndex)
+    uint32_t allButtonStates = 0;
+    for (TILDA_BUTTONS_Names button = 0; button < Buttons_MAX; ++button)
     {
-        // joystick
-        allButtonStates |= ((uint32_t)GPIO_read(gpioIndex)) << (Buttons_JOY_Center + gpioIndex);
+        allButtonStates |= (uint32_t)getButtonState(button) << button;
     }
-    allButtonStates |= !((uint32_t)GPIO_read(Buttons_BTN_Menu - Buttons_BTN_B)) << (Buttons_BTN_Menu);
-
-    return !allButtonStates;
+    return allButtonStates;
 }
 
 // ture a button is pressed
