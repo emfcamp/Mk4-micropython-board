@@ -34,7 +34,8 @@
 
 #include "neopix.h"
 #include "ti/devices/msp432e4/driverlib/driverlib.h"
-
+#include <ti/drivers/Power.h>
+#include <ti/drivers/power/PowerMSP432E4.h>
 
 
 /// \moduleref Neopix
@@ -123,6 +124,7 @@ STATIC mp_obj_t pyb_neopix_make_new(const mp_obj_type_t *type, mp_uint_t n_args,
 }
 
 // called when the dma transfer is complete
+/*
 void
 TIMER3B_IRQHandler(void)
 {
@@ -137,10 +139,11 @@ TIMER3B_IRQHandler(void)
     MAP_TimerDisable(TIMER3_BASE, TIMER_BOTH);
     
 }
-
+*/
 static void setup_ws_timer_dma(void)
 {
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+    //MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+    Power_setDependency(PowerMSP432E4_PERIPH_TIMER3);
     MAP_GPIOPinConfigure(GPIO_PD4_T3CCP0);
     MAP_GPIOPinTypeTimer(GPIO_PORTD_BASE, GPIO_PIN_4);
 
@@ -149,12 +152,11 @@ static void setup_ws_timer_dma(void)
 
     MAP_TimerLoadSet(TIMER3_BASE, TIMER_BOTH, WS2812_TIMER_INTVAL);
 
-    MAP_TimerMatchSet(TIMER3_BASE, TIMER_A, WS2812_TIMER_INTVAL-1);    
-
-    HwiP_create(INT_TIMER3B, TIMER3B_IRQHandler, NULL);
+    MAP_TimerMatchSet(TIMER3_BASE, TIMER_A, WS2812_TIMER_INTVAL-1);
     
-
-    MAP_TimerIntEnable(TIMER3_BASE, TIMER_TIMB_DMA);
+   // HwiP_create(INT_TIMER3B, TIMER3B_IRQHandler, NULL);
+  
+    //MAP_TimerIntEnable(TIMER3_BASE, TIMER_TIMB_DMA);
     MAP_TimerDMAEventSet(TIMER3_BASE, TIMER_DMA_TIMEOUT_B);
 
 
@@ -185,7 +187,7 @@ void ws_start_transfer(uint16_t * fb, uint32_t len){
                                    len);
                                    
 
-    MAP_IntEnable(INT_TIMER3B);
+    //MAP_IntEnable(INT_TIMER3B);
     MAP_TimerEnable(TIMER3_BASE, TIMER_BOTH);
 
     MAP_uDMAChannelEnable(UDMA_CH3_TIMER3B);
@@ -212,8 +214,6 @@ STATIC mp_obj_t pyb_neopix_display(mp_obj_t self_in, mp_obj_t rgb) {
 	else
 		mp_obj_get_array(rgb, &len, &items);
 	
-	//this is obviously a bit crap, needs replacing with DMA
-	__disable_irq();
     
     uint32_t buf_ptr = 0;
 	
