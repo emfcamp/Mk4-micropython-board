@@ -64,14 +64,11 @@
 //GWidgetInit	wi;
 //GTimer GT2;
 
-systemticks_t gfxSystemTicks(void)
-{
-	return mp_hal_ticks_ms();
-}
+#include <time.h>
 
-systemticks_t gfxMillisecondsToTicks(delaytime_t ms)
+int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {
-	return ms;
+    return clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp);
 }
 
 typedef struct _ugfx_obj_t {

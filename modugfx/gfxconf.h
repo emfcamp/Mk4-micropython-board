@@ -30,14 +30,14 @@
 //#define GFX_USE_OS_FREERTOS                          FALSE
 //    #define GFX_FREERTOS_USE_TRACE                   FALSE
 //#define GFX_USE_OS_WIN32                             FALSE
-//#define GFX_USE_OS_LINUX                             FALSE
+#define GFX_USE_OS_LINUX                             TRUE
 //#define GFX_USE_OS_OSX                               FALSE
 //#define GFX_USE_OS_ECOS                              FALSE
 //#define GFX_USE_OS_RAWRTOS                           FALSE
 //#define GFX_USE_OS_ARDUINO                           FALSE
 //#define GFX_USE_OS_KEIL                              FALSE
 //#define GFX_USE_OS_CMSIS                             FALSE
-#define GFX_USE_OS_RAW32                             TRUE
+//#define GFX_USE_OS_RAW32                             TRUE
 //#define GFX_USE_OS_NIOS                              FALSE
 //    #define INTERRUPTS_OFF()                         optional_code
 //    #define INTERRUPTS_ON()                          optional_code

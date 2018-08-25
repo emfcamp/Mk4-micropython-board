@@ -183,11 +183,11 @@ static void MSP_EXP432E401Y_usbBusFaultHwi(uintptr_t arg)
      *  This function should be modified to appropriately manage handle
      *  a USB bus fault.
      */
-    
+
 
     // LWK TODO: fix these to just go out over the repl uart? mp_hal_stdout_tx_str()??
-    // static Display_Handle display;  
-    
+    // static Display_Handle display;
+
     // Display_init();
 
     // /* Open the display for output */
@@ -199,7 +199,7 @@ static void MSP_EXP432E401Y_usbBusFaultHwi(uintptr_t arg)
     // }
 
 
-    // Display_printf(display, 0, 0, "USB bus fault detected.\n");   
+    // Display_printf(display, 0, 0, "USB bus fault detected.\n");
     HwiP_clearInterrupt(INT_GPIOQ4);
 }
 
@@ -286,7 +286,7 @@ const EMACMSP432E4_HWAttrs EMACMSP432E4_hwAttrs = {
  *       reduce memory usage.
  */
 GPIO_PinConfig gpioPinConfigs[] = {
-	
+
 // Inputs
     //MSP_EXP432E401Y_GPIO_JOYC = 0,
     GPIOMSP432E4_PM6 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,
@@ -299,10 +299,10 @@ GPIO_PinConfig gpioPinConfigs[] = {
 
     //MSP_EXP432E401Y_GPIO_JOYL,
     GPIOMSP432E4_PM5 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,
-    
+
     //MSP_EXP432E401Y_GPIO_JOYR,
     GPIOMSP432E4_PB2 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,
-    
+
     //MSP_EXP432E401Y_GPIO_BTN_MENU,
     GPIOMSP432E4_PQ4 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
 
@@ -314,10 +314,10 @@ GPIO_PinConfig gpioPinConfigs[] = {
 
     //MSP_EXP432E401Y_GPIO_SIM_RI,
     GPIOMSP432E4_PN5 | GPIO_CFG_IN_NOPULL | GPIO_CFG_IN_INT_RISING,
-    
+
     //MSP_EXP432E401Y_GPIO_BQ_INT,
     GPIOMSP432E4_PE1 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
-    
+
     //MSP_EXP432E401YG_GPIO_TCA_INT,
     GPIOMSP432E4_PE0 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
 
@@ -333,11 +333,11 @@ GPIO_PinConfig gpioPinConfigs[] = {
     GPIOMSP432E4_PB1 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_BOTH_EDGES,
 
     //MSP_EXP432E401Y_ADC_SPK,
-    GPIOMSP432E4_PD5 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,    
+    GPIOMSP432E4_PD5 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,
 
     // MSP_EXP432E401Y_GPIO_HDC_INT,
     GPIOMSP432E4_PB0 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
-    
+
     // MSP_EXP432E401Y_GPIO_HEADSET_DET,
     GPIOMSP432E4_PC2 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
 
@@ -347,22 +347,22 @@ GPIO_PinConfig gpioPinConfigs[] = {
 // Outputs
     //MSP_EXP432E401Y_GPIO_ETHLED0,
     GPIOMSP432E4_PF0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-    
+
     //MSP_EXP432E401Y_GPIO_ETHLED1,
     GPIOMSP432E4_PF1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
 
     //MSP_EXP432E401Y_GPIO_LED1,
     GPIOMSP432E4_PL5 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-    
+
     //MSP_EXP432E401Y_GPIO_LED2,
     GPIOMSP432E4_PL4 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
 
     // MSP_EXP432E401Y_TIM_WS2812,
-    GPIOMSP432E4_PD4 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,    
+    GPIOMSP432E4_PD4 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
 
     //MSP_EXP432E401Y_GPIO_SIM_PWR_KEY,
     GPIOMSP432E4_PN2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-    
+
     // MSP_EXP432E401Y_PWM_MIC,
     GPIOMSP432E4_PF3 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
 
@@ -374,44 +374,44 @@ GPIO_PinConfig gpioPinConfigs[] = {
 
     //MSP_EXP432E401Y_GPIO_LCD_DCX,
     GPIOMSP432E4_PK2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-    
+
     //MSP_EXP432E401Y_GPIO_LCD_RST,
     GPIOMSP432E4_PN4 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-    
+
     //MSP_EXP432E401Y_LCD_CS,
     GPIOMSP432E4_PA3 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
 
     //MSP_EXP432E401Y_GPIO_MUX_A,
     GPIOMSP432E4_PP4 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
-    
+
     //MSP_EXP432E401Y_GPIO_MUX_B,
     GPIOMSP432E4_PP5 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-    
+
     // MSP_EXP432E401Y_GPIO_AMP_SHUTDOWN,
     GPIOMSP432E4_PF4 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-    
+
     // MSP_EXP432E401Y_GPIO_FET,
     GPIOMSP432E4_PN3 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-    
+
     // MSP_EXP432E401Y_GPIO_CH3,
     GPIOMSP432E4_PD6 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
 
     // MSP_EXP432E401Y_GPIO_CH4,
     GPIOMSP432E4_PD7 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-    
+
     //MSP_EXP432E401Y_FLASH_CS,
     GPIOMSP432E4_PQ1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
 
     /* CC3120 WIFI BP */
     //MSP_EXP432E401Y_CC_RST,
     GPIOMSP432E4_PE3 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
-   
+
     //MSP_EXP432E401Y_CC_nHIB_pin,
     GPIOMSP432E4_PE5 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
-    
+
     //MSP_EXP432E401Y_CC_CS_pin,
     GPIOMSP432E4_PD2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH
-	
+
 };
 
 /*
@@ -421,7 +421,7 @@ GPIO_PinConfig gpioPinConfigs[] = {
  * NOTE: Pins not used for interrupts can be omitted from callbacks array to
  *       reduce memory usage (if placed at end of gpioPinConfigs array).
  */
-GPIO_CallbackFxn gpioCallbackFunctions[MSP_EXP432E401Y_GPIOCOUNT] = { 
+GPIO_CallbackFxn gpioCallbackFunctions[MSP_EXP432E401Y_GPIOCOUNT] = {
     NULL
 };
 // As above, this only needs to be big enough for highest numbered GPIO that needs an
@@ -508,7 +508,7 @@ NVSSPI25X_HWAttrs nvsSPIHWAttrs[MSP_EXP432E401Y_NVSCOUNT] = {
         .verifyBufSize = 256,
         .spiHandle = NULL,
         .spiIndex = MSP_EXP432E401Y_SPI3,
-        .spiBitRate = 33000000,
+        .spiBitRate = 30000000,
         .spiCsnGpioIndex = MSP_EXP432E401Y_FLASH_CS,
     }
 };
@@ -621,14 +621,14 @@ const SPIMSP432E4DMA_HWAttrs spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPICOUNT] = {
     {
         .baseAddr = SSI3_BASE,
         .intNum = INT_SSI3,
-        .intPriority = ((4U << 5)),
+        .intPriority = (~0),
         .scratchBufPtr = &spiMSP432E4DMAscratchBuf[MSP_EXP432E401Y_SPI3],
         .defaultTxBufValue = 0xFF,
-        .minDmaTransferSize = 4097, // Force NVS transfers to not use DMA
+        .minDmaTransferSize = 10, // 4097, // Force NVS transfers to not use DMA
         .rxDmaChannel = UDMA_CH14_SSI3RX,
         .txDmaChannel = UDMA_CH15_SSI3TX,
         .clkPinMask = SPIMSP432E4_PQ0_SSI3CLK,
-        //.fssPinMask = SPIMSP432E4_PQ1_SSI3FSS,
+        .fssPinMask = SPIMSP432E4_PQ1_SSI3FSS,
         .xdat0PinMask = SPIMSP432E4_PQ2_SSI3XDAT0,
         .xdat1PinMask = SPIMSP432E4_PQ3_SSI3XDAT1
     },
@@ -642,7 +642,7 @@ const SPIMSP432E4DMA_HWAttrs spiMSP432E4DMAHWAttrs[MSP_EXP432E401Y_SPICOUNT] = {
         .rxDmaChannel = UDMA_CH10_SSI0RX,
         .txDmaChannel = UDMA_CH11_SSI0TX,
         .clkPinMask = SPIMSP432E4_PA2_SSI0CLK,
-        // .fssPinMask = SPIMSP432E4_PA3_SSI0FSS,
+        .fssPinMask = SPIMSP432E4_PA3_SSI0FSS,
         .xdat0PinMask = SPIMSP432E4_PA4_SSI0XDAT0,
         .xdat1PinMask = SPIMSP432E4_PA5_SSI0XDAT1
     }
