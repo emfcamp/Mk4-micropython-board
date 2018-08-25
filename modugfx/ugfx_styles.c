@@ -80,9 +80,9 @@ STATIC mp_obj_t ugfx_font_make_new(const mp_obj_type_t *type, mp_uint_t n_args, 
 /// frees up all resources
 STATIC mp_obj_t ugfx_font_destroy(mp_obj_t self_in) {
     ugfx_font_obj_t *self = self_in;
-
+    
 	gdispCloseFont(self->font);
-
+	
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ugfx_font_destroy_obj, ugfx_font_destroy);
@@ -118,7 +118,7 @@ const mp_obj_type_t ugfx_font_type = {
 
 /// \classmethod \constructor({style_to_copy})
 ///
-/// Construct an Style object. Can copy an inputted style, overwise
+/// Construct an Style object. Can copy an inputted style, overwise 
 ///   initialises with a copy of the default style
 STATIC mp_obj_t ugfx_style_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *args) {
     // check arguments
@@ -136,7 +136,7 @@ STATIC mp_obj_t ugfx_style_make_new(const mp_obj_type_t *type, mp_uint_t n_args,
 			sty->style =  in_sty->style;
 		}
 	}
-
+	
 	return sty;
 }
 
@@ -144,21 +144,21 @@ STATIC mp_obj_t ugfx_style_make_new(const mp_obj_type_t *type, mp_uint_t n_args,
 
 /// \method set_disabled([text_colour, edge_colour, fill_colour, progress_colour])
 ///
-/// set the colours to use when the widget is disabled
+/// set the colours to use when the widget is disabled 
 STATIC mp_obj_t ugfx_style_set_disabled(mp_obj_t self_in, mp_obj_t colours) {
     ugfx_style_obj_t *self = self_in;
-
+    
 	mp_obj_t *items;
 	mp_uint_t len;
-
+	
 	mp_obj_get_array(colours, &len, &items);
-
+	
 	if (len == 4){
 		GColorSet cs = {
 			mp_obj_get_int(items[0]),
 			mp_obj_get_int(items[1]),
 			mp_obj_get_int(items[2]),
-			mp_obj_get_int(items[3])
+			mp_obj_get_int(items[3])			
 		};
 		self->style.disabled = cs;
 	}
@@ -172,21 +172,21 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(ugfx_style_set_disabled_obj, ugfx_style_set_dis
 
 /// \method set_pressed([text_colour, edge_colour, fill_colour, progress_colour])
 ///
-/// set the colours to use when the widget is pressed
+/// set the colours to use when the widget is pressed 
 STATIC mp_obj_t ugfx_style_set_pressed(mp_obj_t self_in, mp_obj_t colours) {
     ugfx_style_obj_t *self = self_in;
-
+    
 	mp_obj_t *items;
 	mp_uint_t len;
-
+	
 	mp_obj_get_array(colours, &len, &items);
-
+	
 	if (len == 4){
 		GColorSet cs = {
 			mp_obj_get_int(items[0]),
 			mp_obj_get_int(items[1]),
 			mp_obj_get_int(items[2]),
-			mp_obj_get_int(items[3])
+			mp_obj_get_int(items[3])			
 		};
 		self->style.pressed = cs;
 	}
@@ -202,28 +202,28 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(ugfx_style_set_pressed_obj, ugfx_style_set_pres
 
 /// \method set_enabled([text_colour, edge_colour, fill_colour, progress_colour])
 ///
-/// set the colours to use when the widget is enabled
+/// set the colours to use when the widget is enabled 
 STATIC mp_obj_t ugfx_style_set_enabled(mp_obj_t self_in, mp_obj_t colours) {
     ugfx_style_obj_t *self = self_in;
-
+    
 	mp_obj_t *items;
 	mp_uint_t len;
-
+	
 	mp_obj_get_array(colours, &len, &items);
-
+	
 	if (len == 4){
 		GColorSet cs = {
 			mp_obj_get_int(items[0]),
 			mp_obj_get_int(items[1]),
 			mp_obj_get_int(items[2]),
-			mp_obj_get_int(items[3])
+			mp_obj_get_int(items[3])			
 		};
 		self->style.enabled = cs;
 	}
 	else
 		nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "Requires array of 4 colours"));
 
-
+	
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ugfx_style_set_enabled_obj, ugfx_style_set_enabled);
@@ -236,7 +236,7 @@ STATIC mp_obj_t ugfx_style_set_focus(mp_obj_t self_in, mp_obj_t colour) {
     ugfx_style_obj_t *self = self_in;
 
 	self->style.focus = mp_obj_get_int(colour);
-
+		
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ugfx_style_set_focus_obj, ugfx_style_set_focus);
@@ -248,11 +248,26 @@ STATIC mp_obj_t ugfx_style_set_background(mp_obj_t self_in, mp_obj_t colour) {
     ugfx_style_obj_t *self = self_in;
 
 	self->style.background = mp_obj_get_int(colour);
-
+		
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(ugfx_style_set_background_obj, ugfx_style_set_background);
 
+/// \method get_background(background_colour)
+///
+/// set the background colour
+STATIC mp_obj_t ugfx_style_background(mp_uint_t n_args, const mp_obj_t *args) {
+    ugfx_style_obj_t *self = args[0];
+	
+	if (n_args == 1)
+		return mp_obj_new_int(self->style.background);
+	else
+	{
+		self->style.background = mp_obj_get_int(args[1]);
+		return mp_const_none;
+	}
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(ugfx_style_background_obj, 1, 2, ugfx_style_background);
 
 
 STATIC const mp_map_elem_t ugfx_style_locals_dict_table[] = {
@@ -262,6 +277,7 @@ STATIC const mp_map_elem_t ugfx_style_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_pressed), (mp_obj_t)&ugfx_style_set_pressed_obj},
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_focus), (mp_obj_t)&ugfx_style_set_focus_obj},
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_background), (mp_obj_t)&ugfx_style_set_background_obj},
+    { MP_OBJ_NEW_QSTR(MP_QSTR_background), (mp_obj_t)&ugfx_style_background_obj},
 	//class constants
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_RED),        MP_OBJ_NEW_SMALL_INT(Red) },
 
