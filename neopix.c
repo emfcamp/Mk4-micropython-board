@@ -1,4 +1,4 @@
-/*
+ /*
  *
  * The MIT License (MIT)
  *
@@ -43,6 +43,7 @@
 
 static volatile uint16_t * frame_buffer;
 static uint16_t frame_buffer_[10*24];
+static uint16_t dmabuff[] = {10,20,30,40,50,60,70,80,90,11,99,11,99,11,149};
 static volatile uint8_t ws_xr_active;
 
 #define WS_800HZ 800000
@@ -124,22 +125,20 @@ STATIC mp_obj_t pyb_neopix_make_new(const mp_obj_type_t *type, mp_uint_t n_args,
 }
 
 // called when the dma transfer is complete
-/*
 void
 TIMER3B_IRQHandler(void)
 {
     uint32_t getTimerIntStatus;
 
-    /* Get the timer interrupt status and clear the same */
+    // Get the timer interrupt status and clear the same 
     getTimerIntStatus = MAP_TimerIntStatus(TIMER3_BASE, true);
-
     MAP_TimerIntClear(TIMER3_BASE, getTimerIntStatus);
 
     ws_xr_active = 0;
     MAP_TimerDisable(TIMER3_BASE, TIMER_BOTH);
     
 }
-*/
+
 static void setup_ws_timer_dma(void)
 {
     //MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
@@ -154,11 +153,12 @@ static void setup_ws_timer_dma(void)
 
     MAP_TimerMatchSet(TIMER3_BASE, TIMER_A, WS2812_TIMER_INTVAL-1);
     
-   // HwiP_create(INT_TIMER3B, TIMER3B_IRQHandler, NULL);
-  
-    //MAP_TimerIntEnable(TIMER3_BASE, TIMER_TIMB_DMA);
+    
+    HwiP_create(INT_TIMER3B, TIMER3B_IRQHandler, NULL);
+    MAP_TimerIntEnable(TIMER3_BASE, TIMER_TIMB_DMA);
+    
+    
     MAP_TimerDMAEventSet(TIMER3_BASE, TIMER_DMA_TIMEOUT_B);
-
 
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
     //MAP_uDMAEnable();
@@ -175,19 +175,34 @@ static void setup_ws_timer_dma(void)
                                   UDMA_SIZE_16 | UDMA_SRC_INC_16 | UDMA_DST_INC_NONE |
                                   UDMA_ARB_1);
 
+    //remove...
+    /*
+    MAP_uDMAChannelTransferSet(UDMA_CH3_TIMER3B | UDMA_PRI_SELECT,
+                                   UDMA_MODE_BASIC,
+                                   (void *)&dmabuff, (void*)&TIMER3->TAMATCHR,
+                                   sizeof(dmabuff)/sizeof(uint16_t));
+                                   
+
+    //MAP_IntEnable(INT_TIMER3B);
+    MAP_TimerEnable(TIMER3_BASE, TIMER_BOTH);
+
+    MAP_uDMAChannelEnable(UDMA_CH3_TIMER3B);*/
 }
 
 void ws_start_transfer(uint16_t * fb, uint32_t len){
                                   
     frame_buffer = fb;    
-                                  
     MAP_uDMAChannelTransferSet(UDMA_CH3_TIMER3B | UDMA_PRI_SELECT,
                                    UDMA_MODE_BASIC,
-                                   (void *)&fb, (void*)&TIMER3->TAMATCHR,
+                                   (void *)&frame_buffer_, (void*)&TIMER3->TAMATCHR,
                                    len);
+    //MAP_uDMAChannelTransferSet(UDMA_CH3_TIMER3B | UDMA_PRI_SELECT,
+    //                               UDMA_MODE_BASIC,
+    //                               (void *)&fb, (void*)&TIMER3->TAMATCHR,
+    //                               len);
                                    
 
-    //MAP_IntEnable(INT_TIMER3B);
+    MAP_IntEnable(INT_TIMER3B);
     MAP_TimerEnable(TIMER3_BASE, TIMER_BOTH);
 
     MAP_uDMAChannelEnable(UDMA_CH3_TIMER3B);
@@ -216,6 +231,8 @@ STATIC mp_obj_t pyb_neopix_display(mp_obj_t self_in, mp_obj_t rgb) {
 	
     
     uint32_t buf_ptr = 0;
+    
+    frame_buffer_[buf_ptr++] = 149;
 	
 	while(len){
 		len--;
@@ -237,7 +254,9 @@ STATIC mp_obj_t pyb_neopix_display(mp_obj_t self_in, mp_obj_t rgb) {
 			mask = mask >> 1;
 		}
 	}
-		
+     
+    frame_buffer_[buf_ptr++] = 149;
+     
 	ws_start_transfer(frame_buffer_, buf_ptr);
 	
 	return mp_const_none;
