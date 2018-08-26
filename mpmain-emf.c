@@ -415,8 +415,6 @@ int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize, UART_Handle uart
     int stack_dummy;
     uint32_t reset_mode;
 
-    extern void machine_setup(void);
-    machine_setup();
     console = uart;
     led_init();
 
@@ -453,6 +451,9 @@ soft_reset:
     #endif
     led_state(3, 0);
     led_state(4, 0);
+
+    extern void machine_setup(void);
+    machine_setup();
 
     #if !MICROPY_HW_USES_BOOTLOADER
     // check if user switch held to select the reset mode

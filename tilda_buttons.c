@@ -21,6 +21,12 @@
 // ***LWK*** a lot of this should have the same functions as buttons.py
 // https://github.com/emfcamp/Mk4-Apps/blob/master/lib/buttons.py
 
+STATIC mp_obj_t tilda_buttons_get_all_states()
+{
+    return mp_obj_new_int(getAllButtonStates());
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_buttons_get_all_states_obj, tilda_buttons_get_all_states);
+
 
 STATIC mp_obj_t tilda_buttons_is_pressed(mp_obj_t button_in) //(button)
 {
@@ -95,6 +101,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_buttons_disable_menu_reset_obj, tilda_but
 
 
 STATIC const mp_rom_map_elem_t tilda_buttons_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_get_all_states), MP_ROM_PTR(&tilda_buttons_get_all_states_obj) },
     { MP_ROM_QSTR(MP_QSTR_is_pressed), MP_ROM_PTR(&tilda_buttons_is_pressed_obj) },
     { MP_ROM_QSTR(MP_QSTR_is_triggered), MP_ROM_PTR(&tilda_buttons_is_triggered_obj) },
     { MP_ROM_QSTR(MP_QSTR_has_interrupt), MP_ROM_PTR(&tilda_buttons_has_interrupt_obj) },

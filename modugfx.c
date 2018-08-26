@@ -35,6 +35,7 @@
 //#include "pin.h"
 #include "modugfx.h"
 #include "gfx.h"
+#include "tilda_thread.h"
 
 #include "modugfx/board_ILI9341.h"
 
@@ -59,14 +60,11 @@
 
 const char * font_list[] = {"DejaVuSans12","ralewaybold24","ralewayextrabold48","DejaVuSans16","ralewayextrabold16"};
 
-systemticks_t gfxSystemTicks(void)
-{
-	return mp_hal_ticks_ms();
-}
+#include <time.h>
 
-systemticks_t gfxMillisecondsToTicks(delaytime_t ms)
+int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {
-	return ms;
+    return clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp);
 }
 
 typedef struct _ugfx_obj_t {
@@ -1038,14 +1036,14 @@ STATIC const mp_map_elem_t ugfx_module_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_GRAY),       MP_OBJ_NEW_SMALL_INT(Gray) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PURPLE),     MP_OBJ_NEW_SMALL_INT(Purple) },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_RIGHT),  MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_RIGHT) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_LEFT),   MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_LEFT) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_UP),     MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_UP) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_DOWN),   MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_DOWN) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_CENTER), MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_CENTER) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_BTN_A),      MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_A) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_BTN_B),      MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_B) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_BTN_MENU),   MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_MENU) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_RIGHT),  MP_OBJ_NEW_SMALL_INT(Buttons_JOY_Right) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_LEFT),   MP_OBJ_NEW_SMALL_INT(Buttons_JOY_Right) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_UP),     MP_OBJ_NEW_SMALL_INT(Buttons_JOY_Up) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_DOWN),   MP_OBJ_NEW_SMALL_INT(Buttons_JOY_Down) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_CENTER), MP_OBJ_NEW_SMALL_INT(Buttons_JOY_Center) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_BTN_A),      MP_OBJ_NEW_SMALL_INT(Buttons_BTN_A) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_BTN_B),      MP_OBJ_NEW_SMALL_INT(Buttons_BTN_B) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_BTN_MENU),   MP_OBJ_NEW_SMALL_INT(Buttons_BTN_Menu) },
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_POWER_ON),   MP_OBJ_NEW_SMALL_INT(powerOn) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_POWER_OFF),   MP_OBJ_NEW_SMALL_INT(powerOff) },

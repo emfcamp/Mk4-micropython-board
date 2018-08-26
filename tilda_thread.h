@@ -97,6 +97,7 @@ volatile tilda_shared_states_t tildaSharedStates;
 void tilda_init0();
 void * tildaThread(void *arg);
 
+uint32_t getAllButtonStates();
 bool getButtonState(TILDA_BUTTONS_Names button);
 void registerButtonCallback(uint8_t button, mp_obj_t tca_callback_irq,  bool on_press, bool on_release);
 void unregisterButtonCallback(uint8_t button);
