@@ -120,18 +120,18 @@ STATIC mp_obj_t tilda_sensors_get_tmp_temperature()
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_sensors_get_tmp_temperature_obj, tilda_sensors_get_tmp_temperature);
 
 
-STATIC mp_obj_t tilda_sensors_get_hdc_temerature()
+STATIC mp_obj_t tilda_sensors_get_hdc_temperature()
 {
-    return mp_obj_new_float(tildaSharedStates.hcdTemperatue);
+    return mp_obj_new_float(tildaSharedStates.hdcTemperature);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_sensors_get_hdc_temerature_obj, tilda_sensors_get_hdc_temerature);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_sensors_get_hdc_temperature_obj, tilda_sensors_get_hdc_temperature);
 
 
-STATIC mp_obj_t tilda_sensors_get_hcd_humidity()
+STATIC mp_obj_t tilda_sensors_get_hdc_humidity()
 {
-    return mp_obj_new_float(tildaSharedStates.hcdHumidity);
+    return mp_obj_new_float(tildaSharedStates.hdcHumidity);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_sensors_get_hcd_humidity_obj, tilda_sensors_get_hcd_humidity);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_sensors_get_hdc_humidity_obj, tilda_sensors_get_hdc_humidity);
 
 
 STATIC mp_obj_t tilda_sensors_get_lux()
@@ -148,8 +148,8 @@ STATIC const mp_rom_map_elem_t tilda_sensors_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_get_charge_status), MP_ROM_PTR(&tilda_sensors_get_charge_status_obj) },
     // { MP_ROM_QSTR(MP_QSTR_get_battery_voltage), MP_ROM_PTR(&tilda_sensors_get_battery_voltage_obj) },
     { MP_ROM_QSTR(MP_QSTR_get_tmp_temperature), MP_ROM_PTR(&tilda_sensors_get_tmp_temperature_obj) },
-    { MP_ROM_QSTR(MP_QSTR_get_hdc_temerature), MP_ROM_PTR(&tilda_sensors_get_hdc_temerature_obj) },
-    { MP_ROM_QSTR(MP_QSTR_get_hcd_humidity), MP_ROM_PTR(&tilda_sensors_get_hcd_humidity_obj) },
+    { MP_ROM_QSTR(MP_QSTR_get_hdc_temperature), MP_ROM_PTR(&tilda_sensors_get_hdc_temperature_obj) },
+    { MP_ROM_QSTR(MP_QSTR_get_hdc_humidity), MP_ROM_PTR(&tilda_sensors_get_hdc_humidity_obj) },
     { MP_ROM_QSTR(MP_QSTR_get_lux), MP_ROM_PTR(&tilda_sensors_get_lux_obj) },
 
     { MP_ROM_QSTR(MP_QSTR_BAT_NO_INPUT), MP_ROM_INT(NO_INPUT) },
