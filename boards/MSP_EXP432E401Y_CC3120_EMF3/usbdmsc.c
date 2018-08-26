@@ -908,7 +908,7 @@ HandleDevice(void *pvMSCDevice, uint32_t ui32Request, void *pvRequestData)
                 //
                 // Pass the LPM sleep event to the client.
                 //
-                psMSCDevice->pfnEventCallback(0, USB_EVENT_LPM_RESUME, 0,
+                psMSCDevice->pfnEventCallback(0, USB_EVENT_LPM_SLEEP, 0,
                                               (void *)0);
             }
             break;
@@ -920,7 +920,7 @@ HandleDevice(void *pvMSCDevice, uint32_t ui32Request, void *pvRequestData)
                 //
                 // Pass the LPM error event to the client.
                 //
-                psMSCDevice->pfnEventCallback(0, USB_EVENT_LPM_RESUME, 0,
+                psMSCDevice->pfnEventCallback(0, USB_EVENT_LPM_ERROR, 0,
                                               (void *)0);
             }
             break;

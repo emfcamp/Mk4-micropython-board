@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include <ti/sysbios/hal/Hwi.h>
+#include <xdc/runtime/System.h>
 
 #include <ti/devices/msp432e4/driverlib/driverlib.h>
 #include <ti/usblib/msp432e4/usblib.h>
@@ -65,28 +66,6 @@ const uint8_t controlInterfaceString[] =
     'r', 0, 'f', 0, 'a', 0, 'c', 0, 'e', 0
 };
 
-#if 0
-static const unsigned char productString[] = {
-    2 + (16 * 2),
-    USB_DTYPE_STRING,
-    'V', 0, 'i', 0, 'r', 0, 't', 0, 'u', 0, 'a', 0, 'l', 0, ' ', 0,
-    'C', 0, 'O', 0, 'M', 0, ' ', 0, 'P', 0, 'o', 0, 'r', 0, 't', 0
-};
-
-static const unsigned char serialNumberString[] = {
-    (8 + 1) * 2,
-    USB_DTYPE_STRING,
-    '1', 0, '2', 0, '3', 0, '4', 0, '5', 0, '6', 0, '7', 0, '8', 0
-};
-
-static const unsigned char controlInterfaceString[] = {
-    2 + (21 * 2),
-    USB_DTYPE_STRING,
-    'A', 0, 'C', 0, 'M', 0, ' ', 0, 'C', 0, 'o', 0, 'n', 0, 't', 0,
-    'r', 0, 'o', 0, 'l', 0, ' ', 0, 'I', 0, 'n', 0, 't', 0, 'e', 0,
-    'r', 0, 'f', 0, 'a', 0, 'c', 0, 'e', 0
-};
-#endif
 static const unsigned char configString[] = {
     2 + (26 * 2),
     USB_DTYPE_STRING,
@@ -112,22 +91,24 @@ extern uint32_t CDCD_serialHandler(void *cbData, uint32_t event,
                                       uint32_t eventMsg,
                                       void *eventMsgPtr);
 
+static uint32_t mscEventHandler(void * data, uint32_t event, uint32_t arg0, void * arg1)
+{
+    switch (event) {
+    case USB_EVENT_LPM_ERROR:
+        System_printf("MSC error\n");
+        break;
+
+    default:
+        break;
+    }
+
+    return 0u;
+}
+
 static tUSBDCDCDevice serialDevice = {
     .ui16VID = USB_VID_TI_1CBE,
     .ui16PID = USB_PID_SERIAL,
-    .ui16MaxPowermA = 0,
-    .ui8PwrAttributes = USB_CONF_ATTR_SELF_PWR,
-    .pvControlCBData = NULL,
-    .pfnTxCallback = USBBufferEventCallback,
-    .pfnRxCallback = USBBufferEventCallback,
-    .ppui8StringDescriptors = NULL, // stringDescriptors,
-    .ui32NumStringDescriptors = 0, // STRINGDESCRIPTORSCOUNT,
-};
-
-static tUSBDCDCDevice uartDevice = {
-    .ui16VID = USB_VID_TI_1CBE,
-    .ui16PID = USB_PID_SERIAL + 1,
-    .ui16MaxPowermA = 0,
+    .ui16MaxPowermA = 500,
     .ui8PwrAttributes = USB_CONF_ATTR_SELF_PWR,
     .pvControlCBData = NULL,
     .pfnTxCallback = USBBufferEventCallback,
@@ -139,10 +120,10 @@ static tUSBDCDCDevice uartDevice = {
 static tUSBDMSCDevice mscDevice = {
     .ui16VID = USB_VID_TI_1CBE,
     .ui16PID = USB_PID_MSC,
-    .pui8Vendor = "EMF",
-    .pui8Product = "TiLDA MK4",
-    .pui8Version = {1, 2, 3, 4},
-    .ui16MaxPowermA = 0,
+    .pui8Vendor = "TI      ",
+    .pui8Product = "Mass Storage    ",
+    .pui8Version = "1.00",
+    .ui16MaxPowermA = 500,
     .ui8PwrAttributes = USB_CONF_ATTR_SELF_PWR,
     .ppui8StringDescriptors = NULL, //stringDescriptors,
     .ui32NumStringDescriptors = 0, // STRINGDESCRIPTORSCOUNT,
@@ -154,7 +135,7 @@ static tUSBDMSCDevice mscDevice = {
         .pfnNumBlocks = SCMSC_getNumBlocks,
         .pfnBlockSize = SCMSC_getBlockSize
     },
-    .pfnEventCallback = NULL,
+    .pfnEventCallback = mscEventHandler,
 };
 
 static uint32_t compositeHandler(void * data, uint32_t event, uint32_t param,
@@ -163,38 +144,37 @@ static uint32_t compositeHandler(void * data, uint32_t event, uint32_t param,
     return 0;
 }
 
-#define NUM_CDC 1
+#define NUM_DEVICES 2
 
-static uint8_t descriptorData[COMPOSITE_DMSC_SIZE + (NUM_CDC * COMPOSITE_DCDC_SIZE)];
+static uint8_t descriptorData[COMPOSITE_DMSC_SIZE + COMPOSITE_DCDC_SIZE];
 
 extern bool MSCD_setup(tUSBDMSCDevice * dev);
 
 extern void * CDCD_create(tUSBDCDCDevice * dev);
 
-static tCompositeEntry compositeDevices[1 + NUM_CDC];
+static tCompositeEntry compositeDevices[NUM_DEVICES];
 
 static tUSBDCompositeDevice compDevice =
 {
     .ui16VID = USB_VID_TI_1CBE,
     .ui16PID = USB_PID_COMP_SERIAL,
-    .ui16MaxPowermA = 250u,
+    .ui16MaxPowermA = 500u,
     .ui8PwrAttributes = USB_CONF_ATTR_BUS_PWR,
     .pfnCallback = compositeHandler,
     .ppui8StringDescriptors = stringDescriptors,
     .ui32NumStringDescriptors = STRINGDESCRIPTORSCOUNT,
-    .ui32NumDevices = 1 + NUM_CDC,
+    .ui32NumDevices = NUM_DEVICES,
     .psDevices = compositeDevices
 };
 
-const uint32_t CDCD_count = NUM_CDC;
-void * CDCD_handles[NUM_CDC];
+const uint32_t CDCD_count = 1;
+void * CDCD_handles[1];
 
 bool CDCMSC_setup()
 {
     Hwi_create(INT_USB0, (Hwi_FuncPtr)USB0_IRQDeviceHandler, NULL, NULL);
 
     CDCD_handles[0] = CDCD_create(&serialDevice);
-    // CDCD_handles[1] = CDCD_create(&uartDevice);
 
     MSCD_setup(&mscDevice);
 
@@ -203,7 +183,6 @@ bool CDCMSC_setup()
     USBDMSCCompositeInit(0, &mscDevice, &compositeDevices[0]);
 
     USBDCDCCompositeInit(0, &serialDevice, &compositeDevices[1]);
-    // USBDCDCCompositeInit(0, &uartDevice, &compositeDevices[2]);
 
     USBDCompositeInit(0, &compDevice, sizeof(descriptorData), descriptorData);
 
