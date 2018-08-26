@@ -85,8 +85,8 @@ typedef struct tilda_shared_states_t {
     bool vbusAttached;
     uint8_t chargeState; 
     float tmpTemperature;
-    float hcdTemperatue;
-    float hcdHumidity;
+    float hdcTemperature;
+    float hdcHumidity;
     float optLux;
 } tilda_shared_states_t;
 

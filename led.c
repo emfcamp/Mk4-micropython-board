@@ -350,6 +350,8 @@ STATIC const mp_rom_map_elem_t led_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_off), MP_ROM_PTR(&led_obj_off_obj) },
     { MP_ROM_QSTR(MP_QSTR_toggle), MP_ROM_PTR(&led_obj_toggle_obj) },
   //{ MP_ROM_QSTR(MP_QSTR_intensity), MP_ROM_PTR(&led_obj_intensity_obj) },
+    { MP_ROM_QSTR(MP_QSTR_RED), MP_ROM_INT(TILDA_LED_RED) },
+    { MP_ROM_QSTR(MP_QSTR_GREEN), MP_ROM_INT(TILDA_LED_GREEN) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(led_locals_dict, led_locals_dict_table);
