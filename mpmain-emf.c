@@ -51,7 +51,6 @@
 #include "storage.h"
 #include "led.h"
 
-
 #include "lib/utils/pyexec.h"
 #include "lib/mp-readline/readline.h"
 
@@ -208,13 +207,15 @@ MP_DEFINE_CONST_FUN_OBJ_KW(tilda_main_obj, 1, tilda_main);
 
 #if MICROPY_HW_ENABLE_STORAGE
 static const char fresh_boot_py[] =
-"# boot.py -- run on boot-up\r\n"
-"# can run arbitrary Python, but best to keep it minimal\r\n"
+"import os, tilda\r\n\r\nos.sync()\r\nroot = os.listdir()\r\n\r\ndef app(a):\r\n    if (a in root) and (\"main.py\" in os.listdir(a)):\r\n        return a + \"/main.py\"\r\n\r\ndef file(file, remove):\r\n    try:\r\n        a = None\r\n        with open(file, 'r') as f:\r\n            a = f.read().strip()\r\n        if remove:\r\n            os.remove(file)\r\n        return app(a)\r\n    except Exception as e:\r\n        print(str(e))\r\n\r\ndef any_home():\r\n    h = [a for a in root if a.startswith(\"home\")]\r\n    return h[0] if len(h) else False\r\n\r\nif \"no_boot\" in root:\r\n    os.remove(\"no_boot\")\r\nelse:\r\n    start = None\r\n    if \"main.py\" in root:\r\n        start = \"main.py\"\r\n    start = file(\"once.txt\", True) or file(\"default_app.txt\", False) or any_home() or \"bootstrap.py\"\r\n    print(\"Booting into %s\" % start)\r\n    tilda.main(start)\r\n";
+
+static const char fresh_bootstrap_py[] =
+"\"\"\"Bootstraps the badge by downloading the base software\"\"\"\r\n\r\nimport ugfx, machine, network, json, time, usocket, os, gc\r\nfrom tilda import Buttons\r\n\r\nHOST = \"badgeserver.emfcamp.org\"\r\nwifi = network.WLAN()\r\nwifi.active(True)\r\n\r\n# Helpers\r\ndef msg(text):\r\n    ugfx.clear()\r\n    ugfx.text(5, 5, \"EMF 2018\", ugfx.BLACK)\r\n    ugfx.text(5, 30, \"TiLDA Mk4\", ugfx.BLACK)\r\n    lines = text.split(\"\\n\")\r\n    print(lines[0])\r\n    for i, line in enumerate(lines):\r\n        ugfx.text(5, 65 + i * 20, line, ugfx.BLACK)\r\n\r\ndef wifi_select():\r\n    msg(\"Please select your wifi\\nConfirm with button A\")\r\n    sl = ugfx.List(5, 110, 228, 204)\r\n    aps = {}\r\n    while not Buttons.is_pressed(Buttons.BTN_A):\r\n        for s in (wifi.scan() or []):\r\n            if s[0] not in aps:\r\n                sl.add_item(s[0])\r\n                aps[s[0]] = s\r\n        time.sleep(0.01)\r\n        ugfx.poll()\r\n    ssid = sl.selected_text()\r\n    sl.destroy()\r\n\r\n    msg(\"Wifi: %s\\nPlease enter your password\\nConfirm with button A\" % ssid)\r\n    kb = ugfx.Keyboard(0, 160, 240, 170)\r\n    e = ugfx.Textbox(5, 130, 228, 25, text=\"\")\r\n    while not Buttons.is_pressed(Buttons.BTN_A):\r\n        time.sleep(0.01)\r\n        ugfx.poll()\r\n    pw = e.text()\r\n    e.destroy()\r\n    kb.destroy()\r\n    result = {\"ssid\":ssid,\"pw\":pw}\r\n    with open(\"wifi.json\", \"wt\") as file:\r\n        file.write(json.dumps(result))\r\n        file.flush()\r\n    os.sync()\r\n    return result\r\n\r\ndef wifi_details():\r\n    try:\r\n        with open(\"wifi.json\") as f:\r\n            return json.loads(f.read())\r\n    except Exception as e:\r\n        print(str(e))\r\n        return wifi_select()\r\n\r\ndef connect():\r\n    details = wifi_details()\r\n    if 'pw' in details:\r\n        wifi.connect(details['ssid'], details['pw'])\r\n    else:\r\n        wifi.connect(details['ssid'])\r\n\r\n    wait_until = time.ticks_ms() + 10000\r\n    while not wifi.isconnected():\r\n        if (time.ticks_ms() > wait_until):\r\n            os.remove(\"wifi.json\")\r\n            raise OSError(\"Wifi timeout\");\r\n        time.sleep(0.1)\r\n\r\ndef addrinfo(host, port, retries_left = 20):\r\n    try:\r\n        return usocket.getaddrinfo(host, port)[0][4]\r\n    except OSError as e:\r\n        if (\"-15\" in str(e)) and retries_left:\r\n            # [addrinfo error -15]\r\n            # This tends to happen after startup and goes away after a while\r\n            time.sleep_ms(200)\r\n            return addrinfo(host, port, retries_left - 1)\r\n        else:\r\n            raise e\r\n\r\ndef get(path):\r\n    s = usocket.socket()\r\n    s.connect(addrinfo(HOST, 80))\r\n    body = b\"\"\r\n    status = None\r\n    try:\r\n        s.send('GET /2018/%s HTTP/1.0\\r\\nHost: %s\\r\\n\\r\\n' % (path, HOST))\r\n        state = 1\r\n        hbuf = b\"\"\r\n        clen = 9999999\r\n        headers = {}\r\n        while len(body) < clen:\r\n            buf = s.recv(1024)\r\n            if state == 1: # Status\r\n                nl = buf.find(b\"\\n\")\r\n                if nl > -1:\r\n                    hbuf += buf[:nl - 1]\r\n                    status = int(hbuf.split(b' ')[1])\r\n                    state = 2\r\n                    hbuf = b\"\";\r\n                    buf = buf[nl + 1:]\r\n                else:\r\n                    hbuf += buf\r\n\r\n            if state == 2: # Headers\r\n                hbuf += buf\r\n                nl = hbuf.find(b\"\\n\")\r\n                while nl > -1:\r\n                    if nl < 2:\r\n                        buf = hbuf[2:]\r\n                        hbuf = None\r\n                        state = 3\r\n                        clen = int(headers[\"content-length\"])\r\n                        break\r\n\r\n                    header = hbuf[:nl - 1].decode(\"utf8\").split(':', 3)\r\n                    headers[header[0].strip().lower()] = header[1].strip()\r\n                    hbuf = hbuf[nl + 1:]\r\n                    nl = hbuf.find(b\"\\n\")\r\n\r\n            if state == 3: # Content\r\n                body += buf\r\n\r\n    finally:\r\n        s.close()\r\n    if status != 200:\r\n        raise Exception(\"HTTP %d for %s\" % (status, path))\r\n    return body\r\n\r\n# os.path bits\r\ndef split(path):\r\n    if path == \"\":\r\n        return (\"\", \"\")\r\n    r = path.rsplit(\"/\", 1)\r\n    if len(r) == 1:\r\n        return (\"\", path)\r\n    head = r[0]\r\n    if not head:\r\n        head = \"/\"\r\n    return (head, r[1])\r\n\r\ndef dirname(path):\r\n    return split(path)[0]\r\n\r\ndef exists(path):\r\n    try:\r\n        os.stat(path)[0]\r\n        return True\r\n    except OSError:\r\n        return False\r\n\r\ndef makedirs(path):\r\n    sub_path = split(path)[0]\r\n    if sub_path and (not exists(sub_path)):\r\n        makedirs(sub_path)\r\n    if not exists(path):\r\n        os.mkdir(path)\r\n\r\n# Steps\r\ndef step_wifi():\r\n    while not wifi.isconnected():\r\n        msg(\"Connecting to wifi...\");\r\n        try:\r\n            connect()\r\n        except Exception as e:\r\n            print(str(e))\r\n            msg(\"Couldn't connect\\nPlease check wifi details\")\r\n            time.sleep(1)\r\n\r\ndef step_download():\r\n    msg(\"Connecting to server...\")\r\n    files = list(json.loads(get(\"bootstrap\")).keys())\r\n    for i, file in enumerate(files):\r\n        msg(\"Downloading - %d%%\\n%s\" % (100 * i // len(files), file))\r\n        makedirs(dirname(file))\r\n        with open(file, 'wb') as f:\r\n            f.write(get(\"download?repo=emfcamp/Mk4-Apps&path=%s\" % file))\r\n    os.sync()\r\n\r\ndef step_goodbye():\r\n    msg(\"All done!\\n\\nRestarting badge...\")\r\n    time.sleep(2)\r\n    machine.reset()\r\n\r\nugfx.init()\r\nmachine.Pin(machine.Pin.PWM_LCD_BLIGHT).on()\r\ntry:\r\n    step_wifi()\r\n    step_download()\r\n    step_goodbye()\r\nexcept Exception as e:\r\n    msg(\"Error\\nSomething went wrong :(\\n\\n\" + str(e))\r\n    raise e\r\n"
 ;
 
-static const char fresh_main_py[] =
-"# main.py -- put your code here!\r\n"
-;
+static const char fresh_wifi_json[] =
+"{\"ssid\":\"emfcamp\",\"user\":\"emf\",\"pw\":\"emf\"}";
+
 
 // TODO: Get usb cdc inf file
 #if 0
@@ -223,9 +224,9 @@ static const char fresh_pybcdc_inf[] =
 ;
 #endif
 static const char fresh_readme_txt[] =
-"This is a MicroPython board\r\n"
+"This is TiLDA Mk4!\r\n"
 "\r\n"
-"You can get started right away by writing your Python code in 'main.py'.\r\n"
+"If you want to test some code, just create a main.py in here.\r\n"
 "\r\n"
 "For a serial prompt:\r\n"
 " - Windows: you need to go to 'Device manager', right click on the unknown device,\r\n"
@@ -234,7 +235,7 @@ static const char fresh_readme_txt[] =
 " - Mac OS X: use the command: screen /dev/tty.usbmodem*\r\n"
 " - Linux: use the command: screen /dev/ttyACM0\r\n"
 "\r\n"
-"Please visit http://micropython.org/help/ for further help.\r\n"
+"Please visit https://badge.emfcamp.org/2018 and http://micropython.org/help/ for further help.\r\n"
 ;
 
 // avoid inlining to avoid stack usage within main()
@@ -265,13 +266,6 @@ MP_NOINLINE STATIC bool init_flash_fs(uint reset_mode) {
         // set label
         f_setlabel(&vfs_fat->fatfs, MICROPY_HW_FLASH_FS_LABEL);
 
-        // create empty main.py
-        FIL fp;
-        f_open(&vfs_fat->fatfs, &fp, "/main.py", FA_WRITE | FA_CREATE_ALWAYS);
-        UINT n;
-        f_write(&fp, fresh_main_py, sizeof(fresh_main_py) - 1 /* don't count null terminator */, &n);
-        // TODO check we could write n bytes
-        f_close(&fp);
 #if 0
         // create .inf driver file
         f_open(&vfs_fat->fatfs, &fp, "/pybcdc.inf", FA_WRITE | FA_CREATE_ALWAYS);
@@ -279,8 +273,15 @@ MP_NOINLINE STATIC bool init_flash_fs(uint reset_mode) {
         f_close(&fp);
 #endif
         // create readme file
+        FIL fp;
         f_open(&vfs_fat->fatfs, &fp, "/README.txt", FA_WRITE | FA_CREATE_ALWAYS);
+        UINT n;
         f_write(&fp, fresh_readme_txt, sizeof(fresh_readme_txt) - 1 /* don't count null terminator */, &n);
+        f_close(&fp);
+
+        // create wifi.json file
+        f_open(&vfs_fat->fatfs, &fp, "/wifi.json", FA_WRITE | FA_CREATE_ALWAYS);
+        f_write(&fp, fresh_wifi_json, sizeof(fresh_wifi_json) - 1 /* don't count null terminator */, &n);
         f_close(&fp);
 
         // keep LED on for at least 200ms
@@ -323,6 +324,12 @@ MP_NOINLINE STATIC bool init_flash_fs(uint reset_mode) {
         f_open(&vfs_fat->fatfs, &fp, "/boot.py", FA_WRITE | FA_CREATE_ALWAYS);
         UINT n;
         f_write(&fp, fresh_boot_py, sizeof(fresh_boot_py) - 1 /* don't count null terminator */, &n);
+        // TODO check we could write n bytes
+        f_close(&fp);
+
+        // create bootstrap.py
+        f_open(&vfs_fat->fatfs, &fp, "/bootstrap.py", FA_WRITE | FA_CREATE_ALWAYS);
+        f_write(&fp, fresh_bootstrap_py, sizeof(fresh_bootstrap_py) - 1 /* don't count null terminator */, &n);
         // TODO check we could write n bytes
         f_close(&fp);
 
