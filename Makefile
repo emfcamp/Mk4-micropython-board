@@ -22,6 +22,7 @@ SRC_C = \
 	modsocket.c \
 	modnetwork.c \
 	modtilda.c \
+	neopix.c \
 	network_ndklan.c \
 	network_stalan.c \
 	moduos.c \
