@@ -31,12 +31,17 @@ void SCMSC_close(void * drive)
 
 uint32_t SCMSC_read(void * drive, uint8_t * buf, uint32_t sector, uint32_t numBlocks)
 {
+#if 1
+    storage_read_blocks(buf, sector, numBlocks);
+    return numBlocks * blockSize;
+#else
     if (storage_read_blocks(buf, sector, numBlocks) == 0) {
         return numBlocks * blockSize;
     }
     else {
         return 0;
     }
+#endif
 }
 
 uint32_t SCMSC_write(void * drive, uint8_t * buf, uint32_t sector, uint32_t numBlocks)
