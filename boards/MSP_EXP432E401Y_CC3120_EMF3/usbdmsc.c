@@ -2140,7 +2140,7 @@ USBDSCSIStartStopUnit(tUSBDMSCDevice *psMSCDevice, tMSCCBW *psSCSICBW)
                 if(psInst->ui32Flags & USBD_FLAG_ALLOW_REMOVAL)
                 {
                     // TODO
-                    psInst->iMediaStatus = eUSBDMSCMediaUnknown; //eUSBDMSCMediaNotPresent;
+                    psInst->iMediaStatus = eUSBDMSCMediaNotPresent;//eUSBDMSCMediaUnknown; //eUSBDMSCMediaNotPresent;
                     psMSCDevice->sMediaFunctions.pfnClose(psMSCDevice->sPrivateData.pvMedia);
                     psMSCDevice->sPrivateData.pvMedia = 0;
                     g_sSCSICSW.bCSWStatus = 0;
