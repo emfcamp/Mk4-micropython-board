@@ -1,9 +1,6 @@
 /*
- * This file is part of the Micro Python project, http://micropython.org/
  *
  * The MIT License (MIT)
- *
- * Copyright (c) 2013, 2014 Damien P. George
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +35,7 @@
 //#include "pin.h"
 #include "modugfx.h"
 #include "gfx.h"
+#include "tilda_thread.h"
 
 #include "modugfx/board_ILI9341.h"
 
@@ -60,17 +58,13 @@
 ///
 
 
-//GWidgetInit	wi;
-//GTimer GT2;
+const char * font_list[] = {"DejaVuSans12","ralewaybold24","ralewayextrabold48","DejaVuSans16","ralewayextrabold16"};
 
-systemticks_t gfxSystemTicks(void)
-{
-	return mp_hal_ticks_ms();
-}
+#include <time.h>
 
-systemticks_t gfxMillisecondsToTicks(delaytime_t ms)
+int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {
-	return ms;
+    return clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp);
 }
 
 typedef struct _ugfx_obj_t {
@@ -92,7 +86,7 @@ static orientation_t get_orientation(int a){
 ///
 STATIC mp_obj_t ugfx_init(void) {
 
-	gwinSetDefaultFont(gdispOpenFont("ui2"));
+	gwinSetDefaultFont(gdispOpenFont(font_list[0]));
 	gwinSetDefaultStyle(&WhiteWidgetStyle, FALSE);
 
 	gfxInit();
@@ -342,6 +336,12 @@ STATIC mp_obj_t ugfx_set_default_font(mp_obj_t font_obj) {
 	}else if (MP_OBJ_IS_STR(font_obj)){
 		const char *file = mp_obj_str_get_str(font_obj);
 		gwinSetDefaultFont(gdispOpenFont(file));
+	}else if (MP_OBJ_IS_INT(font_obj)){
+		if (mp_obj_get_int(font_obj) < sizeof(font_list)/sizeof(char*)){
+			gwinSetDefaultFont(gdispOpenFont(font_list[mp_obj_get_int(font_obj)]));
+		}
+		else
+			nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "Invalid font index"));
 	}
 
     return mp_const_none;
@@ -1036,20 +1036,25 @@ STATIC const mp_map_elem_t ugfx_module_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_GRAY),       MP_OBJ_NEW_SMALL_INT(Gray) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PURPLE),     MP_OBJ_NEW_SMALL_INT(Purple) },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_RIGHT),  MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_RIGHT) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_LEFT),   MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_LEFT) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_UP),     MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_UP) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_DOWN),   MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_DOWN) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_CENTER), MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_CENTER) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_BTN_A),      MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_A) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_BTN_B),      MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_B) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_BTN_MENU),   MP_OBJ_NEW_SMALL_INT(GINPUT_TOGGLE_MENU) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_RIGHT),  MP_OBJ_NEW_SMALL_INT(Buttons_JOY_Right) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_LEFT),   MP_OBJ_NEW_SMALL_INT(Buttons_JOY_Right) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_UP),     MP_OBJ_NEW_SMALL_INT(Buttons_JOY_Up) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_DOWN),   MP_OBJ_NEW_SMALL_INT(Buttons_JOY_Down) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_JOY_CENTER), MP_OBJ_NEW_SMALL_INT(Buttons_JOY_Center) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_BTN_A),      MP_OBJ_NEW_SMALL_INT(Buttons_BTN_A) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_BTN_B),      MP_OBJ_NEW_SMALL_INT(Buttons_BTN_B) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_BTN_MENU),   MP_OBJ_NEW_SMALL_INT(Buttons_BTN_Menu) },
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_POWER_ON),   MP_OBJ_NEW_SMALL_INT(powerOn) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_POWER_OFF),   MP_OBJ_NEW_SMALL_INT(powerOff) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_POWER_SLEEP),   MP_OBJ_NEW_SMALL_INT(powerSleep) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_POWER_DEEP_SLEEP),   MP_OBJ_NEW_SMALL_INT(powerDeepSleep) },
-
+	
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_FONT_SMALL),   MP_OBJ_NEW_SMALL_INT(0) },
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_FONT_TITLE),   MP_OBJ_NEW_SMALL_INT(1) },
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_FONT_NAME),   MP_OBJ_NEW_SMALL_INT(2) },
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_FONT_MEDIUM),   MP_OBJ_NEW_SMALL_INT(3) },
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_FONT_MEDIUM_BOLD),   MP_OBJ_NEW_SMALL_INT(4) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Button), (mp_obj_t)&ugfx_button_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Container), (mp_obj_t)&ugfx_container_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Graph), (mp_obj_t)&ugfx_graph_type },

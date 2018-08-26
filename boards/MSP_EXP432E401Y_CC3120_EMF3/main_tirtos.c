@@ -48,18 +48,13 @@
 
 #include "mpconfigboard.h"
 
-/* USBS Composit CDC device rom TI RTOS usb_serial_device example */
-#if MICROPY_HW_USB_REPL
-#include "usb.h"
-#endif
-
 //extern void ti_ndk_config_Global_startupFxn();
 extern void *mainThread(void *arg0);
 
 /* Stack size in bytes */
 #define THREADSTACKSIZE    4096
 
-/* 
+/*
  * Enable bootloader selection via Pin PB2 HIGH  (JOY Right)
  */
 #include "ti/devices/msp432e4/driverlib/driverlib.h"
@@ -109,10 +104,7 @@ int main(void)
 
     #if MICROPY_HW_USB_REPL
     MSP_EXP432E401Y_initUSB(MSP_EXP432E401Y_USBDEVICE);
-    USB_Comp_init();
     #endif
-
-//    ti_ndk_config_Global_startupFxn();
 
     /* Set priority and stack size attributes */
     pthread_attr_init(&pAttrs);

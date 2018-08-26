@@ -48,6 +48,8 @@
 Event_Struct evtStruct;
 I2C_Handle      i2cHandle;
 
+// holders for the TCA button states
+// 0 is pressed
 volatile uint16_t buttonState;
 uint16_t lastButtonState;
 
@@ -95,9 +97,9 @@ void bqInterruptHandler(uint8_t index)
     Event_post(tildaEvtHandle, Event_BQ_INT);
 }
 
-void readTCAButtons() 
+void readTCAButtons()
 {
-    //  read button states 
+    //  read button states
     uint8_t readBuffer[2];
     uint8_t writeBuffer[1];
     writeBuffer[0] = 0x00;
@@ -113,7 +115,7 @@ void readTCAButtons()
         return;
     }
     lastButtonState = buttonState;
-    //  update shared state 
+    //  update shared state
     buttonState = readBuffer[1];
     buttonState = (buttonState << 8) | readBuffer[0];
 }
@@ -132,7 +134,7 @@ static void writeTMPReg(uint8_t addr, uint8_t byte1, uint8_t byte2)
     i2cTransaction.writeCount = 3;
     i2cTransaction.readBuf = NULL;
     i2cTransaction.readCount = 0;
-    I2C_transfer(i2cHandle, &i2cTransaction);    
+    I2C_transfer(i2cHandle, &i2cTransaction);
 }
 
 static bool readTMPReg(uint8_t addr, uint8_t *byte1, uint8_t *byte2)
@@ -151,7 +153,7 @@ static bool readTMPReg(uint8_t addr, uint8_t *byte1, uint8_t *byte2)
     if (res == false) {
         return false;
     }
-    
+
     *byte1 = readBuffer[0];
     *byte2 = readBuffer[1];
     return true;
@@ -165,19 +167,34 @@ static bool TMP102_getTemperature(float *temperature)
         *temperature = -999;
         return false;
     }
-    
+
     uint16_t t = ((b1<<8) | b2) >> 3;
-    
+
     if (t&(1<<12)){ // if negative
         // convert t to positive first, then set the float to negative
         t = (~t);
-        t = t & 0xFFF;        
+        t = t & 0xFFF;
         *temperature = 0 - ((float)t/(float)16);
     }
     else
         *temperature = (float)t/(float)16;
 
-    return true;    
+    return true;
+}
+
+#define BQ_ADDR 0x6b  // only one possible address for BQ25601
+
+static void readBQ()
+{
+    I2C_Transaction trans;
+    uint8_t regAddr = 0;
+
+    trans.slaveAddress = BQ_ADDR;
+    trans.writeBuf = &regAddr;
+    trans.writeCount = 1;
+    trans.readBuf = tildaSharedStates.bqRegs;
+    trans.readCount = sizeof(tildaSharedStates.bqRegs);
+    I2C_transfer(i2cHandle, &trans);
 }
 
 
@@ -278,7 +295,8 @@ void *tildaThread(void *arg)
     GPIO_enableInt(MSP_EXP432E401Y_GPIO_HDC_INT);
 
     // setup charger?
-    
+    readBQ();
+
     // setup sensors
     
     // reset the HDC
@@ -298,8 +316,8 @@ void *tildaThread(void *arg)
     // set the TMP102 to 1Hz continuous mode, max range
     //   turn off shutdown (and enable continuous conversion)
     writeTMPReg(TMP_CONFIG_REG, 0, TMP_CFG_CR_1Hz | TMP_CFG_EM);
-    
-    
+
+
     // do an inital button read
     readTCAButtons();
     lastButtonState = buttonState;
@@ -316,12 +334,12 @@ void *tildaThread(void *arg)
     // loop
     for (;;) {
         // wait for TCA or HDC evnt or time out (default 500ms, might be settable)
-        posted = Event_pend(tildaEvtHandle, 
+        posted = Event_pend(tildaEvtHandle,
             Event_Id_NONE,                                  /* andMask */
             Event_BQ_INT + Event_TCA_INT + Event_HDC_INT,   /* orMack */
             tildaSharedStates.sampleRate);
 
-        // if TCA event 
+        // if TCA event
         if (posted & Event_TCA_INT) {
             readTCAButtons();
             scheduled = false;
@@ -350,34 +368,47 @@ void *tildaThread(void *arg)
 
         // else if bq event
         if (posted & Event_BQ_INT) {
-            // check what changed
-            HDC2080_getReadings(&tildaSharedStates.hdcTemperature, &tildaSharedStates.hdcHumidity);
-        
+            readBQ();
         }
 
         // else if hdc data ready
         if (posted & Event_HDC_INT){
-            // grab temp and hum readings 
-        
+            // grab temp and hum readings
+            HDC2080_getReadings(&tildaSharedStates.hdcTemperature, &tildaSharedStates.hdcHumidity);
         }
 
-        // else if time out 
+        // else if time out
         if (posted == 0) {
             // grab TMP temp readings
             TMP102_getTemperature(&tildaSharedStates.tmpTemperature);
             
             // grab lux readings
             OPT3001_getLux(opt3001Handle, &tildaSharedStates.optLux);
+
             // grab battery updates?
-            
+            readBQ();
+
             // kick off Humidity conversion
-            
+
         }
     }
-    
+
     return NULL;
 }
 
+// bit array of all buttons matching the order of TILDA_BUTTONS_Names
+// 1 is pressed
+uint32_t getAllButtonStates()
+{
+    uint32_t allButtonStates = 0;
+    for (TILDA_BUTTONS_Names button = 0; button < Buttons_MAX; ++button)
+    {
+        allButtonStates |= (uint32_t)getButtonState(button) << button;
+    }
+    return allButtonStates;
+}
+
+// ture a button is pressed
 bool getButtonState(TILDA_BUTTONS_Names button)
 {
     if (button < Buttons_JOY_Center) {
@@ -387,7 +418,7 @@ bool getButtonState(TILDA_BUTTONS_Names button)
         // 1 == button not pressed and should return false
         return !((buttonState >> button) & 0x1);
     } else if (button < Buttons_BTN_Menu) {
-        // joystick 
+        // joystick
         // 1 == button pressed, and shouold return true
         return GPIO_read(button - Buttons_JOY_Center);
     } else if (button == Buttons_BTN_Menu) {
@@ -406,13 +437,13 @@ void registerButtonCallback(uint8_t button, mp_obj_t tca_callback_irq,  bool on_
     if (button >= Buttons_JOY_Center) {
         uint8_t gpioIndex = button - Buttons_JOY_Center;
         // This is a GPIO attached button need to do some extra setup
-        
+
         // call GPIO_setConfig to setup the Interupt direction
         GPIO_PinConfig cfg;
         GPIO_getConfig(gpioIndex, &cfg);
 
         cfg = (cfg & (~GPIO_CFG_INT_MASK)); // clear INT
-        if (button == Buttons_BTN_Menu) { 
+        if (button == Buttons_BTN_Menu) {
             if (on_press)
                 cfg |= GPIO_CFG_IN_INT_FALLING;
             if (on_release)

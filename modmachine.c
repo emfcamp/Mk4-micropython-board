@@ -33,6 +33,10 @@
 #include "machine_nvsbdev.h"
 #include "machine_sd.h"
 
+#if MICROPY_HW_HAS_NEOPIX
+#include "neopix.h"
+#endif
+
 #define MACHINE_IDLE (1)
 #define MACHINE_SLEEP (2)
 #define MACHINE_DEEPSLEEP (3)
@@ -258,6 +262,10 @@ STATIC const mp_rom_map_elem_t machine_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_PWM), MP_ROM_PTR(&machine_pwm_type) },
     { MP_ROM_QSTR(MP_QSTR_ADC), MP_ROM_PTR(&machine_adc_type) },
     { MP_ROM_QSTR(MP_QSTR_RTC), MP_ROM_PTR(&machine_rtc_type) },
+    
+#if MICROPY_HW_HAS_NEOPIX
+    { MP_OBJ_NEW_QSTR(MP_QSTR_Neopix), (mp_obj_t)&pyb_neopix_type },
+#endif
     MACHINE_SD_CLASS
 };
 
