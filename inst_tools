@@ -160,10 +160,10 @@ get_uniflash()
         # mount the dmg
         sudo hdiutil attach $inst_bin
         # the --args is for the macOS open command
-        installer=/Volumes/$sdk.app
+        installer=/Volumes/UniFlash/$sdk.app
         mkdir -p $sdk
         open $installer --args --mode unattended --prefix $PWD/$sdk
-        sudo hdiutil unmount /Volumes/$sdk.app
+        sudo hdiutil unmount /Volumes/UniFlash
     fi
 }
 
