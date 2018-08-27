@@ -55,7 +55,7 @@ STATIC mp_obj_t audio_play(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw
         init = true;
     }
 
-    SoundStart(source_info.buf, source_info.len, args[ARG_sample_rate].u_int,
+    SoundStart(source_info.buf, source_info.len/2, args[ARG_sample_rate].u_int,
                soundHandler);
 
     if (args[ARG_wait].u_int) {
