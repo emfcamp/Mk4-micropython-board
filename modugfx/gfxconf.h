@@ -298,7 +298,7 @@
 #define GFILE_NEED_NOAUTOMOUNT                       TRUE
 //#define GFILE_NEED_NOAUTOSYNC                        FALSE
 
-//#define GFILE_NEED_MEMFS                             FALSE
+#define GFILE_NEED_MEMFS                             TRUE
 #define GFILE_NEED_ROMFS                             TRUE
 //#define GFILE_NEED_RAMFS                             FALSE
 #define GFILE_NEED_FATFS                             TRUE
