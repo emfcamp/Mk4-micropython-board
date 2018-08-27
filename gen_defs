@@ -63,6 +63,13 @@ main()
 	echo "warning: sail plugin missing" 1>&2
     fi
 
+    if test -d uniflash_*
+    then
+       echo UNIFLASH_INSTALL_DIR = $(canonicalize_path ./uniflash_*)
+    else
+       echo "warning: uniflash not found"
+    fi
+
     for sdk in simplelink*
     do
         if test -d $sdk
