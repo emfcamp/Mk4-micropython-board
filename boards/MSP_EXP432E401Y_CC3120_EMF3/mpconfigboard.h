@@ -19,6 +19,7 @@
 #define MICROPY_HW_UART_REPL         MSP_EXP432E401Y_UART0
 #define MICROPY_HW_UART_REPL_BAUD    115200
 #define MICROPY_HW_HAS_UGFX          (MICROPY_PY_UGFX)  // set in mpconfigbpard.mk
+#define MICROPY_HW_AUDIO             (1)
 
 #define MICROPY_HW_ENABLE_STORAGE    (1)
 #define MICROPY_HW_ENABLE_INTERNAL_FLASH_STORAGE (1)

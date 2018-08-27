@@ -1,4 +1,4 @@
-BOARD_SRC_C = mpmain-emf.c
+BOARD_SRC_C = mpmain-emf.c boards/$(BOARD)/sound.c
 
 CC = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
 LD = "$(GCC_ARMCOMPILER)/bin/arm-none-eabi-gcc"
@@ -18,7 +18,7 @@ SAIL_INCLUDES = \
 SAIL_LIBS = \
     "-L$(SAIL_INSTALL_DIR)/source" \
     -l:ti/sail/lib/gcc/msp432e4/sail.lib
-        
+
 NETNDK_INCLUDES =
 
 NETNDK_LIBS = \
