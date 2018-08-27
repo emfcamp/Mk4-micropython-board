@@ -56,8 +56,8 @@ extern "C"
 //*****************************************************************************
 extern void SoundIntHandler(void);
 extern void SoundInit(uint32_t ui32SysClock);
-extern bool SoundStart(int16_t *pi16Buffer, uint32_t ui32Length,
-                       uint32_t ui32Rate,
+extern bool SoundStart(void *pi16Buffer, uint32_t ui32Length,
+                       uint32_t ui32Rate, uint8_t ui8Depth,
                        void (*pfnCallback)(uint32_t ui32Half));
 extern void SoundPeriodAdjust(int32_t i32RateAdjust);
 extern void SoundStop(void);

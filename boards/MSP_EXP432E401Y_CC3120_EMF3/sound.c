@@ -79,59 +79,39 @@
 //*****************************************************************************
 typedef struct
 {
-    //
     // The number of clocks per PWM period.
-    //
     uint32_t ui32Period;
 
-    //
     // A set of flags indicating the mode of the sound driver.
-    //
     volatile uint32_t ui32Flags;
 
-    //
     // A pointer to the sound buffer being played.
-    //
-    const int16_t *pi16Buffer;
+    const void *piBuffer;
 
-    //
     // The length of the sound buffer, in bytes.
-    //
     uint32_t ui32Length;
 
-    //
     // The current playback offset into the sound buffer.
-    //
     uint32_t ui32Offset;
 
-    //
     // The volume to playback the sound stream.  This is a value between 0
     // (for silence) and 256 (for full volume).
-    //
     int32_t i32Volume;
 
-    //
     // The previous and current sound samples, used for interpolating from
     // 8 kHz to 64 kHz sound.
-    //
     int16_t pi16Samples[2];
 
-    //
     // The sound step, which corresponds to the current interpolation point
     // between the previous and current sound samples.
-    //
     int32_t i32Step;
 
-    //
     // The current requested rate adjustment.  This is cleared when the
     // the adjustment is made.
-    //
     int32_t i32RateAdjust;
 
-    //
     // The callback function that indicates when half of the sound buffer has
     // bene played and is therefore ready to be refilled.
-    //
     void (*pfnCallback)(uint32_t ui32Half);
 }
 tSoundState;
@@ -148,6 +128,8 @@ tSoundState;
 #define SOUND_FLAG_16KHZ        4
 #define SOUND_FLAG_32KHZ        5
 #define SOUND_FLAG_64KHZ        6
+#define SOUND_FLAG_8BIT         10
+#define SOUND_FLAG_16BIT        11
 
 //*****************************************************************************
 //
@@ -228,10 +210,8 @@ SoundIntHandler(void)
 {
     int32_t i32DutyCycle;
 
-    //
     // If there is an adjustment to be made, the apply it and set allow the
     // update to be done on the next load.
-    //
     if(g_sSoundState.i32RateAdjust)
     {
         g_sSoundState.ui32Period += g_sSoundState.i32RateAdjust;
@@ -239,121 +219,81 @@ SoundIntHandler(void)
         //TimerLoadSet(TIMER5_BASE, TIMER_A, g_sSoundState.ui32Period);
     }
 
-    //
     // Clear the timer interrupt.
-    //
     PWMGenIntClear(spwm.pwmBaseAddr, spwm.pwmGenerator, PWM_INT_CNT_ZERO | PWM_INT_CNT_LOAD);
     //ROM_TimerIntClear(TIMER5_BASE, TIMER_CAPA_EVENT);
 
-    //
     // See if the startup ramp is in progress.
-    //
     if(HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_STARTUP))
     {
-        //
         // Increment the ramp count.
-        //
         g_sSoundState.i32Step++;
 
-        //
         // Increase the pulse width of the output by one clock.
-        //
         //ROM_TimerMatchSet(TIMER5_BASE, TIMER_A, g_sSoundState.i32Step);
 
-        //
         // See if this was the last step of the ramp.
-        //
         if(g_sSoundState.i32Step >= (g_sSoundState.ui32Period / 2))
         {
-            //
             // Indicate that the startup ramp has completed.
-            //
             HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_STARTUP) = 0;
 
-            //
             // Set the step back to zero for the start of audio playback.
-            //
             g_sSoundState.i32Step = 0;
         }
 
-        //
         // There is nothing further to be done.
-        //
         return;
     }
 
-    //
     // See if the shutdown ramp is in progress.
-    //
     if(HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_SHUTDOWN))
     {
-        //
         // See if this was the last step of the ramp.
-        //
         if(g_sSoundState.i32Step == 1)
         {
-            //
             // Disable the output signals.
-            //
             //ROM_TimerMatchSet(TIMER5_BASE, TIMER_A, g_sSoundState.ui32Period);
 
-            //
             // Clear the sound flags.
-            //
             g_sSoundState.ui32Flags = 0;
 
-            //
             // Disable the speaker amp.
-            //
             //ROM_GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_4, 0);
         }
         else
         {
-            //
             // Decrement the ramp count.
-            //
             g_sSoundState.i32Step--;
 
-            //
             // Decrease the pulse width of the output by one clock.
-            //
             //ROM_TimerMatchSet(TIMER5_BASE, TIMER_A, g_sSoundState.i32Step);
         }
 
-        //
         // There is nothing further to be done.
-        //
         return;
     }
 
-    //
     // Compute the value of the PCM sample based on the blended average of the
     // previous and current samples.  It should be noted that linear
     // interpolation does not produce the best results with sound (it produces
     // a significant amount of harmonic aliasing) but it is fast.
-    //
     i32DutyCycle =
         (((g_sSoundState.pi16Samples[0] * (8 - g_sSoundState.i32Step)) +
           (g_sSoundState.pi16Samples[1] * g_sSoundState.i32Step)) / 8);
 
-    //
     // Adjust the magnitude of the sample based on the current volume.  Since a
     // multiplicative volume control is implemented, the volume value
     // results in nearly linear volume adjustment if it is squared.
-    //
     i32DutyCycle = (((i32DutyCycle * g_sSoundState.i32Volume *
                       g_sSoundState.i32Volume) / 65536) + 32768);
 
-    //
     // Set the PWM duty cycle based on this PCM sample.
-    //
     i32DutyCycle = (g_sSoundState.ui32Period * i32DutyCycle) / 65536;
     //ROM_TimerMatchSet(TIMER5_BASE, TIMER_A, i32DutyCycle);
     PWMPulseWidthSet(spwm.pwmBaseAddr, spwm.pwmOutput, i32DutyCycle);
 
-    //
     // Increment the sound step based on the sample rate.
-    //
     if(HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_8KHZ))
     {
         g_sSoundState.i32Step = (g_sSoundState.i32Step + 1) & 7;
@@ -367,35 +307,32 @@ SoundIntHandler(void)
         g_sSoundState.i32Step = (g_sSoundState.i32Step + 4) & 7;
     }
 
-    //
     // See if the next sample has been reached.
-    //
     if(g_sSoundState.i32Step == 0)
     {
-        //
         // Copy the current sample to the previous sample.
-        //
         g_sSoundState.pi16Samples[0] = g_sSoundState.pi16Samples[1];
 
-        //
         // Get the next sample from the buffer.
-        //
-        g_sSoundState.pi16Samples[1] =
-            g_sSoundState.pi16Buffer[g_sSoundState.ui32Offset];
+        if (HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_8BIT)){
+            int8_t * ptr = g_sSoundState.piBuffer;
+            g_sSoundState.pi16Samples[1] = ptr[g_sSoundState.ui32Offset] << 8;
+        }
+        else{ //16 bit
+            int16_t * ptr = g_sSoundState.piBuffer;
+            g_sSoundState.pi16Samples[1] = ptr[g_sSoundState.ui32Offset];
+        }
 
-        //
         // Increment the buffer pointer.
-        //
         g_sSoundState.ui32Offset++;
         if(g_sSoundState.ui32Offset == g_sSoundState.ui32Length)
         {
             g_sSoundState.ui32Offset = 0;
         }
 
-        //
         // Call the callback function if one of the half-buffers has been
         // consumed.
-        //
+
         if(g_sSoundState.pfnCallback)
         {
             if(g_sSoundState.ui32Offset == 0)
@@ -514,10 +451,11 @@ SoundPeriodAdjust(int32_t i32RateAdjust)
 //
 //! Starts playback of a sound stream.
 //!
-//! \param pi16Buffer is a pointer to the buffer that contains the sound to
+//! \param piBuffer is a pointer to the buffer that contains the sound to
 //! play.
 //! \param ui32Length is the length of the buffer in samples.  This should be
 //! a multiple of two.
+//! \param ui8Depth is the sample depth. Should be either 8 or 16.
 //! \param ui32Rate is the sound playback rate; valid values are 8000, 16000,
 //! 32000, and 64000.
 //! \param pfnCallback is the callback function that is called when either half
@@ -534,20 +472,16 @@ SoundPeriodAdjust(int32_t i32RateAdjust)
 //
 //*****************************************************************************
 bool
-SoundStart(int16_t *pi16Buffer, uint32_t ui32Length, uint32_t ui32Rate,
+SoundStart(void *piBuffer, uint32_t ui32Length, uint32_t ui32Rate, uint8_t ui8Depth,
            void (*pfnCallback)(uint32_t ui32Half))
 {
-    //
     // Return without playing the buffer if something is already playing.
-    //
     if(g_sSoundState.ui32Flags)
     {
         return(false);
     }
 
-    //
     // Set the sample rate flag.
-    //
     if(ui32Rate == 8000)
     {
         HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_8KHZ) = 1;
@@ -569,53 +503,42 @@ SoundStart(int16_t *pi16Buffer, uint32_t ui32Length, uint32_t ui32Rate,
         return(false);
     }
 
-    //
+    // Set the sample depth flag
+    if (ui8Depth == 8)
+        HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_8BIT) = 1;
+    else if (ui8Depth == 16)
+        HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_16BIT) = 1;        
+    else
+        return false;
+    
     // Enable the speaker amp.
-    //
     //ROM_GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_4, GPIO_PIN_4);
 
-    //
     // Save the pointer to the buffer.
-    //
-    g_sSoundState.pi16Buffer = pi16Buffer;
+    g_sSoundState.piBuffer = piBuffer;
     g_sSoundState.ui32Length = ui32Length;
 
-    //
     // Save the pointer to the callback function.
-    //
     g_sSoundState.pfnCallback = pfnCallback;
 
-    //
     // Start playback from the beginning of the buffer.
-    //
     g_sSoundState.ui32Offset = 0;
 
-    //
     // Initialize the sample buffer with silence.
-    //
     g_sSoundState.pi16Samples[0] = 0;
     g_sSoundState.pi16Samples[1] = 0;
 
-    //
     // Start playback of the stream.
-    //
     HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_STARTUP) = 1;
     HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_PLAY) = 1;
 
-    //
     // Set the step for the startup ramp.
-    //
     g_sSoundState.i32Step = 1;
 
-    //
     // Enable the timer interrupt.
-    //
     //ROM_TimerMatchSet(TIMER5_BASE, TIMER_A, 1);
     PWMPulseWidthSet(spwm.pwmBaseAddr, spwm.pwmOutput, 1);
 
-    //
-    // Success.
-    //
     return(true);
 }
 

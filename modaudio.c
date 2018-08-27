@@ -1,4 +1,4 @@
-/*
+ /*
  * This file is part of the MicroPython project, http://micropython.org/
  *
  * The MIT License (MIT)
@@ -38,8 +38,9 @@ STATIC mp_obj_t audio_play(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_wait, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = true} },
         { MP_QSTR_sample_rate, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 16000} },
+        { MP_QSTR_sample_depth, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 16} },
     };
-    enum { ARG_wait, ARG_sample_rate,};
+    enum { ARG_wait, ARG_sample_rate, ARG_sample_depth,};
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args,
         MP_ARRAY_SIZE(allowed_args), allowed_args, args);
@@ -55,9 +56,22 @@ STATIC mp_obj_t audio_play(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw
         init = true;
     }
 
-    SoundStart(source_info.buf, source_info.len/2, args[ARG_sample_rate].u_int,
-               soundHandler);
+    uint32_t len;
+    if (args[ARG_sample_depth].u_int == 16)
+        len = source_info.len/2;
+    else
+        len = source_info.len;
+    
+    bool res;
+    res=SoundStart(source_info.buf, len, args[ARG_sample_rate].u_int,
+               args[ARG_sample_depth].u_int, soundHandler);
 
+    if (res == false){
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_TypeError, 
+                           "Input settings are not supported."));
+        return mp_const_none;
+    }
+               
     if (args[ARG_wait].u_int) {
         while (SoundBusy()) {
             usleep(10000);
