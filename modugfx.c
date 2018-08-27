@@ -921,11 +921,15 @@ STATIC mp_obj_t ugfx_display_image(mp_uint_t n_args, const mp_obj_t *args){
 		else if (MP_OBJ_IS_TYPE(img_obj, &mp_type_bytearray))
 		{
 			void *items = ((mp_obj_array_t*)img_obj)->items;
-			gdispImageOpenMemory(&imo, items);
+			gdispImageError er = gdispImageOpenMemory(&imo, items);
+			if (er != 0){
+				nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Error finding image in bytearray"));
+				return mp_const_none;
+			}
 			iptr = &imo;
 		}
 		else{
-			nlr_raise(mp_obj_new_exception_msg(&mp_type_TypeError, "img argument needs to be be a Image or String type"));
+			nlr_raise(mp_obj_new_exception_msg(&mp_type_TypeError, "img argument needs to be be a bytearray (for image data) or String type (for file path)"));
 			return mp_const_none;
 		}
 
