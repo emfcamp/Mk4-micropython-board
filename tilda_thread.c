@@ -389,6 +389,7 @@ void *tildaThread(void *arg)
             readBQ();
 
             // kick off Humidity conversion
+            HDC2080_getReadings(&tildaSharedStates.hdcTemperature, &tildaSharedStates.hdcHumidity);
 
         }
     }
