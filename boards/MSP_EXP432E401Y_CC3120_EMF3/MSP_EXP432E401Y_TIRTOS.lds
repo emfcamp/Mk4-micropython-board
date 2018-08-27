@@ -37,9 +37,11 @@
 STACKSIZE = 1024;
 HEAPSIZE = 0x1f000;   /* Size of heap buffer used by HeapMem */
 
+_intvecs_base_address = 0x10000; /*0x4000; */
+
 MEMORY
 {
-    FLASH (RX) : ORIGIN = 0x00000000, LENGTH = 0x00100000
+    FLASH (RX) : ORIGIN = 0x00010000, LENGTH = 0x000F0000
     SRAM (RWX) : ORIGIN = 0x20000000, LENGTH = 0x00040000
     ExternalSRAM (RWX) : ORIGIN = 0x60000000, LENGTH = 8M
 }
