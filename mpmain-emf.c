@@ -427,14 +427,16 @@ int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize, UART_Handle uart
     console = uart;
     led_init();
 
+#if MICROPY_HW_ENABLE_STORAGE
+    storage_init();
+#endif
+
 #if MICROPY_HW_USB_REPL
     CDCMSC_setup();
     repl_cdc = CDCD_open(0);
 #endif
 
-    #if MICROPY_HW_ENABLE_STORAGE
-    storage_init();
-    #endif
+
 
     #if MICROPY_PY_TILDA
     pthread_t tildaThreadHandle;
