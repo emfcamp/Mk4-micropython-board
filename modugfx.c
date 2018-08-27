@@ -29,6 +29,8 @@
 
 #include "py/nlr.h"
 #include "py/runtime.h"
+#include "py/objarray.h"
+#include "py/objstr.h"
 
 #if MICROPY_HW_HAS_UGFX
 
@@ -901,7 +903,7 @@ STATIC mp_obj_t ugfx_display_image(mp_uint_t n_args, const mp_obj_t *args){
 	mp_obj_t img_obj = args[2];
 	gdispImage imo;
 	gdispImage *iptr;
-
+    
 	if (img_obj != mp_const_none) {
 		if (MP_OBJ_IS_STR(img_obj)){
 			const char *img_str = mp_obj_str_get_str(img_obj);
@@ -913,9 +915,17 @@ STATIC mp_obj_t ugfx_display_image(mp_uint_t n_args, const mp_obj_t *args){
 			iptr = &imo;
 		}
 		else if (MP_OBJ_IS_TYPE(img_obj, &ugfx_image_type))
+		{
 			iptr = &(((ugfx_image_obj_t*)img_obj)->thisImage);
+		}
+		else if (MP_OBJ_IS_TYPE(img_obj, &mp_type_bytearray))
+		{
+			void *items = ((mp_obj_array_t*)img_obj)->items;
+			gdispImageOpenMemory(&imo, items);
+			iptr = &imo;
+		}
 		else{
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_TypeError, "img argument needs to be be a Image or String type"));
+			nlr_raise(mp_obj_new_exception_msg(&mp_type_TypeError, "img argument needs to be be a Image or String type"));
 			return mp_const_none;
 		}
 
@@ -940,7 +950,7 @@ STATIC mp_obj_t ugfx_display_image(mp_uint_t n_args, const mp_obj_t *args){
 
 	}
 
-    return mp_const_none;
+	return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(ugfx_display_image_obj, 3, 4, ugfx_display_image);
 
