@@ -12,10 +12,10 @@ from umqtt.simple import MQTTClient
 #c = MQTTClient("umqtt_client", "192.168.1.199", ssl=True)
 #c = MQTTClient("umqtt_client", "iot.eclipse.org")
 #c = MQTTClient("umqtt_client", "iot.eclipse.org", ssl=True)
-c = MQTTClient("umqtt_client", "iot.eclipse.org", ssl=True, ssl_params={"cert_reqs":ussl.CERT_REQUIRED, "ca_certs":"/cert/DST Root CA X3"})
+#c = MQTTClient("umqtt_client", "iot.eclipse.org", ssl=True, ssl_params={"cert_reqs":ussl.CERT_REQUIRED, "ca_certs":"DST Root CA X3"})
 
 # Note servercertfile needs to be in .der format
-#c = MQTTClient("umqtt_client", "iot.eclipse.org", ssl=True, ssl_params={"cert_reqs":ussl.CERT_REQUIRED, "ca_certs":"/cert/DST Root CA X3", "servercertfile":"/cert/iot.eclipse.org"})
+c = MQTTClient("umqtt_client", "iot.eclipse.org", ssl=True, ssl_params={"cert_reqs":ussl.CERT_REQUIRED, "ca_certs":"DST Root CA X3", "servercertfile":"iot.eclipse.org"})
 
 #, user="user", password="password")
 print("Connecting")
