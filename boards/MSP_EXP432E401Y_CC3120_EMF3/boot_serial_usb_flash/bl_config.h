@@ -320,8 +320,8 @@
 // Requires: None
 //
 //*****************************************************************************
-#define FORCED_UPDATE_WPU
-//#define FORCED_UPDATE_WPD
+//#define FORCED_UPDATE_WPU
+#define FORCED_UPDATE_WPD
 
 //*****************************************************************************
 //
@@ -1571,3 +1571,4 @@
 //#define BL_FLASH_AD_CHECK_FN_HOOK MyFlashAddrCheckFunc
 
 #endif // __BL_CONFIG_H__
+
