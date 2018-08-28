@@ -207,7 +207,7 @@ MP_DEFINE_CONST_FUN_OBJ_KW(tilda_main_obj, 1, tilda_main);
 
 #if MICROPY_HW_ENABLE_STORAGE
 static const char fresh_boot_py[] =
-#include "genhdr/bootstrap.py.h"
+#include "genhdr/boot.py.h"
 ;
 
 static const char fresh_bootstrap_py[] =
