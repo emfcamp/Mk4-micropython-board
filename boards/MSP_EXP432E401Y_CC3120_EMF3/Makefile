@@ -38,6 +38,6 @@ mpex_with_boot.bin: boot.bin mpex.bin
 
 clean:
 	@ echo cleaning $(BOARD) ...
-	@ rm -f *.o *.out *.map *.bin
+	@ rm -f *.o *.out *.map *.bin *.dfu
 	@ make -C kernel clean
 	@ make -C boot_serial_usb_flash/gcc BUILD=$(BUILD) clean
