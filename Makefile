@@ -117,11 +117,17 @@ flash-jlink: all
 	JLinkExe -if swd -device MSP432E401Y -speed 4000 -autoconnect 1
 
 flash-dfu: all
+	cp boards/$(BOARD)/mpex_with_boot.bin boards/$(BOARD)/mpex_with_boot.dfu
+	dfu-suffix -a boards/$(BOARD)/mpex_with_boot.dfu -v 0x1cbe -p 0x00ff
+	dfu-prefix -s 0x0000 -a boards/$(BOARD)/mpex_with_boot.dfu
+	dfu-util -D boards/$(BOARD)/mpex_with_boot.dfu
+
+# Need to decide if we need this... - this doesn't update the bootloader
+flash-dfu-mpexonly: all
 	cp boards/$(BOARD)/mpex.bin boards/$(BOARD)/mpex.dfu
 	dfu-suffix -a boards/$(BOARD)/mpex.dfu -v 0x1cbe -p 0x00ff
-	dfu-prefix -s 0x0000 -a boards/$(BOARD)/mpex.dfu
+	dfu-prefix -s 0x10000 -a boards/$(BOARD)/mpex.dfu
 	dfu-util -D boards/$(BOARD)/mpex.dfu
-
 
 clean: clean-board
 
