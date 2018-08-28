@@ -52,6 +52,7 @@
 #include "led.h"
 
 #include "lib/utils/pyexec.h"
+#include "lib/utils/interrupt_char.h"
 #include "lib/mp-readline/readline.h"
 
 #if MICROPY_HW_USB_REPL
@@ -140,7 +141,23 @@ void mp_hal_stdout_tx_strn_cooked(const char * str, size_t len)
     }
 }
 
+#if MICROPY_KBD_EXCEPTION
+void usb_ctrlc_handler(uint32_t arg, uint8_t * buf, uint32_t avail, uint32_t size)
+{
+    if (mp_interrupt_char == -1) {
+        return;
+    }
 
+    uint8_t * rbuf = buf;
+    for (uint32_t i = 0; i < avail; i++) {
+        if (*rbuf == mp_interrupt_char) {
+            mp_keyboard_interrupt();
+            return;
+        }
+        rbuf = (uint8_t *)((uint32_t)(rbuf + 1) & 0x7fu);
+    }
+}
+#endif
 
 void flash_error(int n) {
     for (int i = 0; i < n; i++) {
@@ -255,7 +272,7 @@ MP_NOINLINE STATIC bool init_flash_fs(uint reset_mode) {
         // LED on to indicate creation of LFS
         led_state(TILDA_LED_GREEN, 1);
 
-        uint8_t working_buf[_MAX_SS];
+        static uint8_t working_buf[_MAX_SS];
         res = f_mkfs(&vfs_fat->fatfs, FM_FAT, 0, working_buf, sizeof(working_buf));
         if (res == FR_OK) {
             // success creating fresh LFS
@@ -428,7 +445,12 @@ int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize, UART_Handle uart
 
 #if MICROPY_HW_USB_REPL
     CDCMSC_setup();
-    repl_cdc = CDCD_open(0);
+
+#if MICROPY_KBD_EXCEPTION
+    repl_cdc = CDCD_open(0, usb_ctrlc_handler);
+#else
+    repl_cdc = CDCD_open(0, NULL);
+#endif
 #endif
 
     #if MICROPY_HW_ENABLE_STORAGE
