@@ -161,7 +161,7 @@ static SPWM_Object spwm = {
 
 void SPWM_intHandler(void)
 {
-    PWMGenIntClear(spwm.pwmBaseAddr, spwm.pwmGenerator, PWM_INT_CNT_ZERO | PWM_INT_CNT_LOAD);
+    PWMGenIntClear(spwm.pwmBaseAddr, spwm.pwmGenerator, PWM_INT_CNT_ZERO);
     PWMPulseWidthSet(spwm.pwmBaseAddr, spwm.pwmOutput, 2000);
 }
 
@@ -177,19 +177,13 @@ void SPWM_setup()
     GPIOPinTypePWM(gpioBaseAddress,
         GPIOMSP432E4_getPinFromPinConfig(spwm.pinConfig));
 
-    uint32_t periodTicks = 120000000u / 64000u;
-
     PWMGenConfigure(spwm.pwmBaseAddr, spwm.pwmGenerator, PWM_GEN_MODE_UP_DOWN);
-    PWMGenPeriodSet(spwm.pwmBaseAddr, spwm.pwmGenerator, periodTicks);
 
     PWMOutputInvert(spwm.pwmBaseAddr, spwm.pwmOutputBit, false);
     PWMOutputState(spwm.pwmBaseAddr, spwm.pwmOutputBit, true);
-    PWMPulseWidthSet(spwm.pwmBaseAddr, spwm.pwmOutput, 6000);
 
-    PWMGenIntTrigEnable(spwm.pwmBaseAddr, spwm.pwmGenerator, PWM_INT_CNT_ZERO | PWM_INT_CNT_LOAD);
+    PWMGenIntTrigEnable(spwm.pwmBaseAddr, spwm.pwmGenerator, PWM_INT_CNT_ZERO);
     PWMIntEnable(spwm.pwmBaseAddr, PWM_INT_GEN_1);
-
-    PWMGenEnable(spwm.pwmBaseAddr, spwm.pwmGenerator);
 }
 
 //*****************************************************************************
@@ -220,7 +214,7 @@ SoundIntHandler(void)
     }
 
     // Clear the timer interrupt.
-    PWMGenIntClear(spwm.pwmBaseAddr, spwm.pwmGenerator, PWM_INT_CNT_ZERO | PWM_INT_CNT_LOAD);
+    PWMGenIntClear(spwm.pwmBaseAddr, spwm.pwmGenerator, PWM_INT_CNT_ZERO);
     //ROM_TimerIntClear(TIMER5_BASE, TIMER_CAPA_EVENT);
 
     // See if the startup ramp is in progress.
@@ -231,6 +225,7 @@ SoundIntHandler(void)
 
         // Increase the pulse width of the output by one clock.
         //ROM_TimerMatchSet(TIMER5_BASE, TIMER_A, g_sSoundState.i32Step);
+        PWMPulseWidthSet(spwm.pwmBaseAddr, spwm.pwmOutput, g_sSoundState.i32Step);
 
         // See if this was the last step of the ramp.
         if(g_sSoundState.i32Step >= (g_sSoundState.ui32Period / 2))
@@ -254,6 +249,8 @@ SoundIntHandler(void)
         {
             // Disable the output signals.
             //ROM_TimerMatchSet(TIMER5_BASE, TIMER_A, g_sSoundState.ui32Period);
+            PWMIntDisable(spwm.pwmBaseAddr, PWM_INT_GEN_1);
+            PWMGenDisable(spwm.pwmBaseAddr, spwm.pwmGenerator);
 
             // Clear the sound flags.
             g_sSoundState.ui32Flags = 0;
@@ -268,6 +265,7 @@ SoundIntHandler(void)
 
             // Decrease the pulse width of the output by one clock.
             //ROM_TimerMatchSet(TIMER5_BASE, TIMER_A, g_sSoundState.i32Step);
+            PWMPulseWidthSet(spwm.pwmBaseAddr, spwm.pwmOutput, g_sSoundState.i32Step);
         }
 
         // There is nothing further to be done.
@@ -385,40 +383,7 @@ SoundInit(uint32_t ui32SysClock)
     //
     g_sSoundState.i32Volume = 255;
 
-#if 1
     SPWM_setup();
-#else
-    //
-    // Configure the timer to run in PWM mode.
-    //
-    if((HWREG(TIMER5_BASE + TIMER_O_CTL) & TIMER_CTL_TBEN) == 0)
-    {
-        ROM_TimerConfigure(TIMER5_BASE, (TIMER_CFG_SPLIT_PAIR |
-                                         TIMER_CFG_A_PWM |
-                                         TIMER_CFG_B_PERIODIC));
-    }
-    ROM_TimerLoadSet(TIMER5_BASE, TIMER_A, g_sSoundState.ui32Period - 1);
-    ROM_TimerMatchSet(TIMER5_BASE, TIMER_A, g_sSoundState.ui32Period);
-    ROM_TimerControlLevel(TIMER5_BASE, TIMER_A, true);
-
-    //
-    // Update the timer values on timeouts and not immediately.
-    //
-    TimerUpdateMode(TIMER5_BASE, TIMER_A, TIMER_UP_LOAD_TIMEOUT |
-                                          TIMER_UP_MATCH_TIMEOUT);
-
-    //
-    // Configure the timer to generate an interrupt at every time-out event.
-    //
-    ROM_TimerIntEnable(TIMER5_BASE, TIMER_CAPA_EVENT);
-
-    //
-    // Enable the timer.  At this point, the timer generates an interrupt
-    // every 15.625 us.
-    //
-    ROM_TimerEnable(TIMER5_BASE, TIMER_A);
-    ROM_IntEnable(INT_TIMER5A);
-#endif
 
     //
     // Clear the sound flags.
@@ -482,35 +447,41 @@ SoundStart(void *piBuffer, uint32_t ui32Length, uint32_t ui32Rate, uint8_t ui8De
     }
 
     // Set the sample rate flag.
-    if(ui32Rate == 8000)
+    if(ui32Rate == 8000 || ui32Rate == 11025)
     {
         HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_8KHZ) = 1;
     }
-    else if(ui32Rate == 16000)
+    else if(ui32Rate == 16000 || ui32Rate == 22050)
     {
         HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_16KHZ) = 1;
     }
-    else if(ui32Rate == 32000)
+    else if(ui32Rate == 32000 || ui32Rate == 44100)
     {
         HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_32KHZ) = 1;
-    }
-    else if(ui32Rate == 64000)
-    {
-        HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_64KHZ) = 1;
     }
     else
     {
         return(false);
     }
 
+    uint32_t periodTicks;
+    if (ui32Rate == 8000 || ui32Rate == 16000 || ui32Rate == 32000) {
+        periodTicks = 120000000u / 64000u;
+    }
+    else {
+        periodTicks = 120000000u / 88200u;
+    }
+
+    PWMGenPeriodSet(spwm.pwmBaseAddr, spwm.pwmGenerator, periodTicks);
+
     // Set the sample depth flag
     if (ui8Depth == 8)
         HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_8BIT) = 1;
     else if (ui8Depth == 16)
-        HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_16BIT) = 1;        
+        HWREGBITW(&g_sSoundState.ui32Flags, SOUND_FLAG_16BIT) = 1;
     else
         return false;
-    
+
     // Enable the speaker amp.
     //ROM_GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_4, GPIO_PIN_4);
 
@@ -538,6 +509,9 @@ SoundStart(void *piBuffer, uint32_t ui32Length, uint32_t ui32Rate, uint8_t ui8De
     // Enable the timer interrupt.
     //ROM_TimerMatchSet(TIMER5_BASE, TIMER_A, 1);
     PWMPulseWidthSet(spwm.pwmBaseAddr, spwm.pwmOutput, 1);
+
+    PWMIntEnable(spwm.pwmBaseAddr, PWM_INT_GEN_1);
+    PWMGenEnable(spwm.pwmBaseAddr, spwm.pwmGenerator);
 
     return(true);
 }
