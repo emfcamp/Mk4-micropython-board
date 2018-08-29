@@ -35,7 +35,7 @@
  *  Define the memory block start/length for the MSP_EXP432E401Y M4
  */
 STACKSIZE = 1024;
-HEAPSIZE = 0x1f000;   /* Size of heap buffer used by HeapMem */
+HEAPSIZE = 0x28000;   /* Size of heap buffer used by HeapMem */
 
 MEMORY
 {
