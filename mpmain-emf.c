@@ -51,8 +51,8 @@
 #include "storage.h"
 #include "led.h"
 
-
 #include "lib/utils/pyexec.h"
+#include "lib/utils/interrupt_char.h"
 #include "lib/mp-readline/readline.h"
 
 #if MICROPY_HW_USB_REPL
@@ -141,7 +141,23 @@ void mp_hal_stdout_tx_strn_cooked(const char * str, size_t len)
     }
 }
 
+#if MICROPY_KBD_EXCEPTION
+void usb_ctrlc_handler(uint32_t arg, uint8_t * buf, uint32_t avail, uint32_t size)
+{
+    if (mp_interrupt_char == -1) {
+        return;
+    }
 
+    uint8_t * rbuf = buf;
+    for (uint32_t i = 0; i < avail; i++) {
+        if (*rbuf == mp_interrupt_char) {
+            mp_keyboard_interrupt();
+            return;
+        }
+        rbuf = (uint8_t *)((uint32_t)(rbuf + 1) & 0x7fu);
+    }
+}
+#endif
 
 void flash_error(int n) {
     for (int i = 0; i < n; i++) {
@@ -208,13 +224,16 @@ MP_DEFINE_CONST_FUN_OBJ_KW(tilda_main_obj, 1, tilda_main);
 
 #if MICROPY_HW_ENABLE_STORAGE
 static const char fresh_boot_py[] =
-"# boot.py -- run on boot-up\r\n"
-"# can run arbitrary Python, but best to keep it minimal\r\n"
+#include "genhdr/boot.py.h"
 ;
 
-static const char fresh_main_py[] =
-"# main.py -- put your code here!\r\n"
+static const char fresh_bootstrap_py[] =
+#include "genhdr/bootstrap.py.h"
 ;
+
+static const char fresh_wifi_json[] =
+"{\"ssid\":\"emfcamp\",\"user\":\"emf\",\"pw\":\"emf\"}";
+
 
 // TODO: Get usb cdc inf file
 #if 0
@@ -223,9 +242,9 @@ static const char fresh_pybcdc_inf[] =
 ;
 #endif
 static const char fresh_readme_txt[] =
-"This is a MicroPython board\r\n"
+"This is TiLDA Mk4!\r\n"
 "\r\n"
-"You can get started right away by writing your Python code in 'main.py'.\r\n"
+"If you want to test some code, just create a main.py in here.\r\n"
 "\r\n"
 "For a serial prompt:\r\n"
 " - Windows: you need to go to 'Device manager', right click on the unknown device,\r\n"
@@ -234,7 +253,7 @@ static const char fresh_readme_txt[] =
 " - Mac OS X: use the command: screen /dev/tty.usbmodem*\r\n"
 " - Linux: use the command: screen /dev/ttyACM0\r\n"
 "\r\n"
-"Please visit http://micropython.org/help/ for further help.\r\n"
+"Please visit https://badge.emfcamp.org/2018 and http://micropython.org/help/ for further help.\r\n"
 ;
 
 // avoid inlining to avoid stack usage within main()
@@ -253,7 +272,7 @@ MP_NOINLINE STATIC bool init_flash_fs(uint reset_mode) {
         // LED on to indicate creation of LFS
         led_state(TILDA_LED_GREEN, 1);
 
-        uint8_t working_buf[_MAX_SS];
+        static uint8_t working_buf[_MAX_SS];
         res = f_mkfs(&vfs_fat->fatfs, FM_FAT, 0, working_buf, sizeof(working_buf));
         if (res == FR_OK) {
             // success creating fresh LFS
@@ -265,13 +284,6 @@ MP_NOINLINE STATIC bool init_flash_fs(uint reset_mode) {
         // set label
         f_setlabel(&vfs_fat->fatfs, MICROPY_HW_FLASH_FS_LABEL);
 
-        // create empty main.py
-        FIL fp;
-        f_open(&vfs_fat->fatfs, &fp, "/main.py", FA_WRITE | FA_CREATE_ALWAYS);
-        UINT n;
-        f_write(&fp, fresh_main_py, sizeof(fresh_main_py) - 1 /* don't count null terminator */, &n);
-        // TODO check we could write n bytes
-        f_close(&fp);
 #if 0
         // create .inf driver file
         f_open(&vfs_fat->fatfs, &fp, "/pybcdc.inf", FA_WRITE | FA_CREATE_ALWAYS);
@@ -279,8 +291,15 @@ MP_NOINLINE STATIC bool init_flash_fs(uint reset_mode) {
         f_close(&fp);
 #endif
         // create readme file
+        FIL fp;
         f_open(&vfs_fat->fatfs, &fp, "/README.txt", FA_WRITE | FA_CREATE_ALWAYS);
+        UINT n;
         f_write(&fp, fresh_readme_txt, sizeof(fresh_readme_txt) - 1 /* don't count null terminator */, &n);
+        f_close(&fp);
+
+        // create wifi.json file
+        f_open(&vfs_fat->fatfs, &fp, "/wifi.json", FA_WRITE | FA_CREATE_ALWAYS);
+        f_write(&fp, fresh_wifi_json, sizeof(fresh_wifi_json) - 1 /* don't count null terminator */, &n);
         f_close(&fp);
 
         // keep LED on for at least 200ms
@@ -325,6 +344,13 @@ MP_NOINLINE STATIC bool init_flash_fs(uint reset_mode) {
         f_write(&fp, fresh_boot_py, sizeof(fresh_boot_py) - 1 /* don't count null terminator */, &n);
         // TODO check we could write n bytes
         f_close(&fp);
+
+        // Todo: uncomment this before flashing the final firmware or once https://github.com/emfcamp/ti_micropython_upstream/issues/37 is closed
+        // create bootstrap.py
+        //f_open(&vfs_fat->fatfs, &fp, "/bootstrap.py", FA_WRITE | FA_CREATE_ALWAYS);
+        //f_write(&fp, fresh_bootstrap_py, sizeof(fresh_bootstrap_py) - 1 /* don't count null terminator */, &n);
+        // TODO check we could write n bytes
+        //f_close(&fp);
 
         // keep LED on for at least 200ms
         mp_hal_delay_ms(200);
@@ -418,14 +444,21 @@ int mp_main(void * heap, uint32_t heapsize, uint32_t stacksize, UART_Handle uart
     console = uart;
     led_init();
 
-#if MICROPY_HW_USB_REPL
-    CDCMSC_setup();
-    repl_cdc = CDCD_open(0);
+#if MICROPY_HW_ENABLE_STORAGE
+    storage_init();
 #endif
 
-    #if MICROPY_HW_ENABLE_STORAGE
-    storage_init();
-    #endif
+#if MICROPY_HW_USB_REPL
+    CDCMSC_setup();
+
+#if MICROPY_KBD_EXCEPTION
+    repl_cdc = CDCD_open(0, usb_ctrlc_handler);
+#else
+    repl_cdc = CDCD_open(0, NULL);
+#endif
+#endif
+
+
 
     #if MICROPY_PY_TILDA
     pthread_t tildaThreadHandle;
