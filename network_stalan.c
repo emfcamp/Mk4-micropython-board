@@ -65,19 +65,33 @@ STATIC mp_obj_t network_stalan_active(size_t n_args, const mp_obj_t *args) {
     if (n_args > 1) {
         bool activate = mp_obj_is_true(args[1]);
         if (activate && status != 0) {
-            if (sl_Start(0, 0, 0) != ROLE_STA) {
-                sl_WlanSetMode(ROLE_STA);
-                if ((status = sl_Stop(20)) < 0) {
+            status = sl_Start(0, 0, 0);
+            if (status < 0) {
+                mp_printf(MP_PYTHON_PRINTER, "network_stalan_active error sl_start: %d\n", status);
+                return (mp_const_false);
+            }
+            else if (status != ROLE_STA) {
+                status = sl_WlanSetMode(ROLE_STA);
+                if (status < 0) {
+                    mp_printf(MP_PYTHON_PRINTER, "network_stalan_active error sl_wlansetmode error: %d\n", status);
+                    return (mp_const_false);
+                }
+
+                mp_printf(MP_PYTHON_PRINTER, "network_stalan_active sl_stop for role change: %d\n", 0);
+                if ((status = sl_Stop(200)) < 0) {
                     mp_printf(MP_PYTHON_PRINTER, "stop: %d\n", status);
+                    return (mp_const_false);
                 }
 
                 if ((status = sl_Start(0, 0, 0)) != ROLE_STA) {
                     mp_printf(MP_PYTHON_PRINTER, "start: %d\n", status);
+                    return (mp_const_false);
                 }
             }
             result = mp_const_true;
         }
         if (!activate) {
+            mp_printf(MP_PYTHON_PRINTER, "network_stalan_active sl_stop deactivate: %d\n", 0);
             sl_Stop(0);
             result = mp_const_false;
         }
@@ -291,14 +305,26 @@ STATIC mp_obj_t network_stalan_isconnected(mp_obj_t self_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(network_stalan_isconnected_obj, network_stalan_isconnected);
 
 STATIC mp_obj_t network_stalan_scan(mp_obj_t self_in) {
-    SlWlanNetworkEntry_t entries[10];
+    SlWlanNetworkEntry_t entries[30];
+    int retryCount = 5;
 
     memset(entries, 0, sizeof(entries));
-    int status = sl_WlanGetNetworkList(0, 10, entries);
-    if (status < 0) {
-        usleep(1000000u);
-        status = sl_WlanGetNetworkList(0, 10, entries);
+    int status = sl_WlanGetNetworkList(0, 30, entries);
+
+    if (status == SL_RET_CODE_DEV_NOT_STARTED) {
+        mp_raise_msg(&mp_type_OSError, "WiFi Not Started, use .active(True)");
+        return mp_const_none;
     }
+
+    while ((status == SL_ERROR_WLAN_GET_NETWORK_LIST_EAGAIN) &&
+           retryCount--) {
+        //usleep(1000000u); // usleep max is 1000000 - this would have returned error..
+	//keep comment for now since later we'll want to replace with smaller usleep()
+        sleep(1);
+	//mp_printf(MP_PYTHON_PRINTER, "WlanGetNetworkList retry: %d\n", retryCount);
+        status = sl_WlanGetNetworkList(0, 30, entries);
+    }
+
     if (status > 0) {
         mp_obj_t list = mp_obj_new_list(0, NULL);
         for (int i = 0; i < status; i++) {
@@ -313,9 +339,12 @@ STATIC mp_obj_t network_stalan_scan(mp_obj_t self_in) {
         }
         return list;
     }
-    else {
-        return mp_const_none;
+
+    if (status < 0) {
+	mp_printf(MP_PYTHON_PRINTER, "WlanGetNetworkList error: %d\n", status);
     }
+
+    return mp_const_none;
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(network_stalan_scan_obj, network_stalan_scan);
@@ -355,7 +384,9 @@ STATIC mp_obj_t network_stalan_ifconfig(size_t n_args, const mp_obj_t *args) {
 
         sl_NetCfgSet(SL_NETCFG_IPV4_STA_ADDR_MODE, SL_NETCFG_ADDR_DHCP,
                      0, NULL);
-        sl_Stop(0);
+	//mp_printf(MP_PYTHON_PRINTER, "network_stalan_ifconfig set DHCP sl_stop: %d\n", 0);
+        sl_Stop(200);
+	//mp_printf(MP_PYTHON_PRINTER, "network_stalan_ifconfig set DHCP sl_start: %d\n", 0);
         sl_Start(0, 0, 0);
 
         return mp_const_none;
@@ -378,7 +409,9 @@ STATIC mp_obj_t network_stalan_ifconfig(size_t n_args, const mp_obj_t *args) {
 
         sl_NetCfgSet(SL_NETCFG_IPV4_STA_ADDR_MODE, SL_NETCFG_ADDR_STATIC,
                      sizeof(addrCfg), (uint8_t *)&addrCfg);
-        sl_Stop(0);
+	//mp_printf(MP_PYTHON_PRINTER, "network_stalan_ifconfig set STATIC sl_stop: %d\n", 0);
+        sl_Stop(200);
+	//mp_printf(MP_PYTHON_PRINTER, "network_stalan_ifconfig set STATIC sl_stop: %d\n", 0);
         sl_Start(0, 0, 0);
 
         return mp_const_none;

@@ -29,6 +29,8 @@ declare -r MSP432E4_SDK="http://software-dl.ti.com/simplelink/esd/simplelink_msp
 declare -r MSP432P4_SDK="http://software-dl.ti.com/simplelink/esd/simplelink_msp432_sdk/2.10.00.14/simplelink_msp432p4_sdk_2_10_00_14"
 declare -r CC3120_SDK="http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/simplelink_sdk_wifi_plugin/1_60_00_07/exports/simplelink_sdk_wifi_plugin_1_60_00_07"
 
+declare -r UNIFLASH="http://software-dl.ti.com/ccs/esd/uniflash/uniflash_sl.4.4.0.1922"
+
 declare -r SAIL_SDK="http://downloads.ti.com/ccs/esd/tirex/zips/sail_1_20_00_02/sail_1_20_00_02"
 
 # Someday ... when these are directly downloadable... for now, these need to be downloaded manually and placed in the "CACHEPATH"
@@ -132,6 +134,39 @@ get_install_sdk_addon()
     tar xf $tarball
 }
 
+get_uniflash()
+{
+    sdk=$(basename $1)
+    if test -d $sdk
+    then
+        echo $sdk already installed
+        return
+    fi
+
+    if $2
+    then
+        fetch $1".run"
+        inst_bin=$fetch_retval
+
+        echo Installing $sdk from $inst_bin ...
+        chmod +x $inst_bin
+        mkdir $sdk
+        $inst_bin --mode unattended --prefix $PWD/$sdk
+    else
+        fetch $1".dmg"
+        inst_bin=$fetch_retval
+
+        echo Installing $sdk from $inst_bin ...
+        # mount the dmg
+        sudo hdiutil attach $inst_bin
+        # the --args is for the macOS open command
+        installer=/Volumes/UniFlash/$sdk.app
+        mkdir -p $sdk
+        open $installer --args --mode unattended --prefix $PWD/$sdk
+        sudo hdiutil unmount /Volumes/UniFlash
+    fi
+}
+
 get_sail_addon()
 {
     addon=$(basename $1)
@@ -188,9 +223,10 @@ main()
     get_install_gcc $is_linux
 
     case $board in
-        MSP_EXP432E401Y_CC3120)
+        MSP_EXP432E401Y_CC3120*)
             get_install_sdk $MSP432E4_SDK $is_linux
             get_install_sdk $CC3120_SDK $is_linux
+            get_uniflash $UNIFLASH $is_linux
             get_sail_addon $SAIL_SDK $is_linux
             ;;
         *CC32*)

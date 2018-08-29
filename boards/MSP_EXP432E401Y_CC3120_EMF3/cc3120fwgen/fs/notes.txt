@@ -1,0 +1,8 @@
+Cert Chains
+
+iot.eclipse.org -> Let's Encrypt -> DST
+badgeserver.emfcamp.org -> Let's Encrypt -> DST
+radius.emfcamp.org -> Let's Encrypt -> DST
+
+(raw.github.com) CN:www.github.com -> DigiCert_SHA2_High_Assurance_Server_CA -> DigiCert_High_Assurance_EV_Root_CA
+(www.github.com) CN:github.com -> DigiCert_SHA2_Extended_Validation_Server_CA -> DigiCert_High_Assurance_EV_Root_CA
