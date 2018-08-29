@@ -1,5 +1,6 @@
 import os, tilda
 
+print("EMF: boot.py")
 os.sync()
 root = os.listdir()
 
@@ -16,16 +17,21 @@ def file(file, remove):
             os.remove(file)
         return app(a)
     except Exception as e:
-        print(str(e))
+        print("Not found: %s" % file)
 
 def any_home():
     h = [a for a in root if a.startswith("home")]
     return h[0] if len(h) else False
 
 if "no_boot" in root:
+    print("no_boot found, aborting boot sequence")
+else:
     start = None
     if "main.py" in root:
         start = "main.py"
-    start = file("once.txt", True) or file("default_app.txt", False) or any_home() or "bootstrap.py"
+    start = start or file("once.txt", True) or file("default_app.txt", False) or any_home() or "bootstrap.py"
+    if ".py" not in start:
+        start += "/main.py"
     print("Booting into %s" % start)
     tilda.main(start)
+
