@@ -232,7 +232,7 @@ static const char fresh_bootstrap_py[] =
 ;
 
 static const char fresh_wifi_json[] =
-"{\"ssid\":\"emfcamp\",\"user\":\"emf\",\"pw\":\"emf\"}";
+"{\"ssid\":\"emfcamp-legacy18\",\"user\":\"emf\",\"pw\":\"emf\"}";
 
 
 // TODO: Get usb cdc inf file
@@ -345,12 +345,11 @@ MP_NOINLINE STATIC bool init_flash_fs(uint reset_mode) {
         // TODO check we could write n bytes
         f_close(&fp);
 
-        // Todo: uncomment this before flashing the final firmware or once https://github.com/emfcamp/ti_micropython_upstream/issues/37 is closed
         // create bootstrap.py
-        //f_open(&vfs_fat->fatfs, &fp, "/bootstrap.py", FA_WRITE | FA_CREATE_ALWAYS);
-        //f_write(&fp, fresh_bootstrap_py, sizeof(fresh_bootstrap_py) - 1 /* don't count null terminator */, &n);
+        f_open(&vfs_fat->fatfs, &fp, "/bootstrap.py", FA_WRITE | FA_CREATE_ALWAYS);
+        f_write(&fp, fresh_bootstrap_py, sizeof(fresh_bootstrap_py) - 1 /* don't count null terminator */, &n);
         // TODO check we could write n bytes
-        //f_close(&fp);
+        f_close(&fp);
 
         // keep LED on for at least 200ms
         mp_hal_delay_ms(200);
