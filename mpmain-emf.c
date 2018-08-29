@@ -94,7 +94,7 @@ int mp_hal_stdin_rx_chr(void)
         #if MICROPY_HW_USB_REPL
         unsigned char data[1];
         /* Block while the device is NOT connected to the USB */
-        c = CDCD_receiveData(repl_cdc, data, 1, 1);
+        c = CDCD_receiveData(repl_cdc, data, 1, 0);
         if (c != 0) {
             return (int)data[0];
         }
