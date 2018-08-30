@@ -191,7 +191,7 @@ get_sail_addon()
 
 main()
 {
-    board=${1:-MSP432E4}
+    board=${1:-MSP_EXP432E401Y_CC3120}
     dst=${2:-./tools}
 
     case $OSTYPE in
