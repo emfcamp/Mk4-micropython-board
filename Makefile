@@ -1,4 +1,4 @@
-BOARD ?= MSP_EXP432E401Y
+BOARD ?= MSP_EXP432E401Y_CC3120_EMF3
 BUILD ?= build-$(BOARD)
 
 include ../../py/mkenv.mk
