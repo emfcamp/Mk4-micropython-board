@@ -114,15 +114,31 @@ targets:
 
 flash-jlink: all
 	$(ECHO) ====== Flashing with JLinkExe ========
-	$(ECHO) "r\nh\nloadbin boards/$(BOARD)/mpex.bin 0x00\nr\nexit\n" |\
+	$(ECHO) "r\nh\nloadbin boards/$(BOARD)/mpex_with_boot.bin 0x00\nr\nexit\n" |\
 	JLinkExe -if swd -device MSP432E401Y -speed 4000 -autoconnect 1
 
 flash-dfu: all
+	cp boards/$(BOARD)/mpex_with_boot.bin boards/$(BOARD)/mpex_with_boot.dfu
+	dfu-suffix -a boards/$(BOARD)/mpex_with_boot.dfu -v 0x1cbe -p 0x00ff
+	dfu-prefix -s 0x0000 -a boards/$(BOARD)/mpex_with_boot.dfu
+	dfu-util -D boards/$(BOARD)/mpex_with_boot.dfu
+
+# Need to decide if we need this... - this doesn't update the bootloader
+flash-dfu-mpexonly: all
 	cp boards/$(BOARD)/mpex.bin boards/$(BOARD)/mpex.dfu
 	dfu-suffix -a boards/$(BOARD)/mpex.dfu -v 0x1cbe -p 0x00ff
-	dfu-prefix -s 0x0000 -a boards/$(BOARD)/mpex.dfu
+	dfu-prefix -s 0x10000 -a boards/$(BOARD)/mpex.dfu
 	dfu-util -D boards/$(BOARD)/mpex.dfu
 
+xds110-reset:
+	$(ECHO) "Resetting Target via XDS110"
+	$(ECHO) "Tools install at http://processors.wiki.ti.com/index.php/XDS_Emulation_Software_Package"
+	../../../ti/ccs_base/common/uscif/dbgjtag -f @xds110 -Y reset,system=yes
+
+xds110-unlock-msp432e:
+	$(ECHO) "Unlocking MSP432E via JTAG unlock sequence from XDS110"
+	$(ECHO) "Tools install at http://processors.wiki.ti.com/index.php/XDS_Emulation_Software_Package"
+	../../../ti/ccs_base/common/uscif/dbgjtag -f @xds110 -Y unlock,mode=msp432e4
 
 clean: clean-board
 
