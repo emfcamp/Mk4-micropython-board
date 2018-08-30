@@ -43,4 +43,6 @@ static inline uint32_t ticks_scaled() {
 
 #define mp_hal_pin_output(p)
 
+extern void mp_hal_set_interrupt_char(int c);
+
 #endif

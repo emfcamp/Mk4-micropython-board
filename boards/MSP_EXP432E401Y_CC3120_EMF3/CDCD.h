@@ -4,7 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef void (*CDCD_NotifyFxn)(uint32_t arg, uint8_t * buf, uint32_t avail, uint32_t ringBufSize);
+typedef void (*CDCD_NotifyFxn)(uint32_t arg, uint8_t * baseBuf, uint8_t * curBuf,
+                               uint32_t avail, uint32_t ringBufSize);
 
 typedef struct CDCD_Object * CDCD_Handle;
 

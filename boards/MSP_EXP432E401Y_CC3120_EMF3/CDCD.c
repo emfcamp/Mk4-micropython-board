@@ -82,7 +82,8 @@ static uint32_t handleRx(void * obj, uint32_t event, uint32_t param,
 
         if (cdcd->notifyFxn) {
             /* this is a ring buffer so callee needs to unwrap */
-            cdcd->notifyFxn(cdcd->notifyArg, msgData, param, cdcd->bufSize);
+            cdcd->notifyFxn(cdcd->notifyArg, cdcd->rxBuf.pui8Buffer, msgData, param,
+                            cdcd->bufSize);
         }
     }
 

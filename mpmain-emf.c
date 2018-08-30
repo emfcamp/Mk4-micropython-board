@@ -142,24 +142,30 @@ void mp_hal_stdout_tx_strn_cooked(const char * str, size_t len)
 }
 
 #if MICROPY_KBD_EXCEPTION
-void usb_ctrlc_handler(uint32_t arg, uint8_t * buf, uint32_t avail, uint32_t size)
+
+void usb_ctrlc_handler(uint32_t arg, uint8_t * baseBuf, uint8_t * curBuf,
+                       uint32_t avail, uint32_t size)
 {
     if (mp_interrupt_char == -1) {
         return;
     }
 
-    uint8_t * rbuf = buf;
+    uint8_t * rbuf = curBuf;
     for (uint32_t i = 0; i < avail; i++) {
         if (*rbuf == mp_interrupt_char) {
-            mp_keyboard_interrupt();
-#if MICROPY_TI_INTRTIME
+#if MICROPY_TI_INTRSLEEP
+            extern Semaphore_Handle machine_sleep_sem;
             if (machine_sleep_sem) {
                 Semaphore_post(machine_sleep_sem);
             }
 #endif
+            mp_keyboard_interrupt();
             return;
         }
-        rbuf = (uint8_t *)((uint32_t)(rbuf + 1) & 0x7fu);
+        rbuf++;
+        if (rbuf >= (baseBuf + size)) {
+            rbuf = baseBuf;
+        }
     }
 }
 #endif
@@ -614,7 +620,10 @@ soft_reset:
         }
         mp_import_stat_t stat = mp_import_stat(main_py);
         if (stat == MP_IMPORT_STAT_FILE) {
+            nlr_buf_t nlr;
+            nlr_push(&nlr);
             int ret = pyexec_file(main_py);
+            nlr_pop();
             if (ret & PYEXEC_FORCED_EXIT) {
                 goto soft_reset_exit;
             }
@@ -626,6 +635,8 @@ soft_reset:
 
     // Main script is finished, so now go into REPL mode.
     // The REPL mode can change, or it can request a soft reset.
+    nlr_buf_t nlr;
+    nlr_push(&nlr);
     for (;;) {
         if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL) {
             if (pyexec_raw_repl() != 0) {
@@ -637,6 +648,7 @@ soft_reset:
             }
         }
     }
+    nlr_pop();
 
 soft_reset_exit:
 
