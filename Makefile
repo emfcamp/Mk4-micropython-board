@@ -114,7 +114,7 @@ targets:
 
 flash-jlink: all
 	$(ECHO) ====== Flashing with JLinkExe ========
-	$(ECHO) "r\nh\nloadbin boards/$(BOARD)/mpex.bin 0x00\nr\nexit\n" |\
+	$(ECHO) "r\nh\nloadbin boards/$(BOARD)/mpex_with_boot.bin 0x00\nr\nexit\n" |\
 	JLinkExe -if swd -device MSP432E401Y -speed 4000 -autoconnect 1
 
 flash-dfu: all
