@@ -65,6 +65,10 @@ static GFXINLINE void init_board(GDisplay *g) {
     pwm_h = PWM_open(MICROPY_HW_UGFX_BL_PWM, &pwmParams);
     
     PWM_start(pwm_h);
+#else
+#ifdef MICROPY_HW_UGFX_PIN_BL
+    GPIO_write(MICROPY_HW_UGFX_PIN_BL, 1);
+#endif
 #endif
 
     
