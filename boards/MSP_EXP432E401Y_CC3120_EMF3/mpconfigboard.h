@@ -21,6 +21,8 @@
 #define MICROPY_HW_HAS_UGFX          (MICROPY_PY_UGFX)  // set in mpconfigbpard.mk
 #define MICROPY_KBD_EXCEPTION        (1)   /* currently works for USB */
 
+#define MICROPY_TI_INTRSLEEP         (1)
+
 #define MICROPY_HW_ENABLE_STORAGE    (1)
 #define MICROPY_HW_ENABLE_INTERNAL_FLASH_STORAGE (1)
 

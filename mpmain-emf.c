@@ -152,6 +152,11 @@ void usb_ctrlc_handler(uint32_t arg, uint8_t * buf, uint32_t avail, uint32_t siz
     for (uint32_t i = 0; i < avail; i++) {
         if (*rbuf == mp_interrupt_char) {
             mp_keyboard_interrupt();
+#if MICROPY_TI_INTRTIME
+            if (machine_sleep_sem) {
+                Semaphore_post(machine_sleep_sem);
+            }
+#endif
             return;
         }
         rbuf = (uint8_t *)((uint32_t)(rbuf + 1) & 0x7fu);
