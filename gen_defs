@@ -66,8 +66,6 @@ main()
     if test -d uniflash_*
     then
        echo UNIFLASH_INSTALL_DIR = $(canonicalize_path ./uniflash_*)
-    else
-       echo "warning: uniflash not found"
     fi
 
     for sdk in simplelink*
