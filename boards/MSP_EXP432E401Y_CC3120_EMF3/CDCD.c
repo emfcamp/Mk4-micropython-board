@@ -26,6 +26,9 @@ typedef struct CDCD_Object {
     tUSBBuffer rxBuf;
     tUSBBuffer txBuf;
     tLineCoding lineCoding;
+    uint32_t bufSize;
+    CDCD_NotifyFxn notifyFxn;
+    uint32_t notifyArg;
     SemaphoreP_Handle rxAvail;
     SemaphoreP_Handle connected;
     SemaphoreP_Handle txComplete;
@@ -76,6 +79,11 @@ static uint32_t handleRx(void * obj, uint32_t event, uint32_t param,
 
     if (event == USB_EVENT_RX_AVAILABLE) {
         SemaphoreP_post(cdcd->rxAvail);
+
+        if (cdcd->notifyFxn) {
+            /* this is a ring buffer so callee needs to unwrap */
+            cdcd->notifyFxn(cdcd->notifyArg, msgData, param, cdcd->bufSize);
+        }
     }
 
     return (0);
@@ -218,6 +226,7 @@ CDCD_Handle CDCD_create(tUSBDCDCDevice * cdcDevice)
 
         cdcd->state = CDCD_STATE_UNCONFIGURED;
         cdcd->lineCoding = DEFLINECODING;
+        cdcd->bufSize = bufSize;
 
         setupBuf(&cdcd->rxBuf, cdcd, cdcDevice, false, bufSize);
         cdcd->rxBuf.pfnCallback = handleRx;
@@ -244,8 +253,15 @@ void CDCD_init(void)
 {
 }
 
-CDCD_Handle CDCD_open(uint32_t index)
+CDCD_Handle CDCD_open(uint32_t index, CDCD_NotifyFxn notify)
 {
     // TODO: open flag?
-    return (index < CDCD_count) ? CDCD_handles[index] : NULL;
+    CDCD_Handle cdcd = NULL;
+
+    if (index < CDCD_count) {
+        cdcd = CDCD_handles[index];
+        cdcd->notifyFxn = notify;
+    }
+
+    return cdcd;
 }

@@ -9,6 +9,8 @@ extern void storage_init(void);
 extern uint32_t storage_get_block_size(void);
 extern uint32_t storage_get_block_count(void);
 extern void storage_flush(void);
+extern uint8_t storage_open_usb();
+extern void storage_close_usb();
 
 // these return 0 on success, non-zero on error
 extern unsigned storage_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_blocks);
@@ -18,15 +20,22 @@ static uint32_t blockSize;
 
 void * SCMSC_open(uint32_t region)
 {
-    storage_init();
-    blockSize = storage_get_block_size();
+    if (storage_open_usb() == 1)
+    {
+        storage_init();
+        blockSize = storage_get_block_size();
 
-    return (void *)0xdeadbeef;
+        return (void *)0xdeadbeef;
+    } else {
+        return 0;
+    }
+
 }
 
 void SCMSC_close(void * drive)
 {
     storage_flush();
+    storage_close_usb();
 }
 
 uint32_t SCMSC_read(void * drive, uint8_t * buf, uint32_t sector, uint32_t numBlocks)

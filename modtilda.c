@@ -35,9 +35,12 @@
 #include "tilda_sensors.h"
 
 #include "modmachine.h"
-
+#include "storage.h"
 
 MP_DECLARE_CONST_FUN_OBJ_KW(tilda_main_obj); // defined in mpmain.c
+MP_DECLARE_CONST_FUN_OBJ_0(tilda_storage_usb_enable_obj); //defined in storage.c
+MP_DECLARE_CONST_FUN_OBJ_0(tilda_storage_usb_disable_obj); //defined in storage.c
+
 
 STATIC const mp_rom_map_elem_t tilda_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_tilda) },
@@ -62,7 +65,8 @@ STATIC const mp_rom_map_elem_t tilda_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_Buttons), MP_ROM_PTR(&tilda_buttons_type) },
     { MP_ROM_QSTR(MP_QSTR_Sensors), MP_ROM_PTR(&tilda_sensors_type) },
 
-
+    { MP_ROM_QSTR(MP_QSTR_storage_enable_usb), MP_ROM_PTR(&tilda_storage_usb_enable_obj)},
+    { MP_ROM_QSTR(MP_QSTR_storage_disable_usb), MP_ROM_PTR(&tilda_storage_usb_disable_obj)}
 };
 
 STATIC MP_DEFINE_CONST_DICT(tilda_module_globals, tilda_module_globals_table);

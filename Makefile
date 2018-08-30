@@ -58,7 +58,8 @@ SRC_C = \
 	lib/timeutils/timeutils.c \
 	lib/netutils/netutils.c \
 	lib/mp-readline/readline.c \
-	lib/utils/sys_stdio_mphal.c
+	lib/utils/sys_stdio_mphal.c \
+	lib/utils/interrupt_char.c
 
 SRC_EXTRA =
 
