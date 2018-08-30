@@ -60,7 +60,7 @@
 ///
 
 
-const char * font_list[] = {"DejaVuSans12","ralewaybold24","ralewayextrabold48","DejaVuSans16","ralewayextrabold16"};
+const char * font_list[] = {"DejaVuSans12","ralewaybold24","ralewayextrabold48","DejaVuSans16","ralewayextrabold16","fixed_7x14","fixed_10x20"};
 
 #include <time.h>
 
@@ -1069,6 +1069,8 @@ STATIC const mp_map_elem_t ugfx_module_dict_table[] = {
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_FONT_NAME),   MP_OBJ_NEW_SMALL_INT(2) },
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_FONT_MEDIUM),   MP_OBJ_NEW_SMALL_INT(3) },
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_FONT_MEDIUM_BOLD),   MP_OBJ_NEW_SMALL_INT(4) },
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_FONT_FIXED),   MP_OBJ_NEW_SMALL_INT(5) },
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_FONT_FIXED_LG),   MP_OBJ_NEW_SMALL_INT(6) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Button), (mp_obj_t)&ugfx_button_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Container), (mp_obj_t)&ugfx_container_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Graph), (mp_obj_t)&ugfx_graph_type },
