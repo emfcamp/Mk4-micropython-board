@@ -232,7 +232,7 @@ static const char fresh_bootstrap_py[] =
 ;
 
 static const char fresh_wifi_json[] =
-"{\"ssid\":\"emfcamp-legacy18\",\"user\":\"emf\",\"pw\":\"emf\"}";
+"{\"ssid\":\"emfcamp-legacy18\",\"user\":\"internetofstuff\",\"pw\":\"internetofstuff\"}";
 
 
 // TODO: Get usb cdc inf file
