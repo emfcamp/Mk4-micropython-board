@@ -83,7 +83,7 @@ void tildaResetFxn()
 void tildaStartFxn()
 {
     ExternalRAM_init();
-    checkBOOTCFG();
+//    checkBOOTCFG();
     return;
 }
 

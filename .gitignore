@@ -2,6 +2,7 @@ build-*
 installs/
 tools/
 *.o
+*.obj
 *.out
 *.map
 *.bin

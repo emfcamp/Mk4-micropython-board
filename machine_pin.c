@@ -24,8 +24,19 @@ typedef struct _machine_pin_obj_t {
     uint32_t id;
 } machine_pin_obj_t;
 
+// TODO: set this from board.h
+#define NUM_PINS 64
+
+static bool irq_in_use[NUM_PINS];
+
 void machine_pin_teardown(void) {
-    /* nothing to do */
+    for (uint32_t i = 0; i < NUM_PINS; i++) {
+        if (irq_in_use[i]) {
+            GPIO_disableInt(i);
+            GPIO_setCallback(i, NULL);
+            irq_in_use[i] = false;
+        }
+    }
 }
 
 STATIC mp_obj_t machine_pin_obj_init_helper(machine_pin_obj_t *self, mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
@@ -262,6 +273,7 @@ STATIC mp_obj_t machine_pin_irq(size_t n_args, const mp_obj_t *pos_args, mp_map_
     GPIO_disableInt(self->id);
     *cb = args[ARG_handler].u_obj;
     GPIO_setCallback(self->id, gpioCallback);
+    irq_in_use[self->id] = true;
     GPIO_enableInt(self->id);
 
     // TODO: fix result

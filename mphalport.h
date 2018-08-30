@@ -37,12 +37,12 @@ static inline uint32_t ticks_scaled() {
 
 #define mp_hal_ticks_cpu() Timestamp_get32()
 
-static inline void mp_hal_set_interrupt_char(char c) {}
-
 #define mp_hal_pin_name(p) "pin"
 
 #define mp_hal_pin_input(p)
 
 #define mp_hal_pin_output(p)
+
+extern void mp_hal_set_interrupt_char(int c);
 
 #endif

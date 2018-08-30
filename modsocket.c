@@ -702,6 +702,12 @@ STATIC mp_obj_t mod_ssl_wrap_socket(size_t n_args, const mp_obj_t *pos_args, mp_
         switch(status) {
             // TODO: fix magic.. don't want to pull in SL_ headers - think should
             // be netsock defines
+            case (-456):
+                mp_printf(MP_PYTHON_PRINTER, "BAD CA File\n");
+                break;
+            case (-462):
+                mp_printf(MP_PYTHON_PRINTER, "Handshake Timeout\n");
+                break;
             case (-469):
                 mp_printf(MP_PYTHON_PRINTER, "Wrong Peer Cert Received\n");
                 break;

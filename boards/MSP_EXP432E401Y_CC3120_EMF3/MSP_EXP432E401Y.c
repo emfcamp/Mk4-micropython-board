@@ -881,7 +881,7 @@ const WIFIMSP432_HWAttrsV1 wifiMSP432HWAttrs =
     .nHIBPin = MSP_EXP432E401Y_CC_nHIB_pin,
     .csPin = MSP_EXP432E401Y_CC_CS_pin,
     .maxDMASize = 1024,
-    .spiBitRate = 3000000
+    .spiBitRate = 20000000
 };
 
 const uint_least8_t WiFi_count = 1;

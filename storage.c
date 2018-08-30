@@ -33,6 +33,10 @@
 #include "machine_nvsbdev.h"
 #include "storage.h"
 
+#include <ti/sysbios/BIOS.h>
+#include <ti/drivers/dpl/SemaphoreP.h>
+#include <ti/drivers/dpl/MutexP.h>
+
 #if MICROPY_HW_ENABLE_STORAGE
 
 #define FLASH_PART1_START_BLOCK (0x100)
@@ -42,8 +46,24 @@
 #endif
 
 static bool storage_is_initialised = false;
+static bool usb_enabled = false;
+static bool usb_in_use = false;
+static MutexP_Handle mutexUSBStorageEnable;
+static SemaphoreP_Handle semUSBUnmountWait;
 
 void storage_init(void) {
+    semUSBUnmountWait = SemaphoreP_createBinary(0);
+    if (semUSBUnmountWait == NULL) {
+        // Display_printf(display, 0, 0, "Can't create USB semaphore.\n");
+        while(1);
+    }
+
+    mutexUSBStorageEnable = MutexP_create(NULL);
+    if (mutexUSBStorageEnable == NULL) {
+        // Display_printf(display, 0, 0, "Could not create USB Wait mutex.\n");
+        while(1);
+    }
+
     if (!storage_is_initialised) {
         storage_is_initialised = true;
 
@@ -200,6 +220,62 @@ mp_uint_t storage_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t 
     }
     return 0; // success
 }
+
+uint8_t storage_open_usb()
+{
+    unsigned int key;
+    key = MutexP_lock(mutexUSBStorageEnable);
+    if (usb_enabled)
+    {
+        usb_in_use = true;
+    }
+    MutexP_unlock(mutexUSBStorageEnable, key);
+    return usb_enabled?1:0;
+}
+
+void storage_close_usb()
+{
+    unsigned int key;
+    key = MutexP_lock(mutexUSBStorageEnable);
+    usb_in_use = false;
+    MutexP_unlock(mutexUSBStorageEnable, key);
+    SemaphoreP_post(semUSBUnmountWait);
+
+}
+
+void enable_usb()
+{
+    unsigned int key;
+    key = MutexP_lock(mutexUSBStorageEnable);
+    usb_enabled = true;
+    MutexP_unlock(mutexUSBStorageEnable, key);
+}
+
+bool disable_usb()
+{
+    unsigned int key;
+    SemaphoreP_pend(semUSBUnmountWait,BIOS_WAIT_FOREVER);
+    key = MutexP_lock(mutexUSBStorageEnable);
+    if (!usb_in_use)
+    {
+        usb_enabled = false;
+    }
+    MutexP_unlock(mutexUSBStorageEnable, key);
+    return !usb_enabled;
+}
+
+
+STATIC mp_obj_t storage_usb_enable(void) {
+    enable_usb();
+	return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(tilda_storage_usb_enable_obj, storage_usb_enable);
+
+STATIC mp_obj_t storage_usb_disable(void) {
+	return mp_obj_new_bool(disable_usb());
+}
+MP_DEFINE_CONST_FUN_OBJ_0(tilda_storage_usb_disable_obj, storage_usb_disable);
+
 
 /******************************************************************************/
 // MicroPython bindings

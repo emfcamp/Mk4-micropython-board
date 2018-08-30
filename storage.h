@@ -47,6 +47,12 @@ void storage_flush(void);
 bool storage_read_block(uint8_t *dest, uint32_t block);
 bool storage_write_block(const uint8_t *src, uint32_t block);
 
+// Enable and disable access to storage from usb;
+uint8_t storage_open_usb();
+void storage_close_usb();
+void enable_usb();
+bool disable_usb();
+
 // these return 0 on success, non-zero on error
 mp_uint_t storage_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_blocks);
 mp_uint_t storage_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t num_blocks);

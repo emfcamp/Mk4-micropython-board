@@ -198,11 +198,6 @@ extern const struct _mp_obj_module_t mp_module_audio;
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>
 
-#ifndef MICROPY_HW_BOARD_NAME
-#define MICROPY_HW_BOARD_NAME "minimal"
-#define MICROPY_HW_MCU_NAME "ti-cortexm"
-#endif
-
 #define MP_STATE_PORT MP_STATE_VM
 
 #define MICROPY_PORT_ROOT_POINTERS \
@@ -210,3 +205,8 @@ extern const struct _mp_obj_module_t mp_module_audio;
     mp_obj_t pinirq_callback[10]; \
     mp_obj_t tilda_button_callback[22]; \
     mp_obj_t tilda_config_main;
+
+#ifndef MICROPY_HW_BOARD_NAME
+#define MICROPY_HW_BOARD_NAME "minimal"
+#define MICROPY_HW_MCU_NAME "ti-cortexm"
+#endif

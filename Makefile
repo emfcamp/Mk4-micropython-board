@@ -17,6 +17,13 @@ include $(TOP)/py/py.mk
 -include $(BUILD)/defs.mk
 include boards/$(BOARD)/mpconfigboard.mk
 
+FILE2H = $(TOP)/tools/file2h.py
+
+BOOT_PY_SOURCE = init-files/boot.py
+BOOTSTRAP_PY_SOURCE = init-files/bootstrap.py
+GEN_BOOT_PY_HEADER = $(HEADER_BUILD)/boot.py.h
+GEN_BOOTSTRAP_PY_HEADER = $(HEADER_BUILD)/bootstrap.py.h
+
 SRC_C = \
 	modmachine.c \
 	modsocket.c \
@@ -52,7 +59,8 @@ SRC_C = \
 	lib/timeutils/timeutils.c \
 	lib/netutils/netutils.c \
 	lib/mp-readline/readline.c \
-	lib/utils/sys_stdio_mphal.c
+	lib/utils/sys_stdio_mphal.c \
+	lib/utils/interrupt_char.c
 
 SRC_EXTRA =
 
@@ -84,9 +92,15 @@ CFLAGS += $(INC) $(CFLAGS_MOD) $(CFLAGS_EXTRA)
 
 SRC_QSTR += $(SRC_C) $(SRC_MOD) $(SRC_LIB) $(EXTMOD_SRC_C) $(HDR_QSTR)
 
+SRC_QSTR_AUTO_DEPS += $(GEN_BOOT_PY_HEADER)
+SRC_QSTR_AUTO_DEPS += $(GEN_BOOTSTRAP_PY_HEADER)
+
 OBJ += $(PY_O) $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_EXTRA:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_UGFX:.c=.o))
+
+# main.c can't be even preprocessed without $(GEN_CDCINF_HEADER)
+mpmain-emf.c: $(GEN_BOOT_PY_HEADER) $(GEN_BOOTSTRAP_PY_HEADER)
 
 all: $(BUILD)/libmicropython.a
 	$(ECHO) building $(BOARD) ...
@@ -101,15 +115,31 @@ targets:
 
 flash-jlink: all
 	$(ECHO) ====== Flashing with JLinkExe ========
-	$(ECHO) "r\nh\nloadbin boards/$(BOARD)/mpex.bin 0x00\nr\nexit\n" |\
+	$(ECHO) "r\nh\nloadbin boards/$(BOARD)/mpex_with_boot.bin 0x00\nr\nexit\n" |\
 	JLinkExe -if swd -device MSP432E401Y -speed 4000 -autoconnect 1
 
 flash-dfu: all
+	cp boards/$(BOARD)/mpex_with_boot.bin boards/$(BOARD)/mpex_with_boot.dfu
+	dfu-suffix -a boards/$(BOARD)/mpex_with_boot.dfu -v 0x1cbe -p 0x00ff
+	dfu-prefix -s 0x0000 -a boards/$(BOARD)/mpex_with_boot.dfu
+	dfu-util -D boards/$(BOARD)/mpex_with_boot.dfu
+
+# Need to decide if we need this... - this doesn't update the bootloader
+flash-dfu-mpexonly: all
 	cp boards/$(BOARD)/mpex.bin boards/$(BOARD)/mpex.dfu
 	dfu-suffix -a boards/$(BOARD)/mpex.dfu -v 0x1cbe -p 0x00ff
-	dfu-prefix -s 0x0000 -a boards/$(BOARD)/mpex.dfu
+	dfu-prefix -s 0x10000 -a boards/$(BOARD)/mpex.dfu
 	dfu-util -D boards/$(BOARD)/mpex.dfu
 
+xds110-reset:
+	$(ECHO) "Resetting Target via XDS110"
+	$(ECHO) "Tools install at http://processors.wiki.ti.com/index.php/XDS_Emulation_Software_Package"
+	../../../ti/ccs_base/common/uscif/dbgjtag -f @xds110 -Y reset,system=yes
+
+xds110-unlock-msp432e:
+	$(ECHO) "Unlocking MSP432E via JTAG unlock sequence from XDS110"
+	$(ECHO) "Tools install at http://processors.wiki.ti.com/index.php/XDS_Emulation_Software_Package"
+	../../../ti/ccs_base/common/uscif/dbgjtag -f @xds110 -Y unlock,mode=msp432e4
 
 clean: clean-board
 
@@ -129,5 +159,13 @@ $(BUILD)/libmicropython.a: $(OBJ)
 $(BUILD)/defs.mk: ./tools
 	$(Q)mkdir -p $(BUILD)
 	./gen_defs ./tools > $@
+
+$(GEN_BOOT_PY_HEADER): $(BOOT_PY_SOURCE) $(FILE2H) | $(HEADER_BUILD)
+		$(ECHO) "Convert boot.py"
+		$(Q)$(PYTHON) $(FILE2H) $< > $@
+
+$(GEN_BOOTSTRAP_PY_HEADER): $(BOOTSTRAP_PY_SOURCE) $(FILE2H) | $(HEADER_BUILD)
+		$(ECHO) "Convert bootstrap.py"
+		$(Q)$(PYTHON) $(FILE2H) $< > $@
 
 include $(TOP)/py/mkrules.mk

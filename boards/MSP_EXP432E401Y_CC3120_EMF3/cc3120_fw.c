@@ -557,6 +557,23 @@ int CC3120_checkIfUpdateNeeded(void)
     return 0;
  }
 
+static void flashLeds(int finalState)
+{
+    int i;
+
+    for (i = 0; i < 5; i++) {
+        GPIO_write(MSP_EXP432E401Y_GPIO_LED1, 1);
+        GPIO_write(MSP_EXP432E401Y_GPIO_LED2, 1);
+        usleep(200000);
+        GPIO_write(MSP_EXP432E401Y_GPIO_LED1, 0);
+        GPIO_write(MSP_EXP432E401Y_GPIO_LED2, 0);
+        usleep(200000);
+    }
+
+    GPIO_write(MSP_EXP432E401Y_GPIO_LED1, finalState ? 1 : 0);
+    GPIO_write(MSP_EXP432E401Y_GPIO_LED2, finalState ? 1 : 0);
+}
+
 void CC3120_doUpdate(void)
 {
     UART_Params uartParams;
@@ -567,6 +584,9 @@ void CC3120_doUpdate(void)
     uartParams.readReturnMode = UART_RETURN_FULL;
     uartParams.readEcho = UART_ECHO_OFF;
     uartParams.baudRate = 921600;
+
+    // Turn on some LEDs to indicate FW update in progress
+    flashLeds(1);
 
     Display_printf(display, 0, 0, "Opening CC3120 UART");
     uart = UART_open(MSP_EXP432E401Y_UART3, &uartParams);
@@ -724,6 +744,9 @@ void CC3120_doUpdate(void)
 
     Display_printf(display, 0, 0, "Closing CC3120 UART");
     UART_close(uart);
+
+    // Turn off some LEDs to indicate FW update complete
+    flashLeds(0);
 }
 
 

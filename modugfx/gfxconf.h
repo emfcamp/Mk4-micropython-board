@@ -93,8 +93,8 @@
     #define GDISP_INCLUDE_FONT_DEJAVUSANS24          TRUE
 //    #define GDISP_INCLUDE_FONT_DEJAVUSANS32          FALSE
 //    #define GDISP_INCLUDE_FONT_DEJAVUSANSBOLD12      FALSE
-//    #define GDISP_INCLUDE_FONT_FIXED_10X20           FALSE
-//    #define GDISP_INCLUDE_FONT_FIXED_7X14            FALSE
+    #define GDISP_INCLUDE_FONT_FIXED_10X20           TRUE
+    #define GDISP_INCLUDE_FONT_FIXED_7X14            TRUE
 //    #define GDISP_INCLUDE_FONT_FIXED_5X8             FALSE
 //    #define GDISP_INCLUDE_FONT_DEJAVUSANS12_AA       FALSE
 //    #define GDISP_INCLUDE_FONT_DEJAVUSANS16_AA       FALSE
@@ -298,7 +298,7 @@
 #define GFILE_NEED_NOAUTOMOUNT                       TRUE
 //#define GFILE_NEED_NOAUTOSYNC                        FALSE
 
-//#define GFILE_NEED_MEMFS                             FALSE
+#define GFILE_NEED_MEMFS                             TRUE
 #define GFILE_NEED_ROMFS                             TRUE
 //#define GFILE_NEED_RAMFS                             FALSE
 #define GFILE_NEED_FATFS                             TRUE

@@ -67,11 +67,52 @@ STATIC mp_obj_t time_localtime(size_t n_args, const mp_obj_t *args) {
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(time_localtime_obj, 0, 1, time_localtime);
 
+#if MICROPY_TI_INTRSLEEP
+#include <ti/sysbios/knl/Task.h>
+#include <ti/sysbios/knl/Semaphore.h>
+
+extern Semaphore_Handle machine_sleep_sem;
+
+static void intr_sleep(uint32_t ticks) {
+    if (machine_sleep_sem) {
+        Semaphore_pend(machine_sleep_sem, ticks);
+    }
+    else {
+        Task_sleep(ticks);
+    }
+}
+
+STATIC mp_obj_t time_sleep(mp_obj_t dur_in) {
+    #if MICROPY_PY_BUILTINS_FLOAT
+    uint32_t ticks = mp_obj_get_float(dur_in) * 1000u;
+    #else
+    uint32_t ticks = mp_obj_get_int(dur_in) * 1000u;
+    #endif
+    intr_sleep(ticks);
+    return mp_const_none;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_obj, time_sleep);
+
+STATIC mp_obj_t time_sleep_ms(mp_obj_t dur_in) {
+    mp_int_t dur = mp_obj_get_int(dur_in);
+    intr_sleep(dur);
+    return mp_const_none;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_ms_obj, time_sleep_ms);
+#endif
+
 STATIC const mp_rom_map_elem_t mp_module_time_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_utime) },
     { MP_ROM_QSTR(MP_QSTR_localtime), MP_ROM_PTR(&time_localtime_obj) },
+#if MICROPY_TI_INTRSLEEP
+    { MP_ROM_QSTR(MP_QSTR_sleep), MP_ROM_PTR(&time_sleep_obj) },
+    { MP_ROM_QSTR(MP_QSTR_sleep_ms), MP_ROM_PTR(&time_sleep_ms_obj) },
+#else
     { MP_ROM_QSTR(MP_QSTR_sleep), MP_ROM_PTR(&mp_utime_sleep_obj) },
     { MP_ROM_QSTR(MP_QSTR_sleep_ms), MP_ROM_PTR(&mp_utime_sleep_ms_obj) },
+#endif
     { MP_ROM_QSTR(MP_QSTR_sleep_us), MP_ROM_PTR(&mp_utime_sleep_us_obj) },
     { MP_ROM_QSTR(MP_QSTR_time), MP_ROM_PTR(&mod_time_time_obj) },
     { MP_ROM_QSTR(MP_QSTR_ticks_ms), MP_ROM_PTR(&mp_utime_ticks_ms_obj) },

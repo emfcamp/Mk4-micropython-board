@@ -40,8 +40,8 @@
 #include "gfx.h"
 #include "tilda_thread.h"
 
-// #include "genhdr/pins.h"
-// #include "bufhelper.h"
+#include "py/objarray.h"
+#include "py/objstr.h"
 
 #include "src/gwin/gwin_class.h"
 
@@ -1236,33 +1236,48 @@ STATIC mp_obj_t ugfx_image_make_new(const mp_obj_type_t *type, mp_uint_t n_args,
 		cache = false;
 	else
 		cache = mp_obj_get_int(args[1]);
-
-	const char *img_str = mp_obj_str_get_str(args[0]);
+	
+	gdispImage imo;    
+    
+	
+	//we'll open the file initially to fill the gdispImage struct
+	//when the draw function is used, will need to check the image handle is open
+    if (MP_OBJ_IS_STR(args[0])){
+		const char *img_str = mp_obj_str_get_str(args[0]);
+		gdispImageError er = gdispImageOpenFile(&imo, img_str);
+		if (er != 0){
+			nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Error opening file"));
+			return mp_const_none;
+		}
+	}
+	else if (MP_OBJ_IS_TYPE(args[0], &mp_type_bytearray))
+	{
+		void *items = ((mp_obj_array_t*)args[0])->items;
+		gdispImageError er = gdispImageOpenMemory(&imo, items);
+		if (er != 0){
+			nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Error finding image in bytearray"));
+			return mp_const_none;
+		}
+	}
+	else{
+		nlr_raise(mp_obj_new_exception_msg(&mp_type_TypeError, "img argument needs to be be a bytearray (for image data) or String type (for file path)"));
+		return mp_const_none;
+	}
 
 
     // create object
     ugfx_image_obj_t *image = m_new_obj(ugfx_image_obj_t);
     image->base.type = &ugfx_image_type;
+	image->thisImage = imo;
 
+	
 
-	//we'll open the file initially to fill the gdispImage struct
-	//when the draw function is used, will need to check the image handle is open
-	gdispImageError er = gdispImageOpenFile(&(image->thisImage), img_str);
-
-	if (er == 0){
-		if (cache){
-			int err = gdispImageCache(&(image->thisImage));
-			print_image_error(err);
-		}
-		//gdispImageClose(&(image->thisImage));  //TODO: delete this, currently for debugging reasons
-		//TODO: error handling and reporting
-		return image;
-	}
-	else{
-		nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Error opening file"));
-		return mp_const_none;
+	if (cache){
+		int err = gdispImageCache(&(image->thisImage));
+		print_image_error(err);
 	}
 
+	return image;
 
 }
 

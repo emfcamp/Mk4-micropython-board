@@ -52,7 +52,7 @@
 #include "mpconfigboard.h"
 
 // Micropython RTOS thread stack size
-#define STACKSIZE 8192U
+#define STACKSIZE (8192U + 4096U)
 #define MPHEAPSIZE (8388608 - 630000) // 8 Meg SRAM - GFX_OS_HEAP_SIZE (630K)
 
 // Simplelink network task
