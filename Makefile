@@ -44,6 +44,7 @@ SRC_C = \
 	machine_nvsbdev.c \
 	machine_pwm.c \
 	machine_rtc.c \
+	machine_eeprom.c \
 	tilda_buttons.c \
 	tilda_sensors.c \
 	tilda_thread.c \
