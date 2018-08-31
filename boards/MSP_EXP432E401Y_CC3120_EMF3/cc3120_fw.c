@@ -745,6 +745,14 @@ void CC3120_doUpdate(void)
     Display_printf(display, 0, 0, "Closing CC3120 UART");
     UART_close(uart);
 
+    Display_printf(display, 0, 0, "Toggle nHIB Low");
+    GPIO_write(MSP_EXP432E401Y_CC_nHIB_pin, 0);
+    Display_printf(display, 0, 0, "Toggle Reset Low");
+    GPIO_write(MSP_EXP432E401Y_CC_RST, 0);
+    usleep(50000);
+    Display_printf(display, 0, 0, "Toggle Reset High");
+    GPIO_write(MSP_EXP432E401Y_CC_RST, 1);
+
     // Turn off some LEDs to indicate FW update complete
     flashLeds(0);
 }
