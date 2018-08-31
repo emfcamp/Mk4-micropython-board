@@ -25,7 +25,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>
-
+#include <unistd.h>
 
 #include "py/nlr.h"
 #include "py/runtime.h"
@@ -47,6 +47,8 @@
 static uint16_t * frame_buffer = NULL;
 static uint32_t frame_buffer_size = 0;
 
+static volatile int inprogress = 0;
+
 #define WS_800HZ 800000
 #define WS_400HZ 400000
 #define WS_FREQ WS_800HZ
@@ -55,6 +57,7 @@ static uint32_t frame_buffer_size = 0;
 #define WS2812_DUTYCYCLE_0      ((10*WS2812_TIMER_INTVAL)/15)
 #define WS2812_DUTYCYCLE_1      ((10*WS2812_TIMER_INTVAL)/36)
 #define WS2812_DUTYCYCLE_RESET  (WS2812_TIMER_INTVAL-1)
+#define WS2812_RESET_BIT_N      30
 
 static void setup_ws_timer_dma(void);
 
@@ -90,6 +93,8 @@ TIMER3B_IRQHandler(unsigned int a)
     MAP_TimerIntClear(TIMER3_BASE, getTimerIntStatus);
 
     MAP_TimerDisable(TIMER3_BASE, TIMER_BOTH);
+
+    inprogress = 0;
     
 }
 
@@ -133,21 +138,26 @@ static void setup_ws_timer_dma(void)
 }
 
 void ws_start_transfer( uint32_t len){
-                            
+
+    MAP_TimerMatchSet(TIMER3_BASE, TIMER_A, frame_buffer[0]);
+
     MAP_uDMAChannelTransferSet(UDMA_CH3_TIMER3B | UDMA_PRI_SELECT,
                                    UDMA_MODE_BASIC,
-                                   (void *)frame_buffer, (void*)&TIMER3->TAMATCHR,
-                                   len);
+                                   (void *)frame_buffer+2, (void*)&TIMER3->TAMATCHR,
+                                   len-1);
     //MAP_uDMAChannelTransferSet(UDMA_CH3_TIMER3B | UDMA_PRI_SELECT,
     //                               UDMA_MODE_BASIC,
     //                               (void *)&fb, (void*)&TIMER3->TAMATCHR,
     //                               len);
-                                   
+
+    inprogress = 1;
+
+    MAP_uDMAChannelEnable(UDMA_CH3_TIMER3B);
 
     MAP_IntEnable(INT_TIMER3B);
     MAP_TimerEnable(TIMER3_BASE, TIMER_BOTH);
 
-    MAP_uDMAChannelEnable(UDMA_CH3_TIMER3B);
+//    MAP_uDMAChannelEnable(UDMA_CH3_TIMER3B);
     
 }
 
@@ -162,8 +172,11 @@ STATIC mp_obj_t pyb_neopix_display(mp_obj_t self_in, mp_obj_t rgb) {
 	int tx;
 	int mask;
 	int val;
-    
-	
+
+        while(inprogress) {
+	    usleep(100);
+        }
+
 	mp_obj_t *items;
 	
 	if (MP_OBJ_IS_INT(rgb))
@@ -173,17 +186,17 @@ STATIC mp_obj_t pyb_neopix_display(mp_obj_t self_in, mp_obj_t rgb) {
 
     uint32_t buf_ptr = 0;
 
-    if (frame_buffer_size < (24*len+2)*sizeof(uint16_t)){
+    if (frame_buffer_size < (24*len+WS2812_RESET_BIT_N)*sizeof(uint16_t)){
         if (frame_buffer != NULL)
             free(frame_buffer);
-        frame_buffer = malloc((24*len+2)*sizeof(uint16_t));
+        frame_buffer = malloc((24*len+WS2812_RESET_BIT_N)*sizeof(uint16_t));
         if (frame_buffer == NULL)
             return mp_const_none;
-        frame_buffer_size = (24*len+2)*sizeof(uint16_t);
+        frame_buffer_size = (24*len+WS2812_RESET_BIT_N)*sizeof(uint16_t);
     }
 
     
-    frame_buffer[buf_ptr++] = WS2812_DUTYCYCLE_RESET;
+//    frame_buffer[buf_ptr++] = WS2812_DUTYCYCLE_RESET;
 	
 	while(len){
 		len--;
@@ -205,9 +218,11 @@ STATIC mp_obj_t pyb_neopix_display(mp_obj_t self_in, mp_obj_t rgb) {
 			mask = mask >> 1;
 		}
 	}
-     
-    frame_buffer[buf_ptr++] = WS2812_DUTYCYCLE_RESET;
-     
+
+    for(int i=0;i<WS2812_RESET_BIT_N;i++) {
+        frame_buffer[buf_ptr++] = WS2812_DUTYCYCLE_RESET;
+    }
+
 	ws_start_transfer( buf_ptr);
 	
 	return mp_const_none;
