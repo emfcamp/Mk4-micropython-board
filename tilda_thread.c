@@ -273,6 +273,7 @@ void *tildaThread(void *arg)
     I2C_Params      i2cParams;
 
     tildaSharedStates.sampleRate = 500; // default to 0.5 Sec sample rate
+    tildaSharedStates.optLux = 0.0;  // in case OPT3001 is not working
 
     // setup Event
     Event_construct(&evtStruct, NULL);
@@ -393,7 +394,9 @@ void *tildaThread(void *arg)
             TMP102_getTemperature(&tildaSharedStates.tmpTemperature);
 
             // grab lux readings
-            OPT3001_getLux(opt3001Handle, &tildaSharedStates.optLux);
+            if (opt3001Handle) {
+                OPT3001_getLux(opt3001Handle, &tildaSharedStates.optLux);
+            }
 
             // grab battery updates?
             readBQ();
