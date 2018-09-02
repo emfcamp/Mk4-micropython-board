@@ -48,6 +48,7 @@ SRC_C = \
 	tilda_buttons.c \
 	tilda_sensors.c \
 	tilda_thread.c \
+	pdb.c \
 	$(BOARD_SRC_C) \
 	led.c \
 	storage.c \

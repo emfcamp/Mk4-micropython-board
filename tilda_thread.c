@@ -45,8 +45,11 @@
 #include "tilda_thread.h"
 #include "tilda_sensors.h"
 
+#include "pdb.h"
+
 Event_Struct evtStruct;
 I2C_Handle      i2cHandle;
+PDB_Handle pdb;
 
 // holders for the TCA button states
 // 0 is pressed
@@ -59,6 +62,11 @@ typedef struct tilda_tca_callback_modes_t {
 } tilda_tca_callback_modes_t;
 
 static tilda_tca_callback_modes_t tildaButtonCallbackModes[Buttons_MAX];
+
+static void pdbStart(uint8_t pin)
+{
+    PDB_start(pdb);
+}
 
 void tilda_init0()
 {
@@ -212,7 +220,7 @@ static void writeHDCReg(uint8_t addr, uint8_t data)
     i2cTransaction.writeCount = 2;
     i2cTransaction.readBuf = NULL;
     i2cTransaction.readCount = 0;
-    I2C_transfer(i2cHandle, &i2cTransaction);    
+    I2C_transfer(i2cHandle, &i2cTransaction);
 }
 
 static bool readHDCRegMulti(uint8_t addr, uint8_t *data, uint8_t cnt)
@@ -229,7 +237,7 @@ static bool readHDCRegMulti(uint8_t addr, uint8_t *data, uint8_t cnt)
     bool res = I2C_transfer(i2cHandle, &i2cTransaction);
     if (res == false) {
         return false;
-    }    
+    }
     return true;
 }
 
@@ -242,7 +250,7 @@ static bool HDC2080_getReadings(float *temperature, float *humidity)
         *humidity = -999;
         return false;
     }
-    
+
     uint8_t data_h[2];
     res = readHDCRegMulti(HDC2080_HUMIDITY_LSB_REG, data_h, 2);
     if (res == false){
@@ -250,14 +258,14 @@ static bool HDC2080_getReadings(float *temperature, float *humidity)
         *humidity = -999;
         return false;
     }
-    
+
     uint16_t t = ((data_t[1]<<8) | data_t[0]);
     uint16_t h = ((data_h[1]<<8) | data_h[0]);
-    
+
     *temperature = ((float) (t * CELSIUS_PER_LSB) - 40U);
     *humidity = ( (float) ( h * RH_PER_LSB));
 
-    return true;    
+    return true;
 }
 
 void *tildaThread(void *arg)
@@ -286,7 +294,9 @@ void *tildaThread(void *arg)
 
     // register TCA9555 Int handler
     GPIO_disableInt(MSP_EXP432E401Y_GPIO_TCA_INT);
-    GPIO_setCallback(MSP_EXP432E401Y_GPIO_TCA_INT, tcaInterruptHandler);
+    //GPIO_setCallback(MSP_EXP432E401Y_GPIO_TCA_INT, tcaInterruptHandler);
+    pdb = PDB_create(tcaInterruptHandler, NULL, MSP_EXP432E401Y_GPIO_TCA_INT);
+    GPIO_setCallback(MSP_EXP432E401Y_GPIO_TCA_INT, pdbStart);
     GPIO_enableInt(MSP_EXP432E401Y_GPIO_TCA_INT);
 
     // register HDC2080 Int handler
@@ -298,12 +308,12 @@ void *tildaThread(void *arg)
     readBQ();
 
     // setup sensors
-    
+
     // reset the HDC
     writeHDCReg(HDC2080_RST_DRDY_INT_CONF_REG, HDC2080_RST_DRDY_INT_CONF_SOFT_RES);
     usleep(3000U);
     // set interrupt on data ready
-    writeHDCReg(HDC2080_INT_MASK_REG, (1<<7)); 
+    writeHDCReg(HDC2080_INT_MASK_REG, (1<<7));
     // set temp and humid to max resolution
     writeHDCReg(HDC2080_MEAS_CONFIG_REG, 0);
     // set the HDC to 1Hz continuous mode, enable interrupt output
@@ -311,8 +321,8 @@ void *tildaThread(void *arg)
                                                | HDC2080_RST_DRDY_INT_CONF_DRDY_EN
                                                | HDC2080_RST_DRDY_INT_CONF_INT_POL);
     //start conversion
-    writeHDCReg(HDC2080_MEAS_CONFIG_REG, HDC2080_MEAS_CONFIG_START_MEAS);    
-    
+    writeHDCReg(HDC2080_MEAS_CONFIG_REG, HDC2080_MEAS_CONFIG_START_MEAS);
+
     // set the TMP102 to 1Hz continuous mode, max range
     //   turn off shutdown (and enable continuous conversion)
     writeTMPReg(TMP_CONFIG_REG, 0, TMP_CFG_CR_1Hz | TMP_CFG_EM);
@@ -381,7 +391,7 @@ void *tildaThread(void *arg)
         if (posted == 0) {
             // grab TMP temp readings
             TMP102_getTemperature(&tildaSharedStates.tmpTemperature);
-            
+
             // grab lux readings
             OPT3001_getLux(opt3001Handle, &tildaSharedStates.optLux);
 
