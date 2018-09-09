@@ -72,11 +72,18 @@ STATIC mp_obj_t tilda_buttons_enable_interrupt(size_t n_args, const mp_obj_t *po
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(tilda_buttons_enable_interrupt_obj, 2, tilda_buttons_enable_interrupt);
 
 
-STATIC mp_obj_t tilda_buttons_disable_interrupt() //(button)
+STATIC mp_obj_t tilda_buttons_disable_interrupt(mp_obj_t button_in) //(button)
 {
+    TILDA_BUTTONS_Names button = mp_obj_get_int(button_in);
+    if (button >= Buttons_MAX) {
+        mp_raise_OSError(MP_ENODEV);
+    }
+    unregisterButtonCallback(button);
+
     return mp_const_none;
+
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(tilda_buttons_disable_interrupt_obj, tilda_buttons_disable_interrupt);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(tilda_buttons_disable_interrupt_obj, tilda_buttons_disable_interrupt);
 
 
 STATIC mp_obj_t tilda_buttons_disable_all_interrupt()
