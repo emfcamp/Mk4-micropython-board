@@ -54,9 +54,9 @@ static volatile int inprogress = 0;
 #define WS_FREQ WS_800HZ
 #define SYSCLOCK 120000000
 #define WS2812_TIMER_INTVAL     (SYSCLOCK/WS_FREQ)
-#define WS2812_DUTYCYCLE_0      ((10*WS2812_TIMER_INTVAL)/15)
-#define WS2812_DUTYCYCLE_1      ((10*WS2812_TIMER_INTVAL)/36)
-#define WS2812_DUTYCYCLE_RESET  (WS2812_TIMER_INTVAL-1)
+#define WS2812_DUTYCYCLE_0      (((25-8)*WS2812_TIMER_INTVAL)/25)
+#define WS2812_DUTYCYCLE_1      (((25-16)*WS2812_TIMER_INTVAL)/25)
+#define WS2812_DUTYCYCLE_RESET  (WS2812_TIMER_INTVAL)
 #define WS2812_RESET_BIT_N      30
 
 static void setup_ws_timer_dma(void);
@@ -109,6 +109,10 @@ static void setup_ws_timer_dma(void)
     MAP_TimerConfigure(TIMER3_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_PWM | TIMER_CFG_B_PERIODIC_UP);
 
     MAP_TimerLoadSet(TIMER3_BASE, TIMER_BOTH, WS2812_TIMER_INTVAL);
+
+    // FIXME: this function was not meant to be used for setting TAPLO
+    // but it is the most convenient way to set these bits in GPTMTAMR
+    TimerUpdateMode(TIMER3_BASE, TIMER_A, TIMER_TAMR_TAPLO | TIMER_TAMR_TAMRSU);
 
     MAP_TimerMatchSet(TIMER3_BASE, TIMER_A, WS2812_DUTYCYCLE_RESET);
     
