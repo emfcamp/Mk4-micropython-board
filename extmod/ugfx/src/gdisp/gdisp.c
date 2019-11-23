@@ -3231,7 +3231,7 @@ void gdispGDrawBox(GDisplay *g, coord_t x, coord_t y, coord_t cx, coord_t cy, co
 		g->t.font = font;
 		g->t.clipx0 = x;
 		g->t.clipy0 = y;
-		g->t.clipx1 = x + mf_get_string_width(font, str, 0, 0);
+		g->t.clipx1 = x + mf_get_string_width(font, str, 0, 0) + 2; // +2 Fixes clipped last char of string. 
 		g->t.clipy1 = y + font->height;
 		g->t.color = color;
 
